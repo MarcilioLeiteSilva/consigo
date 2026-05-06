@@ -1,0 +1,307 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  GERENTE
+  OPERADOR
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum FinancialReferenceType {
+  SALE
+  PAYOUT
+  ADJUSTMENT
+}
+
+// ─────────────────────────────────────────────────────────────
+// Tenant (empresa / loja)
+// ─────────────────────────────────────────────────────────────
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users           User[]
+  categories      Category[]
+  consignors      Consignor[]
+  products        Product[]
+  pointsOfSale    POS[]
+  consignmentLots ConsignmentLot[]
+  sales           Sale[]
+  operationLogs   OperationLog[]
+  transactions    FinancialTransaction[]
+  consignorAccounts ConsignorAccount[]
+
+  @@map("tenants")
+}
+
+// ─────────────────────────────────────────────────────────────
+// User
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  tenantId     String
+  email        String
+  passwordHash String
+  name         String
+  role         Role      @default(OPERADOR)
+  isActive     Boolean   @default(true)
+  refreshToken String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Category
+// ─────────────────────────────────────────────────────────────
+
+model Category {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@index([tenantId])
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Consignor (consignador / fornecedor)
+// ─────────────────────────────────────────────────────────────
+
+model Consignor {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  contact   String?
+  email     String?
+  document  String?  // CPF or CNPJ
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  consignmentLots ConsignmentLot[]
+  saleItems       SaleItem[]
+  account         ConsignorAccount?
+  transactions    FinancialTransaction[]
+
+  @@index([tenantId])
+  @@map("consignors")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Product
+// ─────────────────────────────────────────────────────────────
+
+model Product {
+  id          String   @id @default(uuid())
+  tenantId    String
+  categoryId  String?
+  name        String
+  description String?
+  sku         String?
+  unit        String   @default("un")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  consignmentLots ConsignmentLot[]
+  saleItems       SaleItem[]
+
+  @@index([tenantId])
+  @@map("products")
+}
+
+// ─────────────────────────────────────────────────────────────
+// POS – Point of Sale (ponto de venda)
+// ─────────────────────────────────────────────────────────────
+
+model POS {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  location  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sales  Sale[]
+
+  @@index([tenantId])
+  @@map("points_of_sale")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ConsignmentLot (lote de consignação)
+// ─────────────────────────────────────────────────────────────
+
+model ConsignmentLot {
+  id                String   @id @default(uuid())
+  tenantId          String
+  productId         String
+  consignorId       String
+  quantityReceived  Int
+  quantitySold      Int      @default(0)
+  quantityReturned  Int      @default(0)
+  commissionPercent Decimal  @db.Decimal(5, 2)
+  unitPrice         Decimal  @db.Decimal(12, 2)
+  notes             String?
+  receivedAt        DateTime @default(now())
+  closedAt          DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id])
+  consignor Consignor @relation(fields: [consignorId], references: [id])
+  saleItems SaleItem[]
+
+  @@index([tenantId])
+  @@index([productId])
+  @@index([consignorId])
+  @@index([receivedAt])
+  @@map("consignment_lots")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Sale (Venda)
+// ─────────────────────────────────────────────────────────────
+
+model Sale {
+  id         String   @id @default(uuid())
+  tenantId   String
+  posId      String
+  totalValue Decimal  @db.Decimal(12, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pos    POS        @relation(fields: [posId], references: [id])
+  items  SaleItem[]
+
+  @@index([tenantId])
+  @@index([posId])
+  @@index([createdAt])
+  @@map("sales")
+}
+
+// ─────────────────────────────────────────────────────────────
+// SaleItem (Item da Venda)
+// ─────────────────────────────────────────────────────────────
+
+model SaleItem {
+  id               String  @id @default(uuid())
+  saleId           String
+  productId        String
+  consignorId      String
+  consignmentLotId String
+  quantity         Int
+  unitPrice        Decimal @db.Decimal(12, 2)
+  totalItem        Decimal @db.Decimal(12, 2)
+
+  sale           Sale           @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product        Product        @relation(fields: [productId], references: [id])
+  consignor      Consignor      @relation(fields: [consignorId], references: [id])
+  consignmentLot ConsignmentLot @relation(fields: [consignmentLotId], references: [id])
+
+  @@map("sale_items")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AuditLog / StockMovement
+// ─────────────────────────────────────────────────────────────
+
+model OperationLog {
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String?
+  action    String
+  module    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("operation_logs")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ConsignorAccount (Conta do Consignador)
+// ─────────────────────────────────────────────────────────────
+
+model ConsignorAccount {
+  id          String   @id @default(uuid())
+  tenantId    String
+  consignorId String   @unique
+  balance     Decimal  @default(0) @db.Decimal(15, 2)
+  updatedAt   DateTime @updatedAt
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  consignor Consignor @relation(fields: [consignorId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("consignor_accounts")
+}
+
+// ─────────────────────────────────────────────────────────────
+// FinancialTransaction (Transação Financeira)
+// ─────────────────────────────────────────────────────────────
+
+model FinancialTransaction {
+  id            String                 @id @default(uuid())
+  tenantId      String
+  consignorId   String
+  type          TransactionType
+  amount        Decimal                @db.Decimal(15, 2)
+  referenceType FinancialReferenceType
+  referenceId   String?                // e.g. saleId
+  description   String?
+  createdAt     DateTime               @default(now())
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  consignor Consignor @relation(fields: [consignorId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([consignorId])
+  @@index([referenceId])
+  @@index([createdAt])
+  @@map("financial_transactions")
+}

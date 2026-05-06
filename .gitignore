@@ -1,0 +1,25 @@
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Subfolders node_modules
+**/node_modules/
+**/dist/
+**/.next/
+**/.env
+**/backups/
+**/*.sql
+
+# Flutter specific
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/generated/
