@@ -7,7 +7,7 @@ class ApiClient {
 
   ApiClient() {
     dio = Dio(BaseOptions(
-      baseUrl: 'https://api.consigo-backend-consigo.xc4mw1.easypanel.host', // Altere para o IP da sua máquina se testar em dispositivo real
+      baseUrl: 'https://consigo-backend-consigo.xc4mw1.easypanel.host', // Altere para o IP da sua máquina se testar em dispositivo real
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ));
