@@ -6,15 +6,14 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y openssl python3 make g++
 
 COPY package*.json ./
-# Usar install normal para ser mais resiliente a mudanças de versão
 RUN npm install
 
 COPY . .
 
-# DELETAR client antigo e forçar o motor BINARY
-RUN rm -rf node_modules/.prisma node_modules/@prisma/client
+# Forçar o motor BINARY e garantir que o Prisma seja regerado
 ENV PRISMA_CLIENT_ENGINE_TYPE='binary'
-RUN npx prisma generate
+# O comando abaixo (echo) serve apenas para quebrar o cache do Docker neste ponto
+RUN echo "Build em $(date)" && npx prisma generate
 
 RUN npm run build
 
