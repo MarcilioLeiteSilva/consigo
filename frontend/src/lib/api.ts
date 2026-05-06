@@ -1,8 +1,12 @@
 // Updated: 2026-05-06 19:17
 import axios from 'axios';
 
+const rawBaseURL = process.env.NEXT_PUBLIC_API_URL || 'https://consigo-backend-consigo.xc4mw1.easypanel.host';
+// Limpeza automática para remover o prefixo 'api.' caso o Easypanel injete errado
+const sanitizedBaseURL = rawBaseURL.replace('https://api.consigo', 'https://consigo');
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://consigo-backend-consigo.xc4mw1.easypanel.host',
+  baseURL: sanitizedBaseURL,
 });
 
 api.interceptors.request.use((config) => {
@@ -23,7 +27,7 @@ api.interceptors.response.use(
       
       if (refreshToken) {
         try {
-          const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'https://consigo-backend-consigo.xc4mw1.easypanel.host'}/auth/refresh`, {
+          const res = await axios.post(`${sanitizedBaseURL}/auth/refresh`, {
             refreshToken,
           });
           
