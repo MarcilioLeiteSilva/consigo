@@ -3,16 +3,17 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Instalar dependências necessárias para o Prisma no Linux
 RUN apt-get update && apt-get install -y openssl python3 make g++
 
 COPY package*.json ./
-RUN npm install
+# Forçar a reinstalação limpa
+RUN npm ci
 
 COPY . .
 
-# Forçar o uso do motor library e gerar o client
-ENV PRISMA_CLIENT_ENGINE_TYPE='library'
+# Deletar qualquer client gerado anteriormente e forçar o BINARY
+RUN rm -rf node_modules/.prisma node_modules/@prisma/client
+ENV PRISMA_CLIENT_ENGINE_TYPE='binary'
 RUN npx prisma generate
 
 RUN npm run build
@@ -28,11 +29,10 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/prisma.config.ts ./
 
-# Variáveis para garantir o motor correto em tempo de execução
-ENV PRISMA_CLIENT_ENGINE_TYPE='library'
+# Garantir que o motor binário seja usado
+ENV PRISMA_CLIENT_ENGINE_TYPE='binary'
 EXPOSE 3000
 
-# Script para rodar migrações e iniciar
+# Rodar migrações e iniciar
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
