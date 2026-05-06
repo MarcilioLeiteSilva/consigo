@@ -10,7 +10,11 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+
+# Forçar o uso do motor library e gerar o client
+ENV PRISMA_CLIENT_ENGINE_TYPE='library'
 RUN npx prisma generate
+
 RUN npm run build
 
 # Estágio de Produção
@@ -26,6 +30,8 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
 
+# Variáveis para garantir o motor correto em tempo de execução
+ENV PRISMA_CLIENT_ENGINE_TYPE='library'
 EXPOSE 3000
 
 # Script para rodar migrações e iniciar
