@@ -18,7 +18,7 @@ export class SalesService {
 
     return await this.prisma.$transaction(async (tx) => {
       let totalValue = 0;
-      const saleItemsToCreate = [];
+      const saleItemsToCreate: any[] = [];
 
       for (const item of dto.items) {
         let remainingToSell = item.quantity;
