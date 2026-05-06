@@ -6,12 +6,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y openssl python3 make g++
 
 COPY package*.json ./
-# Forçar a reinstalação limpa
-RUN npm ci
+# Usar install normal para ser mais resiliente a mudanças de versão
+RUN npm install
 
 COPY . .
 
-# Deletar qualquer client gerado anteriormente e forçar o BINARY
+# DELETAR client antigo e forçar o motor BINARY
 RUN rm -rf node_modules/.prisma node_modules/@prisma/client
 ENV PRISMA_CLIENT_ENGINE_TYPE='binary'
 RUN npx prisma generate
@@ -30,7 +30,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 
-# Garantir que o motor binário seja usado
 ENV PRISMA_CLIENT_ENGINE_TYPE='binary'
 EXPOSE 3000
 
