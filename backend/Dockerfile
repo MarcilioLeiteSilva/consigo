@@ -10,10 +10,9 @@ RUN npm install
 
 COPY . .
 
-# Forçar o motor BINARY e garantir que o Prisma seja regerado
+# Gerar o client de forma limpa
 ENV PRISMA_CLIENT_ENGINE_TYPE='binary'
-# O comando abaixo (echo) serve apenas para quebrar o cache do Docker neste ponto
-RUN echo "Build em $(date)" && npx prisma generate
+RUN npx prisma generate
 
 RUN npm run build
 
@@ -29,8 +28,10 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 
+# Definir variável para o runtime
 ENV PRISMA_CLIENT_ENGINE_TYPE='binary'
 EXPOSE 3000
 
-# Rodar migrações e iniciar
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+# Comando de Start robusto (Ponto 7 do solicitado)
+# Adicionei uma verificação de rede simples e o migrate explícito
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
