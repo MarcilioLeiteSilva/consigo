@@ -6,13 +6,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🚀 Iniciando Setup de Produção...');
 
-  // 1. Criar o Tenant (Loja)
+  // 1. Criar o Tenant (Loja) usando o slug como chave única
   const tenant = await prisma.tenant.upsert({
-    where: { name: 'Consigo Prime' },
+    where: { slug: 'consigo-prime' },
     update: {},
     create: {
       name: 'Consigo Prime',
-      plan: 'PREMIUM',
+      slug: 'consigo-prime',
+      isActive: true,
     },
   });
   console.log(`✅ Tenant criado: ${tenant.name} (${tenant.id})`);
@@ -20,14 +21,22 @@ async function main() {
   // 2. Criar Usuário Admin
   const hashedPassword = await bcrypt.hash('Cascavel88101', 10);
   const user = await prisma.user.upsert({
-    where: { email: 'admin@consigo.app' },
-    update: {},
+    where: { 
+      tenantId_email: {
+        tenantId: tenant.id,
+        email: 'admin@consigo.app'
+      }
+    },
+    update: {
+      passwordHash: hashedPassword,
+    },
     create: {
       email: 'admin@consigo.app',
-      password: hashedPassword,
+      passwordHash: hashedPassword,
       name: 'Administrador Consigo',
       role: 'ADMIN',
       tenantId: tenant.id,
+      isActive: true,
     },
   });
   console.log(`✅ Usuário Admin criado: ${user.email}`);
