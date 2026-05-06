@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://api.consigo-backend-consigo.xc4mw1.easypanel.host',
 });
 
 api.interceptors.request.use((config) => {
@@ -22,7 +22,7 @@ api.interceptors.response.use(
       
       if (refreshToken) {
         try {
-          const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/auth/refresh`, {
+          const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'https://api.consigo-backend-consigo.xc4mw1.easypanel.host'}/auth/refresh`, {
             refreshToken,
           });
           
