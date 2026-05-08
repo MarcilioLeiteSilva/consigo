@@ -59,7 +59,7 @@ async function main() {
   ];
 
   const savedPdvs = await Promise.all(pdvs.map(p => 
-    prisma.pos.create({ data: { ...p, tenantId: tenant.id } })
+    prisma.pOS.create({ data: { ...p, tenantId: tenant.id } })
   ));
 
   // 6. Distribuir Estoque (Snapshots)
