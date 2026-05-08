@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -28,6 +29,7 @@ import {
 import api from '@/lib/api';
 
 export default function DashboardHome() {
+  const router = useRouter();
   const [metrics, setMetrics] = useState<any>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
@@ -37,21 +39,24 @@ export default function DashboardHome() {
     async function loadDashboardData() {
       try {
         const [mRes, cRes, pRes] = await Promise.all([
-          api.get('/dashboard/metrics'),
-          api.get('/dashboard/sales-chart'),
-          api.get('/dashboard/top-products')
+          api.get('/dashboard/metrics').catch(e => { if(e.response?.status === 401) router.push('/login'); throw e; }),
+          api.get('/dashboard/sales-chart').catch(e => ({ data: [] })),
+          api.get('/dashboard/top-products').catch(e => ({ data: [] }))
         ]);
         setMetrics(mRes.data);
-        setChartData(cRes.data);
-        setTopProducts(pRes.data);
-      } catch (err) {
+        setChartData(Array.isArray(cRes.data) ? cRes.data : []);
+        setTopProducts(Array.isArray(pRes.data) ? pRes.data : []);
+      } catch (err: any) {
         console.error('Erro ao carregar dados do dashboard', err);
+        if (err.response?.status === 401) {
+          router.push('/login');
+        }
       } finally {
         setLoading(false);
       }
     }
     loadDashboardData();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
