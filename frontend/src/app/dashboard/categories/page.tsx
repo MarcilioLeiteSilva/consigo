@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { 
   Plus, 
   Search, 
-  MoreHorizontal, 
   FolderOpen,
   Trash2,
   Edit,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -18,21 +18,44 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function loadCategories() {
+    setLoading(true);
+    try {
+      const response = await api.get('/categories');
+      console.log('📡 Categorias Recebidas:', response.data);
+      setCategories(Array.isArray(response.data) ? response.data : []);
+    } catch (err: any) {
+      console.error('❌ Erro ao carregar categorias:', err.response?.data || err.message);
+      if (err.response?.status === 401) router.push('/login');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadCategories() {
-      try {
-        const response = await api.get('/categories');
-        setCategories(Array.isArray(response.data) ? response.data : []);
-      } catch (err: any) {
-        console.error('Erro ao carregar categorias', err);
-        if (err.response?.status === 401) router.push('/login');
-      } finally {
-        setLoading(false);
-      }
-    }
     loadCategories();
   }, [router]);
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    
+    setSaving(true);
+    try {
+      await api.post('/categories', { name: newCategoryName });
+      setNewCategoryName('');
+      setIsModalOpen(false);
+      loadCategories();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erro ao criar categoria');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const filteredCategories = categories.filter(c => 
     (c?.name || '').toLowerCase().includes(search.toLowerCase())
@@ -45,10 +68,44 @@ export default function CategoriesPage() {
           <h1 className="text-2xl font-bold text-slate-900">Categorias</h1>
           <p className="text-slate-500 text-sm">Organize seu mix de produtos e manufatura.</p>
         </div>
-        <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-2xl transition-all shadow-lg shadow-blue-100">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-2xl transition-all shadow-lg shadow-blue-100"
+        >
           <Plus size={20} /> Nova Categoria
         </button>
       </div>
+
+      {/* Modal de Criação */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[32px] w-full max-w-md p-8 shadow-2xl animate-scale-in">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-900">Nova Categoria</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+            </div>
+            <form onSubmit={handleCreateCategory} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nome da Categoria</label>
+                <input 
+                  autoFocus
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Ex: Colecionáveis 3D"
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium"
+                />
+              </div>
+              <button 
+                type="submit" 
+                disabled={saving || !newCategoryName.trim()}
+                className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2"
+              >
+                {saving ? <Loader2 className="animate-spin" size={20} /> : 'Salvar Categoria'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -114,8 +171,16 @@ export default function CategoriesPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="px-8 py-20 text-center text-slate-400 font-medium">
-                    Nenhuma categoria encontrada.
+                  <td colSpan={3} className="px-8 py-24 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                        <FolderOpen size={32} />
+                      </div>
+                      <div>
+                        <p className="text-slate-900 font-bold">Nenhuma categoria encontrada</p>
+                        <p className="text-slate-500 text-sm">Crie sua primeira categoria no botão acima.</p>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               )}
