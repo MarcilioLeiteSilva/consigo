@@ -142,9 +142,10 @@ model Subscription {
   status      String   @default("active")
   startDate   DateTime @default(now())
   endDate     DateTime?
-  renewalDate DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  renewalDate         DateTime?
+  asaasSubscriptionId String?   // ID da assinatura no Asaas
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   plan     SubscriptionPlan @relation(fields: [planId], references: [id])
