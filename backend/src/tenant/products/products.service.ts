@@ -28,9 +28,6 @@ export class ProductsService {
   findAll(tenantId: string) {
     return this.prisma.product.findMany({
       where: { tenantId },
-      include: {
-        category: true,
-      },
       orderBy: { createdAt: 'desc' },
     });
   }
