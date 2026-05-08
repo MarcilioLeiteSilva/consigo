@@ -14,7 +14,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@prisma/client';
+import { TenantUserRole } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('users')
@@ -25,28 +25,28 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.GERENTE)
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
   @ApiOperation({ summary: 'Criar um novo usuário' })
   create(@CurrentUser() user: any, @Body() createUserDto: CreateUserDto) {
     return this.usersService.create(user.tenantId, createUserDto);
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.GERENTE)
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
   @ApiOperation({ summary: 'Listar usuários do tenant' })
   findAll(@CurrentUser() user: any) {
     return this.usersService.findAll(user.tenantId);
   }
 
   @Get(':id')
-  @Roles(Role.ADMIN, Role.GERENTE)
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
   @ApiOperation({ summary: 'Buscar usuário por ID' })
   findOne(@CurrentUser() user: any, @Param('id') id: string) {
     return this.usersService.findOne(user.tenantId, id);
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.GERENTE)
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
   @ApiOperation({ summary: 'Atualizar usuário' })
   update(
     @CurrentUser() user: any,
@@ -57,7 +57,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(TenantUserRole.TENANT_ADMIN)
   @ApiOperation({ summary: 'Remover usuário' })
   remove(@CurrentUser() user: any, @Param('id') id: string) {
     return this.usersService.remove(user.tenantId, id);

@@ -12,48 +12,49 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '@prisma/client';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { PlatformRoles } from '../auth/decorators/platform-roles.decorator';
+import { PlatformRole } from '@prisma/client';
+import { PlatformAuthGuard } from '../auth/guards/platform-auth.guard';
+import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
 
-@ApiTags('tenants')
+@ApiTags('platform-tenants')
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Controller('tenants')
+@UseGuards(PlatformAuthGuard, PlatformRolesGuard)
+@Controller('platform/tenants')
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @Post()
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Criar um novo tenant (Apenas ADMIN)' })
+  @PlatformRoles(PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN)
+  @ApiOperation({ summary: 'Criar um novo tenant' })
   create(@Body() createTenantDto: CreateTenantDto) {
     return this.tenantsService.create(createTenantDto);
   }
 
   @Get()
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Listar todos os tenants (Apenas ADMIN)' })
+  @PlatformRoles(PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN, PlatformRole.SUPPORT)
+  @ApiOperation({ summary: 'Listar todos os tenants' })
   findAll() {
     return this.tenantsService.findAll();
   }
 
   @Get(':id')
-  @Roles(Role.ADMIN, Role.GERENTE)
+  @PlatformRoles(PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN, PlatformRole.SUPPORT)
   @ApiOperation({ summary: 'Buscar um tenant por ID' })
   findOne(@Param('id') id: string) {
     return this.tenantsService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Atualizar um tenant (Apenas ADMIN)' })
+  @PlatformRoles(PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN)
+  @ApiOperation({ summary: 'Atualizar um tenant' })
   update(@Param('id') id: string, @Body() updateTenantDto: UpdateTenantDto) {
     return this.tenantsService.update(id, updateTenantDto);
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Remover um tenant (Apenas ADMIN)' })
+  @PlatformRoles(PlatformRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Remover um tenant' })
   remove(@Param('id') id: string) {
     return this.tenantsService.remove(id);
   }

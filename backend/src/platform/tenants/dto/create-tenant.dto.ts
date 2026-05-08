@@ -1,19 +1,25 @@
-import { IsNotEmpty, IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsEnum, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { TenantStatus } from '@prisma/client';
 
 export class CreateTenantDto {
-  @ApiProperty({ example: 'Minha Empresa' })
+  @ApiProperty({ example: 'Consigo Empresa' })
   @IsNotEmpty()
   @IsString()
-  name: string;
+  companyName: string;
 
-  @ApiProperty({ example: 'minha-empresa' })
+  @ApiProperty({ example: 'empresa@consigo.com' })
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ example: 'consigo-empresa' })
   @IsNotEmpty()
   @IsString()
   slug: string;
 
-  @ApiProperty({ required: false, default: true })
+  @ApiProperty({ enum: TenantStatus, default: TenantStatus.ACTIVE })
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsEnum(TenantStatus)
+  status?: TenantStatus;
 }

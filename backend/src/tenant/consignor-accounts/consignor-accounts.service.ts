@@ -5,18 +5,18 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class ConsignorAccountsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByConsignor(tenantId: string, consignorId: string) {
-    const account = await this.prisma.consignorAccount.findFirst({
-      where: { consignorId, tenantId },
+  async findByTenant(tenantId: string) {
+    const account = await this.prisma.consignorAccount.findUnique({
+      where: { tenantId },
       include: {
-        consignor: {
-          select: { name: true, email: true }
+        tenant: {
+          select: { companyName: true, email: true }
         }
       }
     });
 
     if (!account) {
-      throw new NotFoundException('Conta do consignador não encontrada');
+      throw new NotFoundException('Conta financeira do tenant não encontrada');
     }
 
     return account;

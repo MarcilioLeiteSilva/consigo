@@ -19,16 +19,16 @@ export class DashboardService {
 
     const sales = await this.prisma.sale.aggregate({
       where: { tenantId },
-      _sum: { totalValue: true },
+      _sum: { totalAmount: true },
       _count: { id: true },
     });
 
     const itemsCount = await this.prisma.saleItem.aggregate({
-      where: { sale: { tenantId } },
+      where: { tenantId },
       _sum: { quantity: true },
     });
 
-    const totalSales = Number(sales._sum.totalValue || 0);
+    const totalSales = Number(sales._sum.totalAmount || 0);
     const saleCount = sales._count.id || 0;
     const totalItems = itemsCount._sum.quantity || 0;
     const ticketMedio = saleCount > 0 ? totalSales / saleCount : 0;
@@ -45,30 +45,30 @@ export class DashboardService {
   }
 
   async getTopConsignors(tenantId: string) {
-    const cacheKey = `dashboard:top-consignors:${tenantId}`;
+    // Agora que o Tenant é o consignador único, transformamos isso em Top Products
+    // para não quebrar o frontend, mas com dados de produtos.
+    const cacheKey = `dashboard:top-products:${tenantId}`;
     const cached = await this.redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
-    // Agregação manual via Prisma (ou raw query se necessário para performance)
     const result = await this.prisma.saleItem.groupBy({
-      by: ['consignorId'],
-      where: { sale: { tenantId } },
-      _sum: { totalItem: true, quantity: true },
-      orderBy: { _sum: { totalItem: 'desc' } },
+      by: ['productId'],
+      where: { tenantId },
+      _sum: { quantity: true, consignorAmount: true },
+      orderBy: { _sum: { quantity: 'desc' } },
       take: 5,
     });
 
-    // Hidratar com nomes dos consignadores
     const hydrated = await Promise.all(
       result.map(async (item) => {
-        const consignor = await this.prisma.consignor.findUnique({
-          where: { id: item.consignorId },
+        const product = await this.prisma.product.findUnique({
+          where: { id: item.productId },
           select: { name: true },
         });
         return {
-          consignorId: item.consignorId,
-          name: consignor?.name || 'Desconhecido',
-          totalGenerated: Number(item._sum.totalItem || 0),
+          consignorId: item.productId, // Mantemos a chave para compatibilidade
+          name: product?.name || 'Desconhecido',
+          totalGenerated: Number(item._sum.consignorAmount || 0),
           itemsSold: item._sum.quantity || 0,
         };
       }),
@@ -83,22 +83,19 @@ export class DashboardService {
     const cached = await this.redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
-    // 1. Total a pagar (saldos atuais dos consignadores)
-    const accounts = await this.prisma.consignorAccount.aggregate({
+    const account = await this.prisma.consignorAccount.findUnique({
       where: { tenantId },
-      _sum: { balance: true },
     });
 
-    // 2. Total pago (Débitos no histórico financeiro)
     const payouts = await this.prisma.financialTransaction.aggregate({
       where: { tenantId, type: TransactionType.DEBIT },
       _sum: { amount: true },
     });
 
     const result = {
-      pendingBalance: Number(accounts._sum.balance || 0),
+      pendingBalance: Number(account?.balance || 0),
       totalPaid: Number(payouts._sum.amount || 0),
-      totalValueManaged: Number(accounts._sum.balance || 0) + Number(payouts._sum.amount || 0),
+      totalValueManaged: Number(account?.balance || 0) + Number(payouts._sum.amount || 0),
     };
 
     await this.redis.set(cacheKey, JSON.stringify(result), this.CACHE_TTL);
@@ -110,7 +107,6 @@ export class DashboardService {
     const cached = await this.redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
-    // Produtos com lotes abertos há mais de 30 dias com baixo giro
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -122,7 +118,6 @@ export class DashboardService {
       },
       include: {
         product: { select: { name: true } },
-        consignor: { select: { name: true } },
       },
       take: 10,
     });
@@ -134,7 +129,7 @@ export class DashboardService {
       return {
         productId: lot.productId,
         productName: lot.product.name,
-        consignorName: lot.consignor.name,
+        consignorName: 'Próprio',
         currentStock: stock,
         daysInStock,
         turnoverRate: lot.quantityReceived > 0 ? (lot.quantitySold / lot.quantityReceived) : 0,

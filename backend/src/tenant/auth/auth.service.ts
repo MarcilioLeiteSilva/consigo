@@ -36,8 +36,8 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    if (!user.tenant.isActive) {
-      throw new UnauthorizedException('Tenant inativo');
+    if (user.tenant.status !== 'ACTIVE') {
+      throw new UnauthorizedException('Tenant inativo ou suspenso');
     }
 
     const tokens = await this.generateTokens(user);
@@ -56,7 +56,7 @@ export class AuthService {
         name: user.name,
         role: user.role,
         tenantId: user.tenantId,
-        tenant: { id: user.tenant.id, name: user.tenant.name },
+        tenant: { id: user.tenant.id, name: user.tenant.companyName },
       },
     };
   }
@@ -103,7 +103,7 @@ export class AuthService {
         role: true,
         tenantId: true,
         createdAt: true,
-        tenant: { select: { id: true, name: true, slug: true } },
+        tenant: { select: { id: true, companyName: true, slug: true } },
       },
     });
 

@@ -16,14 +16,6 @@ export class ConsignmentLotsService {
       throw new BadRequestException('Produto inválido ou não pertence ao tenant');
     }
 
-    // Validar Consignador
-    const consignor = await this.prisma.consignor.findFirst({
-      where: { id: createConsignmentLotDto.consignorId, tenantId },
-    });
-    if (!consignor) {
-      throw new BadRequestException('Consignador inválido ou não pertence ao tenant');
-    }
-
     return this.prisma.consignmentLot.create({
       data: {
         ...createConsignmentLotDto,
@@ -37,9 +29,8 @@ export class ConsignmentLotsService {
       where: { tenantId },
       include: {
         product: true,
-        consignor: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { receivedAt: 'desc' },
     });
   }
 
@@ -48,7 +39,6 @@ export class ConsignmentLotsService {
       where: { id, tenantId },
       include: {
         product: true,
-        consignor: true,
       },
     });
 
@@ -68,15 +58,6 @@ export class ConsignmentLotsService {
       });
       if (!product) {
         throw new BadRequestException('Produto inválido');
-      }
-    }
-
-    if (updateConsignmentLotDto.consignorId) {
-      const consignor = await this.prisma.consignor.findFirst({
-        where: { id: updateConsignmentLotDto.consignorId, tenantId },
-      });
-      if (!consignor) {
-        throw new BadRequestException('Consignador inválido');
       }
     }
 

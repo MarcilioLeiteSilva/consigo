@@ -1,14 +1,14 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { TenantUserRole } from '@prisma/client';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { PlatformRole } from '@prisma/client';
+import { PLATFORM_ROLES_KEY } from '../decorators/platform-roles.decorator';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class PlatformRolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<TenantUserRole[]>(ROLES_KEY, [
+    const requiredRoles = this.reflector.getAllAndOverride<PlatformRole[]>(PLATFORM_ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -19,15 +19,15 @@ export class RolesGuard implements CanActivate {
 
     const { user } = context.switchToHttp().getRequest();
 
-    if (!user) {
-      throw new ForbiddenException('User not authenticated');
+    if (!user || user.scope !== 'PLATFORM_ADMIN') {
+      throw new ForbiddenException('Acesso restrito à plataforma');
     }
 
     const hasRole = requiredRoles.some((role) => user.role === role);
 
     if (!hasRole) {
       throw new ForbiddenException(
-        `Required roles: ${requiredRoles.join(', ')}. Your role: ${user.role}`,
+        `Permissão insuficiente na plataforma. Requer: ${requiredRoles.join(', ')}`,
       );
     }
 

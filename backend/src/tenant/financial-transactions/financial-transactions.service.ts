@@ -5,14 +5,13 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class FinancialTransactionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(tenantId: string, consignorId?: string) {
+  findAll(tenantId: string) {
     return this.prisma.financialTransaction.findMany({
       where: {
         tenantId,
-        ...(consignorId ? { consignorId } : {}),
       },
       include: {
-        consignor: { select: { name: true } },
+        tenant: { select: { companyName: true } },
       },
       orderBy: { createdAt: 'desc' },
     });

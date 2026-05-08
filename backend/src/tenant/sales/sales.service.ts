@@ -17,7 +17,7 @@ export class SalesService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      let totalValue = 0;
+      let totalAmount = 0;
       const saleItemsToCreate: any[] = [];
 
       for (const item of dto.items) {
@@ -50,7 +50,7 @@ export class SalesService {
 
           const quantityFromThisLot = Math.min(remainingToSell, lotAvailable);
           const itemTotal = quantityFromThisLot * Number(item.unitPrice);
-          totalValue += itemTotal;
+          totalAmount += itemTotal;
 
           // Atualizar estoque no lote
           await tx.consignmentLot.update({
@@ -58,37 +58,38 @@ export class SalesService {
             data: { quantitySold: { increment: quantityFromThisLot } },
           });
 
-          // --- LÓGICA FINANCEIRA (Fase 3) ---
-          // Calcular valor devido ao consignador (Repasse = Total - Comissão)
+          // --- LÓGICA FINANCEIRA SaaS ---
+          // No novo modelo, o Tenant é o Consignador. 
+          // O valor da venda (menos comissões se houver) entra no saldo dele.
           const commissionPercent = Number(lot.commissionPercent);
           const commissionAmount = (itemTotal * commissionPercent) / 100;
-          const amountDueToConsignor = itemTotal - commissionAmount;
+          const consignorAmount = itemTotal - commissionAmount;
 
-          // Atualizar Saldo do Consignador (Atomic Increment)
+          // Atualizar Saldo do Tenant (ConsignorAccount)
           await tx.consignorAccount.update({
-            where: { consignorId: lot.consignorId },
-            data: { balance: { increment: amountDueToConsignor } },
+            where: { tenantId },
+            data: { balance: { increment: consignorAmount } },
           });
 
           // Registrar Transação Financeira
           await tx.financialTransaction.create({
             data: {
               tenantId,
-              consignorId: lot.consignorId,
               type: TransactionType.CREDIT,
-              amount: amountDueToConsignor,
+              amount: consignorAmount,
               referenceType: FinancialReferenceType.SALE,
               description: `Venda de ${quantityFromThisLot} un de ${item.productId} (Lote: ${lot.id})`,
             },
           });
 
           saleItemsToCreate.push({
+            tenantId,
             productId: item.productId,
-            consignorId: lot.consignorId,
             consignmentLotId: lot.id,
             quantity: quantityFromThisLot,
             unitPrice: item.unitPrice,
-            totalItem: itemTotal,
+            commissionPercent: lot.commissionPercent,
+            consignorAmount: consignorAmount,
           });
 
           remainingToSell -= quantityFromThisLot;
@@ -100,7 +101,8 @@ export class SalesService {
         data: {
           tenantId,
           posId: dto.posId,
-          totalValue,
+          totalAmount,
+          createdBy: userId,
           items: {
             create: saleItemsToCreate,
           },
@@ -108,12 +110,12 @@ export class SalesService {
         include: { items: true },
       });
 
-      // Vincular as transações financeiras à venda criada (opcional, mas bom para rastreio)
+      // Vincular as transações financeiras à venda criada
       await tx.financialTransaction.updateMany({
         where: { 
           tenantId, 
-          description: { contains: `Venda de` }, 
-          createdAt: { gte: new Date(Date.now() - 10000) } // Filtro temporal simples para o mock
+          description: { contains: `(Lote:` }, 
+          createdAt: { gte: new Date(Date.now() - 30000) } 
         },
         data: { referenceId: sale.id }
       });
@@ -124,8 +126,9 @@ export class SalesService {
           tenantId,
           userId,
           action: 'CREATE_SALE',
-          module: 'SALES',
-          details: { saleId: sale.id, totalValue },
+          entity: 'SALE',
+          entityId: sale.id,
+          metadata: { totalAmount },
         },
       });
 
@@ -137,7 +140,7 @@ export class SalesService {
     return this.prisma.sale.findMany({
       where: { tenantId },
       include: {
-        items: { include: { product: true, consignor: true } },
+        items: { include: { product: true } },
         pos: true,
       },
       orderBy: { createdAt: 'desc' },

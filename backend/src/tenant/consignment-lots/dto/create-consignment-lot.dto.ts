@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsInt, IsDecimal, IsOptional, IsUUID, Min, Max, IsString } from 'class-validator';
+import { IsNotEmpty, IsInt, IsOptional, IsUUID, Min, Max, IsString, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateConsignmentLotDto {
@@ -6,11 +6,6 @@ export class CreateConsignmentLotDto {
   @IsNotEmpty()
   @IsUUID()
   productId: string;
-
-  @ApiProperty({ example: 'uuid-do-consignador' })
-  @IsNotEmpty()
-  @IsUUID()
-  consignorId: string;
 
   @ApiProperty({ example: 100 })
   @IsNotEmpty()
@@ -20,12 +15,14 @@ export class CreateConsignmentLotDto {
 
   @ApiProperty({ example: 20.0 })
   @IsNotEmpty()
+  @IsNumber()
   @Min(0)
   @Max(100)
   commissionPercent: number;
 
   @ApiProperty({ example: 50.0 })
   @IsNotEmpty()
+  @IsNumber()
   @Min(0)
   unitPrice: number;
 

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, TenantStatus, TenantUserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -11,12 +11,16 @@ async function main() {
     where: { slug: 'consigo-prime' },
     update: {},
     create: {
-      name: 'Consigo Prime',
+      companyName: 'Consigo Prime',
+      email: 'admin@consigo.app', // Adicionado campo obrigatório
       slug: 'consigo-prime',
-      isActive: true,
+      status: TenantStatus.ACTIVE,
+      consignorAccount: {
+        create: { balance: 0 }
+      }
     },
   });
-  console.log(`✅ Tenant criado: ${tenant.name} (${tenant.id})`);
+  console.log(`✅ Tenant criado: ${tenant.companyName} (${tenant.id})`);
 
   // 2. Criar Usuário Admin
   const hashedPassword = await bcrypt.hash('Cascavel88101', 10);
@@ -34,7 +38,7 @@ async function main() {
       email: 'admin@consigo.app',
       passwordHash: hashedPassword,
       name: 'Administrador Consigo',
-      role: 'ADMIN',
+      role: TenantUserRole.TENANT_ADMIN,
       tenantId: tenant.id,
       isActive: true,
     },

@@ -32,9 +32,11 @@ export class AuditInterceptor implements NestInterceptor {
               data: {
                 tenantId: user.tenantId,
                 userId: user.id,
-                action: `${method} ${url}`,
-                module: url.split('/')[1] || 'GENERAL',
-                details: {
+                action: method,
+                entity: url.split('/')[2] || url.split('/')[1] || 'GENERAL',
+                entityId: data?.id || 'N/A',
+                metadata: {
+                  url,
                   requestBody: body,
                   response: data,
                 },
