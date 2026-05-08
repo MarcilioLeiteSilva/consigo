@@ -19,16 +19,15 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [categoryName, setCategoryName] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function loadCategories() {
     setLoading(true);
     try {
       const response = await api.get('/categories');
-      // Aceita tanto array direto quanto envelopado { data: [] }
       const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
-      console.log('📡 Categorias Processadas:', data);
       setCategories(data);
     } catch (err: any) {
       console.error('❌ Erro ao carregar categorias:', err.response?.data || err.message);
@@ -42,20 +41,46 @@ export default function CategoriesPage() {
     loadCategories();
   }, [router]);
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
+  const handleOpenCreate = () => {
+    setEditingCategory(null);
+    setCategoryName('');
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (category: any) => {
+    setEditingCategory(category);
+    setCategoryName(category.name);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCategoryName.trim()) return;
+    if (!categoryName.trim()) return;
     
     setSaving(true);
     try {
-      await api.post('/categories', { name: newCategoryName });
-      setNewCategoryName('');
+      if (editingCategory) {
+        await api.patch(`/categories/${editingCategory.id}`, { name: categoryName });
+      } else {
+        await api.post('/categories', { name: categoryName });
+      }
       setIsModalOpen(false);
       loadCategories();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erro ao criar categoria');
+      alert(err.response?.data?.message || 'Erro ao salvar categoria');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
+    
+    try {
+      await api.delete(`/categories/${id}`);
+      loadCategories();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erro ao excluir categoria');
     }
   };
 
@@ -71,38 +96,40 @@ export default function CategoriesPage() {
           <p className="text-slate-500 text-sm">Organize seu mix de produtos e manufatura.</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleOpenCreate}
           className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-2xl transition-all shadow-lg shadow-blue-100"
         >
           <Plus size={20} /> Nova Categoria
         </button>
       </div>
 
-      {/* Modal de Criação */}
+      {/* Modal de Criação/Edição */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-[32px] w-full max-w-md p-8 shadow-2xl animate-scale-in">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-900">Nova Categoria</h3>
+              <h3 className="text-xl font-bold text-slate-900">
+                {editingCategory ? 'Editar Categoria' : 'Nova Categoria'}
+              </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
             </div>
-            <form onSubmit={handleCreateCategory} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nome da Categoria</label>
                 <input 
                   autoFocus
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  value={categoryName}
+                  onChange={(e) => setCategoryName(e.target.value)}
                   placeholder="Ex: Colecionáveis 3D"
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium"
                 />
               </div>
               <button 
                 type="submit" 
-                disabled={saving || !newCategoryName.trim()}
+                disabled={saving || !categoryName.trim()}
                 className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2"
               >
-                {saving ? <Loader2 className="animate-spin" size={20} /> : 'Salvar Categoria'}
+                {saving ? <Loader2 className="animate-spin" size={20} /> : (editingCategory ? 'Atualizar Categoria' : 'Salvar Categoria')}
               </button>
             </form>
           </div>
@@ -161,10 +188,16 @@ export default function CategoriesPage() {
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                        <button 
+                          onClick={() => handleOpenEdit(cat)}
+                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        >
                           <Edit size={18} />
                         </button>
-                        <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                        <button 
+                          onClick={() => handleDelete(cat.id)}
+                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                        >
                           <Trash2 size={18} />
                         </button>
                       </div>
