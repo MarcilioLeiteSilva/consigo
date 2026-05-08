@@ -2,24 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Search, 
   Plus, 
+  Search, 
   Filter, 
-  MoreHorizontal, 
   Package, 
-  Tag, 
-  Edit, 
-  Trash2,
-  ChevronLeft,
+  DollarSign, 
+  Tag,
+  MoreVertical,
   ChevronRight,
-  Eye
+  Loader2,
+  Box,
+  Layers
 } from 'lucide-react';
 import api from '@/lib/api';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     async function loadProducts() {
@@ -36,136 +36,149 @@ export default function ProductsPage() {
   }, []);
 
   const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.sku?.toLowerCase().includes(search.toLowerCase())
   );
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header com Ações */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Produtos</h1>
-          <p className="text-slate-500">Gerencie seu catálogo e preços aqui.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Meus Produtos</h1>
+          <p className="text-slate-500 text-sm">Gerencie seu catálogo de impressão 3D e produtos embalados.</p>
         </div>
-        <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-200">
-          <Plus size={20} />
-          Novo Produto
-        </button>
-      </div>
-
-      {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Buscar por nome ou SKU..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-          />
-        </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 text-sm font-medium hover:bg-slate-50 transition-all">
-            <Filter size={18} />
-            Filtros
+        <div className="flex gap-3">
+          <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 px-6 rounded-2xl hover:bg-slate-50 transition-all">
+            <Filter size={18} /> Filtrar
           </button>
-          <select className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 text-sm font-medium outline-none">
-            <option>Todas as Categorias</option>
-            <option>Joias</option>
-            <option>Acessórios</option>
-          </select>
+          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-2xl transition-all shadow-lg shadow-blue-100">
+            <Plus size={20} /> Novo Produto
+          </button>
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+            <Package size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Itens</p>
+            <h3 className="text-2xl font-black text-slate-900">{products.length}</h3>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+            <Layers size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Em Estoque</p>
+            <h3 className="text-2xl font-black text-slate-900">{products.reduce((acc, p) => acc + (p.stock || 0), 0)} un</h3>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+            <DollarSign size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Valor em Estoque</p>
+            <h3 className="text-2xl font-black text-slate-900">R$ {products.reduce((acc, p) => acc + (p.salePrice * (p.stock || 0)), 0).toFixed(2)}</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabela de Produtos */}
+      <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-50">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Buscar por nome ou SKU..." 
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Produto</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">SKU</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Categoria</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Preço de Venda</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ações</th>
+              <tr className="bg-slate-50/50">
+                <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Produto</th>
+                <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">SKU</th>
+                <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Categoria</th>
+                <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Preço</th>
+                <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Estoque</th>
+                <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredProducts.length > 0 ? filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                        <Package size={20} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">{product.name}</p>
-                        <p className="text-xs text-slate-500">{product.description || 'Sem descrição'}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600">
-                      {product.sku || 'N/A'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Tag size={14} className="text-slate-400" />
-                      {product.category?.name || 'Geral'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-bold text-slate-900">R$ {Number(product.salePrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button title="Visualizar" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
-                        <Eye size={18} />
-                      </button>
-                      <button title="Editar" className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all">
-                        <Edit size={18} />
-                      </button>
-                      <button title="Excluir" className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-8 py-20 text-center">
+                    <Loader2 className="animate-spin mx-auto text-blue-600 mb-2" size={32} />
+                    <p className="text-slate-500 text-sm font-medium">Carregando catálogo...</p>
                   </td>
                 </tr>
-              )) : (
+              ) : filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
+                          <Box size={24} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 leading-none mb-1">{product.name}</p>
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${product.isActive ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {product.isActive ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{product.sku || 'N/A'}</span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-2">
+                        <Tag size={14} className="text-blue-400" />
+                        <span className="text-sm font-medium text-slate-600">{product.category?.name || 'Geral'}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-center">
+                      <span className="font-bold text-slate-900">R$ {parseFloat(product.salePrice).toFixed(2)}</span>
+                    </td>
+                    <td className="px-8 py-5 text-center">
+                      <div className="flex flex-col items-center">
+                        <span className={`text-sm font-bold ${product.stock <= 5 ? 'text-rose-600' : 'text-slate-900'}`}>
+                          {product.stock || 0} un
+                        </span>
+                        {product.stock <= 5 && <span className="text-[10px] font-bold text-rose-400 uppercase">Baixo</span>}
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                          <MoreVertical size={18} />
+                        </button>
+                        <ChevronRight size={18} className="text-slate-300" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={6} className="px-8 py-20 text-center text-slate-400">
                     Nenhum produto encontrado.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          <p className="text-sm text-slate-500">
-            Mostrando <span className="font-bold text-slate-900">{filteredProducts.length}</span> produtos
-          </p>
-          <div className="flex gap-2">
-            <button className="p-2 border border-slate-200 rounded-lg bg-white text-slate-400 hover:text-slate-600 disabled:opacity-50" disabled>
-              <ChevronLeft size={20} />
-            </button>
-            <button className="p-2 border border-slate-200 rounded-lg bg-white text-slate-400 hover:text-slate-600 disabled:opacity-50" disabled>
-              <ChevronRight size={20} />
-            </button>
-          </div>
         </div>
       </div>
     </div>
