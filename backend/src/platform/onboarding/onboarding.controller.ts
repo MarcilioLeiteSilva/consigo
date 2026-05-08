@@ -20,8 +20,6 @@ export class OnboardingController {
   @Get('plans')
   @ApiOperation({ summary: 'Listar planos disponíveis para assinatura' })
   async getPlans() {
-    return this.prisma.subscriptionPlan.findMany({
-      where: { isActive: true },
-    });
+    return this.prisma.subscriptionPlan.findMany();
   }
 }
