@@ -1,273 +1,196 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
-  Users, 
+  TrendingDown, 
+  ShoppingCart, 
   Package, 
-  Wallet,
+  DollarSign, 
+  Store,
+  AlertTriangle,
   ArrowUpRight,
-  ArrowDownRight,
-  Clock
+  MoreVertical
 } from 'lucide-react';
 import { 
-  AreaChart, 
-  Area, 
+  BarChart, 
+  Bar, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell
+  LineChart,
+  Line,
+  AreaChart,
+  Area
 } from 'recharts';
-import StatCard from '@/components/StatCard';
 import api from '@/lib/api';
 
-const mockSalesData = [
-  { name: 'Seg', sales: 4000 },
-  { name: 'Ter', sales: 3000 },
-  { name: 'Qua', sales: 5000 },
-  { name: 'Qui', sales: 2780 },
-  { name: 'Sex', sales: 1890 },
-  { name: 'Sáb', sales: 2390 },
-  { name: 'Dom', sales: 3490 },
-];
-
-export default function DashboardPage() {
-  const [stats, setStats] = useState<any>(null);
+export default function DashboardHome() {
+  const [metrics, setMetrics] = useState<any>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    async function loadDashboardData() {
       try {
-        const [salesRes, financialRes] = await Promise.all([
-          api.get('/dashboard/sales-summary'),
-          api.get('/dashboard/financial-summary')
+        const [mRes, cRes, pRes] = await Promise.all([
+          api.get('/dashboard/metrics'),
+          api.get('/dashboard/sales-chart'),
+          api.get('/dashboard/top-products')
         ]);
-        setStats({
-          sales: salesRes.data.data,
-          financial: financialRes.data.data
-        });
+        setMetrics(mRes.data);
+        setChartData(cRes.data);
+        setTopProducts(pRes.data);
       } catch (err) {
-        console.error('Falha ao buscar dados do dashboard', err);
+        console.error('Erro ao carregar dados do dashboard', err);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchStats();
+    }
+    loadDashboardData();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  const kpis = [
+    { label: 'Vendas Hoje', value: `R$ ${metrics?.salesToday || 0}`, icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-100', trend: '+12.5%' },
+    { label: 'Vendas Mês', value: `R$ ${metrics?.salesMonth || 0}`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-100', trend: '+8.2%' },
+    { label: 'Ticket Médio', value: `R$ ${metrics?.avgTicket || 0}`, icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-100', trend: '-2.4%' },
+    { label: 'Saldo Disponível', value: `R$ ${metrics?.balance || 0}`, icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-100', trend: null },
+    { label: 'Estoque Total', value: `${metrics?.totalStock || 0} un`, icon: Package, color: 'text-slate-600', bg: 'bg-slate-100', trend: null },
+    { label: 'PDVs Ativos', value: `${metrics?.activePosCount || 0}`, icon: Store, color: 'text-rose-600', bg: 'bg-rose-100', trend: null },
+  ];
+
   return (
-    <div className="dashboard-grid">
-      <style jsx>{`
-        .dashboard-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 1.5rem;
-        }
+    <div className="space-y-8 animate-fade-in">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Visão Geral</h1>
+        <p className="text-slate-500">Bem-vindo ao centro de comando da sua operação.</p>
+      </div>
 
-        .chart-section {
-          grid-column: span 3;
-          background: white;
-          padding: 2rem;
-          border-radius: 1.5rem;
-          border: 1px solid var(--border);
-          min-height: 400px;
-        }
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+        {kpis.map((kpi, index) => (
+          <div key={index} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+              <div className={`${kpi.bg} p-2.5 rounded-xl`}>
+                <kpi.icon className={`${kpi.color} w-5 h-5`} />
+              </div>
+              {kpi.trend && (
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${kpi.trend.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                  {kpi.trend}
+                </span>
+              )}
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{kpi.label}</p>
+              <h3 className="text-xl font-bold text-slate-900 mt-1">{kpi.value}</h3>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        .side-section {
-          grid-column: span 1;
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
-
-        .card-title {
-          font-family: 'Outfit', sans-serif;
-          font-weight: 700;
-          font-size: 1.125rem;
-        }
-
-        .activity-card {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 1.25rem;
-          border: 1px solid var(--border);
-          flex: 1;
-        }
-
-        .activity-item {
-          display: flex;
-          gap: 1rem;
-          padding: 1rem 0;
-          border-bottom: 1px solid var(--muted);
-        }
-
-        .activity-item:last-child {
-          border-bottom: none;
-        }
-
-        .activity-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          background: var(--muted);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--primary);
-        }
-
-        .activity-info p {
-          font-size: 0.875rem;
-          font-weight: 600;
-        }
-
-        .activity-info span {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-      `}</style>
-
-      {/* Stats Widgets */}
-      <StatCard 
-        title="Vendas Totais" 
-        value={stats?.sales?.totalSales ? `R$ ${stats.sales.totalSales.toLocaleString()}` : 'R$ 0,00'} 
-        icon={TrendingUp} 
-        trend="12% vs mês anterior"
-      />
-      <StatCard 
-        title="Itens Vendidos" 
-        value={stats?.sales?.totalItems || 0} 
-        icon={Package} 
-        color="#0ea5e9"
-      />
-      <StatCard 
-        title="Ticket Médio" 
-        value={stats?.sales?.ticketMedio ? `R$ ${stats.sales.ticketMedio.toFixed(2)}` : 'R$ 0,00'} 
-        icon={ArrowUpRight} 
-        color="#a855f7"
-      />
-      <StatCard 
-        title="Saldo Pendente" 
-        value={stats?.financial?.pendingBalance ? `R$ ${stats.financial.pendingBalance.toLocaleString()}` : 'R$ 0,00'} 
-        icon={Wallet} 
-        color="#f59e0b"
-      />
-
-      {/* Main Chart */}
-      <div className="chart-section glass">
-        <div className="card-header">
-          <h3 className="card-title">Desempenho de Vendas</h3>
-          <select className="input" style={{ width: 'auto', padding: '0.5rem 1rem' }}>
-            <option>Últimos 7 dias</option>
-            <option>Últimos 30 dias</option>
-          </select>
+      {/* Charts & Table Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Sales Chart */}
+        <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Histórico de Vendas</h2>
+              <p className="text-sm text-slate-500">Últimos 7 dias de operação</p>
+            </div>
+            <select className="bg-slate-50 border border-slate-200 text-sm rounded-lg px-3 py-2 outline-none">
+              <option>Últimos 7 dias</option>
+              <option>Este mês</option>
+            </select>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Area type="monotone" dataKey="total" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        
-        <div style={{ width: '100%', height: 300 }}>
-          <ResponsiveContainer>
-            <AreaChart data={mockSalesData}>
-              <defs>
-                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#64748b', fontSize: 12 }} 
-                dy={10}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                tickFormatter={(value) => `R$ ${value}`}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  borderRadius: '12px', 
-                  border: 'none', 
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                  padding: '10px'
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="sales" 
-                stroke="var(--primary)" 
-                strokeWidth={3}
-                fillOpacity={1} 
-                fill="url(#colorSales)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+
+        {/* Top Products */}
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-lg font-bold text-slate-900">Top Produtos</h2>
+            <button className="text-slate-400 hover:text-slate-600">
+              <MoreVertical size={20} />
+            </button>
+          </div>
+          <div className="space-y-6">
+            {topProducts.length > 0 ? topProducts.map((product, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-500">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{product.name}</p>
+                    <p className="text-xs text-slate-500">{product.quantity} unidades vendidas</p>
+                  </div>
+                </div>
+                <ArrowUpRight size={18} className="text-emerald-500" />
+              </div>
+            )) : (
+              <p className="text-sm text-slate-400 text-center py-10">Nenhum dado disponível</p>
+            )}
+          </div>
+          <button className="w-full mt-8 py-3 bg-slate-50 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 transition-colors">
+            Ver Todos os Produtos
+          </button>
         </div>
       </div>
 
-      {/* Recent Activity / Side Section */}
-      <div className="side-section">
-        <div className="activity-card glass">
-          <div className="card-header">
-            <h3 className="card-title">Atividade Recente</h3>
-            <Clock size={18} className="text-muted-foreground" />
+      {/* Alert Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-amber-50 border border-amber-200 p-6 rounded-2xl flex items-center gap-4">
+          <div className="bg-amber-100 p-3 rounded-full">
+            <AlertTriangle className="text-amber-600 w-6 h-6" />
           </div>
-
-          <div className="activity-list">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="activity-item">
-                <div className="activity-icon">
-                  <ShoppingCart size={16} />
-                </div>
-                <div className="activity-info">
-                  <p>Venda #102{i}</p>
-                  <span>Há {i * 15} minutos</span>
-                </div>
-                <div style={{ marginLeft: 'auto', fontWeight: 700, fontSize: '0.875rem' }}>
-                  + R$ {(i * 85).toFixed(2)}
-                </div>
-              </div>
-            ))}
+          <div>
+            <h3 className="text-amber-900 font-bold">Estoque Baixo Detectado</h3>
+            <p className="text-amber-700 text-sm">3 produtos em seu Quiosque Principal estão abaixo do limite mínimo.</p>
           </div>
+          <button className="ml-auto bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">Repor Agora</button>
         </div>
 
-        <div className="btn btn-primary" style={{ width: '100%' }}>
-          Gerar Relatório Completo
+        <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl flex items-center gap-4">
+          <div className="bg-blue-100 p-3 rounded-full">
+            <DollarSign className="text-blue-600 w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-blue-900 font-bold">Fechamento de Ciclo</h3>
+            <p className="text-blue-700 text-sm">Seu próximo fechamento financeiro será em 3 dias. Confira os repasses.</p>
+          </div>
+          <button className="ml-auto bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">Ver Detalhes</button>
         </div>
       </div>
     </div>
-  );
-}
-
-function ShoppingCart({ size, className }: { size: number, className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
-    </svg>
   );
 }

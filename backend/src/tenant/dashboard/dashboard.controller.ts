@@ -13,31 +13,24 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get('sales-summary')
+  @Get('metrics')
   @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
-  @ApiOperation({ summary: 'Resumo de vendas (Admin/Gerente)' })
-  getSalesSummary(@CurrentUser() user: any) {
-    return this.dashboardService.getSalesSummary(user.tenantId);
+  @ApiOperation({ summary: 'Métricas gerais (KPIs) do Tenant' })
+  getMetrics(@CurrentUser() user: any) {
+    return this.dashboardService.getMetrics(user.tenantId);
   }
 
-  @Get('top-consignors')
+  @Get('sales-chart')
   @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
-  @ApiOperation({ summary: 'Ranking de produtos (antigo top-consignors)' })
-  getTopConsignors(@CurrentUser() user: any) {
-    return this.dashboardService.getTopConsignors(user.tenantId);
+  @ApiOperation({ summary: 'Dados de vendas para gráfico por período' })
+  getSalesChart(@CurrentUser() user: any) {
+    return this.dashboardService.getSalesByPeriod(user.tenantId);
   }
 
-  @Get('financial-summary')
+  @Get('top-products')
   @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
-  @ApiOperation({ summary: 'Resumo financeiro: saldos e pagamentos' })
-  getFinancialSummary(@CurrentUser() user: any) {
-    return this.dashboardService.getFinancialSummary(user.tenantId);
-  }
-
-  @Get('slow-products')
-  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
-  @ApiOperation({ summary: 'Produtos com baixo giro e tempo em estoque' })
-  getSlowProducts(@CurrentUser() user: any) {
-    return this.dashboardService.getSlowProducts(user.tenantId);
+  @ApiOperation({ summary: 'Ranking dos produtos mais vendidos' })
+  getTopProducts(@CurrentUser() user: any) {
+    return this.dashboardService.getTopProducts(user.tenantId);
   }
 }

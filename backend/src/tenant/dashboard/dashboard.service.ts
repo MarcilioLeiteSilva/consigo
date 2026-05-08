@@ -1,142 +1,127 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { RedisService } from '../../common/redis.service';
-import { TransactionType } from '@prisma/client';
 
 @Injectable()
 export class DashboardService {
-  private readonly CACHE_TTL = 300; // 5 minutos
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
-  ) {}
+  async getMetrics(tenantId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  async getSalesSummary(tenantId: string) {
-    const cacheKey = `dashboard:sales:${tenantId}`;
-    const cached = await this.redis.get(cacheKey);
-    if (cached) return JSON.parse(cached);
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    const sales = await this.prisma.sale.aggregate({
-      where: { tenantId },
+    // 1. Vendas do Dia e do Mês
+    const salesMetrics = await this.prisma.sale.aggregate({
+      where: {
+        tenantId,
+        createdAt: { gte: monthStart },
+      },
       _sum: { totalAmount: true },
       _count: { id: true },
     });
 
-    const itemsCount = await this.prisma.saleItem.aggregate({
-      where: { tenantId },
-      _sum: { quantity: true },
+    const salesToday = await this.prisma.sale.aggregate({
+      where: {
+        tenantId,
+        createdAt: { gte: today },
+      },
+      _sum: { totalAmount: true },
     });
 
-    const totalSales = Number(sales._sum.totalAmount || 0);
-    const saleCount = sales._count.id || 0;
-    const totalItems = itemsCount._sum.quantity || 0;
-    const ticketMedio = saleCount > 0 ? totalSales / saleCount : 0;
+    // 2. Ticket Médio (Mês)
+    const totalSalesMonth = Number(salesMetrics._sum.totalAmount || 0);
+    const countSalesMonth = salesMetrics._count.id || 1;
+    const avgTicket = totalSalesMonth / countSalesMonth;
 
-    const result = {
-      totalSales,
-      saleCount,
-      totalItems,
-      ticketMedio,
+    // 3. Saldo Financeiro (ConsignorAccount)
+    const account = await this.prisma.consignorAccount.findUnique({
+      where: { tenantId },
+    });
+
+    // 4. Estoque Total e Quantidade de PDVs
+    const activePosCount = await this.prisma.pOS.count({
+      where: { tenantId, isActive: true },
+    });
+
+    // Estoque total (soma de todos os lotes ativos)
+    const stockQuantity = await this.prisma.consignmentLot.aggregate({
+      where: {
+        tenantId,
+        quantityReceived: { gt: 0 }, // Simplificado para fins de performance
+      },
+      _sum: { 
+        quantityReceived: true,
+        quantitySold: true,
+        quantityReturned: true,
+      },
+    });
+
+    const totalStock = 
+      Number(stockQuantity._sum.quantityReceived || 0) - 
+      (Number(stockQuantity._sum.quantitySold || 0) + Number(stockQuantity._sum.quantityReturned || 0));
+
+    return {
+      salesToday: Number(salesToday._sum.totalAmount || 0),
+      salesMonth: totalSalesMonth,
+      avgTicket: Number(avgTicket.toFixed(2)),
+      totalStock,
+      activePosCount,
+      balance: Number(account?.balance || 0),
     };
-
-    await this.redis.set(cacheKey, JSON.stringify(result), this.CACHE_TTL);
-    return result;
   }
 
-  async getTopConsignors(tenantId: string) {
-    // Agora que o Tenant é o consignador único, transformamos isso em Top Products
-    // para não quebrar o frontend, mas com dados de produtos.
-    const cacheKey = `dashboard:top-products:${tenantId}`;
-    const cached = await this.redis.get(cacheKey);
-    if (cached) return JSON.parse(cached);
+  async getSalesByPeriod(tenantId: string) {
+    // Agregação de vendas nos últimos 7 dias para o gráfico
+    const last7Days = new Date();
+    last7Days.setDate(last7Days.getDate() - 7);
 
-    const result = await this.prisma.saleItem.groupBy({
+    const sales = await this.prisma.sale.findMany({
+      where: {
+        tenantId,
+        createdAt: { gte: last7Days },
+      },
+      select: {
+        totalAmount: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Agrupar por dia (isso pode ser otimizado via SQL bruto se houver volume alto)
+    const chartData = sales.reduce((acc: any, sale) => {
+      const date = sale.createdAt.toISOString().split('T')[0];
+      acc[date] = (acc[date] || 0) + Number(sale.totalAmount);
+      return acc;
+    }, {});
+
+    return Object.entries(chartData).map(([date, total]) => ({ date, total }));
+  }
+
+  async getTopProducts(tenantId: string) {
+    const topProducts = await this.prisma.saleItem.groupBy({
       by: ['productId'],
       where: { tenantId },
-      _sum: { quantity: true, consignorAmount: true },
-      orderBy: { _sum: { quantity: 'desc' } },
+      _sum: { quantity: true },
+      orderBy: {
+        _sum: { quantity: 'desc' },
+      },
       take: 5,
     });
 
-    const hydrated = await Promise.all(
-      result.map(async (item) => {
+    const products = await Promise.all(
+      topProducts.map(async (item) => {
         const product = await this.prisma.product.findUnique({
           where: { id: item.productId },
           select: { name: true },
         });
         return {
-          consignorId: item.productId, // Mantemos a chave para compatibilidade
           name: product?.name || 'Desconhecido',
-          totalGenerated: Number(item._sum.consignorAmount || 0),
-          itemsSold: item._sum.quantity || 0,
+          quantity: item._sum.quantity,
         };
       }),
     );
 
-    await this.redis.set(cacheKey, JSON.stringify(hydrated), this.CACHE_TTL);
-    return hydrated;
-  }
-
-  async getFinancialSummary(tenantId: string) {
-    const cacheKey = `dashboard:financial:${tenantId}`;
-    const cached = await this.redis.get(cacheKey);
-    if (cached) return JSON.parse(cached);
-
-    const account = await this.prisma.consignorAccount.findUnique({
-      where: { tenantId },
-    });
-
-    const payouts = await this.prisma.financialTransaction.aggregate({
-      where: { tenantId, type: TransactionType.DEBIT },
-      _sum: { amount: true },
-    });
-
-    const result = {
-      pendingBalance: Number(account?.balance || 0),
-      totalPaid: Number(payouts._sum.amount || 0),
-      totalValueManaged: Number(account?.balance || 0) + Number(payouts._sum.amount || 0),
-    };
-
-    await this.redis.set(cacheKey, JSON.stringify(result), this.CACHE_TTL);
-    return result;
-  }
-
-  async getSlowProducts(tenantId: string) {
-    const cacheKey = `dashboard:slow-products:${tenantId}`;
-    const cached = await this.redis.get(cacheKey);
-    if (cached) return JSON.parse(cached);
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const slowLots = await this.prisma.consignmentLot.findMany({
-      where: {
-        tenantId,
-        closedAt: null,
-        receivedAt: { lte: thirtyDaysAgo },
-      },
-      include: {
-        product: { select: { name: true } },
-      },
-      take: 10,
-    });
-
-    const result = slowLots.map(lot => {
-      const stock = lot.quantityReceived - lot.quantitySold - lot.quantityReturned;
-      const daysInStock = Math.floor((Date.now() - new Date(lot.receivedAt).getTime()) / (1000 * 60 * 60 * 24));
-      
-      return {
-        productId: lot.productId,
-        productName: lot.product.name,
-        consignorName: 'Próprio',
-        currentStock: stock,
-        daysInStock,
-        turnoverRate: lot.quantityReceived > 0 ? (lot.quantitySold / lot.quantityReceived) : 0,
-      };
-    }).sort((a, b) => a.turnoverRate - b.turnoverRate);
-
-    await this.redis.set(cacheKey, JSON.stringify(result), this.CACHE_TTL);
-    return result;
+    return products;
   }
 }

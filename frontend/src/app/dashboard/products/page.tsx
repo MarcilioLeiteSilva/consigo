@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Package, 
-  Plus, 
   Search, 
+  Plus, 
   Filter, 
   MoreHorizontal, 
-  ArrowUpDown,
-  History,
-  Archive
+  Package, 
+  Tag, 
+  Edit, 
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Eye
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import api from '@/lib/api';
 
 export default function ProductsPage() {
@@ -20,240 +22,152 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    async function loadProducts() {
       try {
-        const response = await api.get('/sales/stock');
-        setProducts(response.data.data);
+        const response = await api.get('/products');
+        setProducts(response.data);
       } catch (err) {
-        console.error('Falha ao buscar estoque', err);
+        console.error('Erro ao carregar produtos', err);
       } finally {
         setLoading(false);
       }
-    };
-    fetchProducts();
+    }
+    loadProducts();
   }, []);
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+    p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="page-container">
-      <style jsx>{`
-        .page-container {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
+    <div className="space-y-8 animate-fade-in">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Produtos</h1>
+          <p className="text-slate-500">Gerencie seu catálogo e preços aqui.</p>
+        </div>
+        <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-200">
+          <Plus size={20} />
+          Novo Produto
+        </button>
+      </div>
 
-        .actions-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .search-wrapper {
-          position: relative;
-          flex: 1;
-          max-width: 400px;
-        }
-
-        .search-icon {
-          position: absolute;
-          left: 1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          color: var(--muted-foreground);
-        }
-
-        .search-input {
-          width: 100%;
-          padding: 0.75rem 1rem 0.75rem 2.75rem;
-          border-radius: 0.75rem;
-          border: 1px solid var(--border);
-          background: white;
-          font-size: 0.95rem;
-        }
-
-        .data-table-container {
-          background: white;
-          border-radius: 1.25rem;
-          border: 1px solid var(--border);
-          overflow: hidden;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .data-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-        }
-
-        .data-table th {
-          padding: 1rem 1.5rem;
-          background: #f8fafc;
-          border-bottom: 1px solid var(--border);
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground);
-          font-weight: 700;
-        }
-
-        .data-table td {
-          padding: 1.25rem 1.5rem;
-          border-bottom: 1px solid var(--border);
-          font-size: 0.95rem;
-          color: var(--foreground);
-        }
-
-        .data-table tr:last-child td {
-          border-bottom: none;
-        }
-
-        .data-table tr:hover {
-          background: #fcfdfe;
-        }
-
-        .product-info {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .product-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          background: var(--muted);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--primary);
-        }
-
-        .stock-badge {
-          display: inline-flex;
-          align-items: center;
-          padding: 0.25rem 0.75rem;
-          border-radius: 2rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-        }
-
-        .stock-high { background: #dcfce7; color: #166534; }
-        .stock-low { background: #fee2e2; color: #991b1b; }
-        .stock-empty { background: #f1f5f9; color: #475569; }
-
-        .btn-outline {
-          background: white;
-          border: 1px solid var(--border);
-          color: var(--foreground);
-        }
-
-        .btn-outline:hover {
-          background: var(--muted);
-        }
-      `}</style>
-
-      <div className="actions-bar">
-        <div className="search-wrapper">
-          <Search className="search-icon" size={18} />
+      {/* Filters & Search */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input 
             type="text" 
-            placeholder="Pesquisar por nome ou SKU..." 
-            className="search-input"
+            placeholder="Buscar por nome ou SKU..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
           />
         </div>
-
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn btn-outline">
-            <Filter size={18} /> Filtrar
+        <div className="flex gap-2">
+          <button className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 text-sm font-medium hover:bg-slate-50 transition-all">
+            <Filter size={18} />
+            Filtros
           </button>
-          <button className="btn btn-primary">
-            <Plus size={18} /> Novo Produto
-          </button>
+          <select className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 text-sm font-medium outline-none">
+            <option>Todas as Categorias</option>
+            <option>Joias</option>
+            <option>Acessórios</option>
+          </select>
         </div>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="data-table-container"
-      >
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>SKU</th>
-              <th>Estoque Atual</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              [1, 2, 3].map(i => (
-                <tr key={i}>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--muted-foreground)' }}> Carregando... </td>
-                </tr>
-              ))
-            ) : filteredProducts.length === 0 ? (
-              <tr>
-                <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--muted-foreground)' }}> Nenhum produto encontrado. </td>
+      {/* Products Table */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Produto</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">SKU</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Categoria</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Preço de Venda</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ações</th>
               </tr>
-            ) : (
-              filteredProducts.map((product) => (
-                <tr key={product.id}>
-                  <td>
-                    <div className="product-info">
-                      <div className="product-icon">
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredProducts.length > 0 ? filteredProducts.map((product) => (
+                <tr key={product.id} className="hover:bg-slate-50/50 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
                         <Package size={20} />
                       </div>
                       <div>
-                        <p style={{ fontWeight: 600 }}>{product.name}</p>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>ID: {product.id.slice(0,8)}</p>
+                        <p className="text-sm font-bold text-slate-900">{product.name}</p>
+                        <p className="text-xs text-slate-500">{product.description || 'Sem descrição'}</p>
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <code style={{ background: 'var(--muted)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                      {product.sku || '---'}
-                    </code>
-                  </td>
-                  <td>
-                    <span style={{ fontWeight: 700, fontSize: '1.125rem' }}>{product.totalStock}</span>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginLeft: '0.25rem' }}>un</span>
-                  </td>
-                  <td>
-                    <span className={`stock-badge ${
-                      product.totalStock > 10 ? 'stock-high' : 
-                      product.totalStock > 0 ? 'stock-low' : 'stock-empty'
-                    }`}>
-                      {product.totalStock > 10 ? 'Em dia' : 
-                       product.totalStock > 0 ? 'Baixo' : 'Esgotado'}
+                  <td className="px-6 py-4">
+                    <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600">
+                      {product.sku || 'N/A'}
                     </span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn btn-outline" style={{ padding: '0.5rem' }} title="Histórico de Lotes">
-                        <History size={16} />
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Tag size={14} className="text-slate-400" />
+                      {product.category?.name || 'Geral'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-bold text-slate-900">R$ {Number(product.salePrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button title="Visualizar" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                        <Eye size={18} />
                       </button>
-                      <button className="btn btn-outline" style={{ padding: '0.5rem' }} title="Novo Lote">
-                        <Plus size={16} />
+                      <button title="Editar" className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all">
+                        <Edit size={18} />
+                      </button>
+                      <button title="Excluir" className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </motion.div>
+              )) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                    Nenhum produto encontrado.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+          <p className="text-sm text-slate-500">
+            Mostrando <span className="font-bold text-slate-900">{filteredProducts.length}</span> produtos
+          </p>
+          <div className="flex gap-2">
+            <button className="p-2 border border-slate-200 rounded-lg bg-white text-slate-400 hover:text-slate-600 disabled:opacity-50" disabled>
+              <ChevronLeft size={20} />
+            </button>
+            <button className="p-2 border border-slate-200 rounded-lg bg-white text-slate-400 hover:text-slate-600 disabled:opacity-50" disabled>
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
