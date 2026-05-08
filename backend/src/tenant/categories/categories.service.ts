@@ -19,6 +19,11 @@ export class CategoriesService {
   findAll(tenantId: string) {
     return this.prisma.category.findMany({
       where: { tenantId },
+      include: {
+        _count: {
+          select: { products: true },
+        },
+      },
       orderBy: { name: 'asc' },
     });
   }
