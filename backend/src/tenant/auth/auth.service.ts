@@ -36,8 +36,8 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    if (user.tenant.status !== 'ACTIVE') {
-      throw new UnauthorizedException('Tenant inativo ou suspenso');
+    if (user.tenant.status !== 'ACTIVE' && user.tenant.status !== 'TRIAL') {
+      throw new UnauthorizedException('Sua conta ainda não está ativa ou foi suspensa.');
     }
 
     const tokens = await this.generateTokens(user);
