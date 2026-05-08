@@ -16,6 +16,7 @@ import {
   Layers,
   X,
   Edit,
+  Trash2,
   Image as ImageIcon,
   CheckCircle2,
   AlertCircle
