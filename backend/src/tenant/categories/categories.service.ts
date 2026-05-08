@@ -8,6 +8,7 @@ export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(tenantId: string, createCategoryDto: CreateCategoryDto) {
+    console.log(`🏗️ Criando categoria para Tenant: [${tenantId}]`, createCategoryDto);
     return this.prisma.category.create({
       data: {
         ...createCategoryDto,
@@ -17,6 +18,7 @@ export class CategoriesService {
   }
 
   findAll(tenantId: string) {
+    console.log(`🔍 Buscando categorias para Tenant: [${tenantId}]`);
     return this.prisma.category.findMany({
       where: { tenantId },
       include: {
