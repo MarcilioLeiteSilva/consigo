@@ -32,6 +32,5 @@ COPY --from=builder /app/prisma ./prisma
 ENV PRISMA_CLIENT_ENGINE_TYPE='binary'
 EXPOSE 3000
 
-# Comando de Start robusto (Ponto 7 do solicitado)
-# Adicionei uma verificação de rede simples e o migrate explícito
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+# Comando de Start robusto
+CMD ["node", "dist/src/main.js"]
