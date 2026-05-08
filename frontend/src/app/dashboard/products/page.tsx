@@ -15,6 +15,7 @@ import {
   Box,
   Layers,
   X,
+  Edit,
   Image as ImageIcon,
   CheckCircle2,
   AlertCircle
