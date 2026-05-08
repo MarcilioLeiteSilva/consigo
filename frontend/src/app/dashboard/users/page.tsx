@@ -27,7 +27,8 @@ export default function UsersPage() {
     async function loadUsers() {
       try {
         const response = await api.get('/users');
-        setUsers(Array.isArray(response.data) ? response.data : []);
+        const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+        setUsers(data);
       } catch (err: any) {
         console.error('Erro ao carregar usuários', err);
         if (err.response?.status === 401) router.push('/login');

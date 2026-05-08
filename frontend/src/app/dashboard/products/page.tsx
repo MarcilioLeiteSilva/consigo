@@ -27,7 +27,8 @@ export default function ProductsPage() {
     async function loadProducts() {
       try {
         const response = await api.get('/products');
-        setProducts(Array.isArray(response.data) ? response.data : []);
+        const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+        setProducts(data);
       } catch (err: any) {
         console.error('Erro ao carregar produtos', err);
         if (err.response?.status === 401) router.push('/login');

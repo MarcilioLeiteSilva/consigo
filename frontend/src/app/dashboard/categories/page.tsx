@@ -26,8 +26,10 @@ export default function CategoriesPage() {
     setLoading(true);
     try {
       const response = await api.get('/categories');
-      console.log('📡 Categorias Recebidas:', response.data);
-      setCategories(Array.isArray(response.data) ? response.data : []);
+      // Aceita tanto array direto quanto envelopado { data: [] }
+      const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      console.log('📡 Categorias Processadas:', data);
+      setCategories(data);
     } catch (err: any) {
       console.error('❌ Erro ao carregar categorias:', err.response?.data || err.message);
       if (err.response?.status === 401) router.push('/login');
