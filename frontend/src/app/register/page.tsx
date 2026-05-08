@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   CheckCircle2, 
@@ -10,18 +10,16 @@ import {
   User, 
   Lock, 
   Globe, 
-  CreditCard,
   ChevronLeft,
-  Loader2
+  Loader2,
+  Zap
 } from 'lucide-react';
 import api from '@/lib/api';
 
 function RegisterForm() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [plans, setPlans] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
@@ -29,24 +27,7 @@ function RegisterForm() {
     document: '',
     adminName: '',
     adminPassword: '',
-    planId: searchParams.get('plan') || '',
   });
-
-  useEffect(() => {
-    async function loadPlans() {
-      try {
-        const response = await api.get('/onboarding/plans');
-        setPlans(response.data);
-        // Se não houver plano na URL, seleciona o primeiro por padrão
-        if (!formData.planId && response.data.length > 0) {
-          setFormData(prev => ({ ...prev, planId: response.data[0].id }));
-        }
-      } catch (err) {
-        console.error('Erro ao carregar planos', err);
-      }
-    }
-    loadPlans();
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -64,7 +45,7 @@ function RegisterForm() {
     setLoading(true);
     try {
       await api.post('/onboarding/register', formData);
-      alert('Conta criada com sucesso! Você será redirecionado para o login.');
+      alert('Conta Trial criada com sucesso! Você será redirecionado para o login.');
       router.push('/login');
     } catch (err: any) {
       alert(err.response?.data?.message || 'Erro ao realizar cadastro');
@@ -85,12 +66,11 @@ function RegisterForm() {
               <span className="font-bold text-xl tracking-tight">Consigo</span>
             </Link>
             <h2 className="text-3xl font-bold mb-6 leading-tight">Comece sua jornada hoje.</h2>
-            <p className="text-blue-100 mb-12 leading-relaxed">Você está a poucos passos de profissionalizar sua gestão de consignados.</p>
+            <p className="text-blue-100 mb-12 leading-relaxed">Experimente o Consigo grátis por 7 dias e transforme sua gestão.</p>
             <div className="space-y-6">
               {[
                 { step: 1, label: 'Dados da Empresa' },
-                { step: 2, label: 'Conta Administradora' },
-                { step: 3, label: 'Plano e Pagamento' }
+                { step: 2, label: 'Conta Administradora' }
               ].map((s) => (
                 <div key={s.step} className="flex items-center gap-4">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 font-bold text-xs ${
@@ -130,6 +110,10 @@ function RegisterForm() {
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400">.consigo.com</span>
                   </div>
                 </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Documento (CPF/CNPJ)</label>
+                  <input name="document" value={formData.document} onChange={handleChange} placeholder="00.000.000/0001-00" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
+                </div>
               </div>
               <button onClick={() => setStep(2)} disabled={!formData.companyName || !formData.slug} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-100">Próximo Passo <ArrowRight size={20} /></button>
             </div>
@@ -138,6 +122,10 @@ function RegisterForm() {
           {step === 2 && (
             <div className="space-y-6 animate-fade-in">
               <button onClick={() => setStep(1)} className="flex items-center gap-2 text-slate-400 hover:text-blue-600 text-sm font-bold transition-colors"><ChevronLeft size={18} /> Voltar</button>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Sua Conta</h3>
+                <p className="text-slate-500 text-sm">Defina seus dados de acesso para começar grátis.</p>
+              </div>
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Seu Nome</label>
@@ -158,54 +146,14 @@ function RegisterForm() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => setStep(3)} disabled={!formData.email || !formData.adminPassword} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-100">Revisar e Finalizar <ArrowRight size={20} /></button>
-            </div>
-          )}
 
-          {step === 3 && (
-            <div className="space-y-6 animate-fade-in">
-              <button onClick={() => setStep(2)} className="flex items-center gap-2 text-slate-400 hover:text-blue-600 text-sm font-bold transition-colors"><ChevronLeft size={18} /> Voltar</button>
-              
-              <div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Confirme seu Plano</h3>
-                <p className="text-slate-500 text-sm">Selecione o plano desejado para sua assinatura.</p>
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex gap-3 items-center">
+                <Zap className="text-blue-600 shrink-0" size={20} />
+                <p className="text-xs text-blue-800 leading-relaxed font-medium">Você começará no <strong>Plano Bronze</strong> com 7 dias de teste gratuito.</p>
               </div>
 
-              {plans.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {plans.map((p) => (
-                    <div 
-                      key={p.id} 
-                      onClick={() => setFormData(prev => ({ ...prev, planId: p.id }))}
-                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center ${
-                        formData.planId === p.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white hover:border-slate-200'
-                      }`}
-                    >
-                      <div>
-                        <p className="font-bold text-slate-900">{p.name}</p>
-                        <p className="text-xs text-slate-500">Até {p.maxUsers} usuários • {p.maxPos} PDVs</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-black text-slate-900">R$ {p.price}</p>
-                        <p className="text-[10px] text-slate-500 font-bold text-blue-600">POR MÊS</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center bg-slate-50 rounded-3xl border border-slate-100">
-                  <Loader2 className="animate-spin mx-auto text-blue-600 mb-2" />
-                  <p className="text-sm text-slate-500 font-medium">Buscando planos...</p>
-                </div>
-              )}
-
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3 items-start">
-                <CreditCard className="text-amber-600 shrink-0 mt-0.5" size={18} />
-                <p className="text-xs text-amber-800 leading-relaxed font-medium">Ao finalizar, sua conta será criada em modo TRIAL. Um link de pagamento será gerado para ativação total.</p>
-              </div>
-
-              <button onClick={handleRegister} disabled={loading || !formData.planId} className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold py-5 rounded-2xl transition-all shadow-xl shadow-emerald-100">
-                {loading ? <Loader2 className="animate-spin" /> : 'Finalizar e Criar Conta'}
+              <button onClick={handleRegister} disabled={loading || !formData.email || !formData.adminPassword} className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold py-5 rounded-2xl transition-all shadow-xl shadow-emerald-100">
+                {loading ? <Loader2 className="animate-spin" /> : 'Finalizar e Começar Agora'}
               </button>
             </div>
           )}

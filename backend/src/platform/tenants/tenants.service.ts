@@ -14,7 +14,9 @@ export class TenantsService {
   ) {}
 
   async register(data: any) {
-    const { companyName, email, slug, planId, adminName, adminPassword, document } = data;
+    const { companyName, email, slug, adminName, adminPassword, document } = data;
+    // Usa plano-bronze como padrão se não for enviado
+    const planId = data.planId || 'plano-bronze';
 
     // 1. Validar se o slug já existe
     const existing = await this.prisma.tenant.findUnique({ where: { slug } });
