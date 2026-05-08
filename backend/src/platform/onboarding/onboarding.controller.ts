@@ -2,8 +2,10 @@ import { Controller, Post, Body, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { TenantsService } from '../tenants/tenants.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('onboarding')
+@Public()
 @Controller('onboarding')
 export class OnboardingController {
   constructor(
