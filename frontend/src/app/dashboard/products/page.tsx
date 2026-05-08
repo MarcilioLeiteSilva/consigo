@@ -170,13 +170,21 @@ export default function ProductsPage() {
                     </td>
                   </tr>
                 ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center text-slate-400">
-                    Nenhum produto encontrado.
-                  </td>
-                </tr>
-              )}
+            ) : (
+              <tr>
+                <td colSpan={6} className="px-8 py-24 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                      <Box size={32} />
+                    </div>
+                    <div>
+                      <p className="text-slate-900 font-bold">Nenhum produto cadastrado</p>
+                      <p className="text-slate-500 text-sm">Use o botão "Novo Produto" ou execute o script de semente.</p>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            )}
             </tbody>
           </table>
         </div>
