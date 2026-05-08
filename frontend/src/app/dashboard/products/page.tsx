@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Plus, 
   Search, 
@@ -17,6 +18,7 @@ import {
 import api from '@/lib/api';
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -25,20 +27,26 @@ export default function ProductsPage() {
     async function loadProducts() {
       try {
         const response = await api.get('/products');
-        setProducts(response.data);
-      } catch (err) {
+        setProducts(Array.isArray(response.data) ? response.data : []);
+      } catch (err: any) {
         console.error('Erro ao carregar produtos', err);
+        if (err.response?.status === 401) router.push('/login');
       } finally {
         setLoading(false);
       }
     }
     loadProducts();
-  }, []);
+  }, [router]);
 
   const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.sku?.toLowerCase().includes(search.toLowerCase())
+    (p?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (p?.sku || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  const formatCurrency = (value: any) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? '0,00' : num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -75,7 +83,9 @@ export default function ProductsPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Em Estoque</p>
-            <h3 className="text-2xl font-black text-slate-900">{products.reduce((acc, p) => acc + (p.stock || 0), 0)} un</h3>
+            <h3 className="text-2xl font-black text-slate-900">
+              {products.reduce((acc, p) => acc + (parseFloat(p.stock) || 0), 0)} un
+            </h3>
           </div>
         </div>
         <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-4">
@@ -84,7 +94,9 @@ export default function ProductsPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Valor em Estoque</p>
-            <h3 className="text-2xl font-black text-slate-900">R$ {products.reduce((acc, p) => acc + (p.salePrice * (p.stock || 0)), 0).toFixed(2)}</h3>
+            <h3 className="text-2xl font-black text-slate-900">
+              R$ {formatCurrency(products.reduce((acc, p) => acc + ((parseFloat(p.salePrice) || 0) * (parseFloat(p.stock) || 0)), 0))}
+            </h3>
           </div>
         </div>
       </div>
@@ -133,31 +145,31 @@ export default function ProductsPage() {
                           <Box size={24} />
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900 leading-none mb-1">{product.name}</p>
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${product.isActive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {product.isActive ? 'Ativo' : 'Inativo'}
+                          <p className="font-bold text-slate-900 leading-none mb-1">{product?.name || 'Sem nome'}</p>
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${product?.isActive ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {product?.isActive ? 'Ativo' : 'Inativo'}
                           </span>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-5">
-                      <span className="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{product.sku || 'N/A'}</span>
+                      <span className="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{product?.sku || 'N/A'}</span>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-2">
                         <Tag size={14} className="text-blue-400" />
-                        <span className="text-sm font-medium text-slate-600">{product.category?.name || 'Geral'}</span>
+                        <span className="text-sm font-medium text-slate-600">{product?.category?.name || 'Geral'}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5 text-center">
-                      <span className="font-bold text-slate-900">R$ {parseFloat(product.salePrice).toFixed(2)}</span>
+                      <span className="font-bold text-slate-900">R$ {formatCurrency(product?.salePrice)}</span>
                     </td>
                     <td className="px-8 py-5 text-center">
                       <div className="flex flex-col items-center">
-                        <span className={`text-sm font-bold ${product.stock <= 5 ? 'text-rose-600' : 'text-slate-900'}`}>
-                          {product.stock || 0} un
+                        <span className={`text-sm font-bold ${(parseFloat(product?.stock) || 0) <= 5 ? 'text-rose-600' : 'text-slate-900'}`}>
+                          {parseFloat(product?.stock) || 0} un
                         </span>
-                        {product.stock <= 5 && <span className="text-[10px] font-bold text-rose-400 uppercase">Baixo</span>}
+                        {(parseFloat(product?.stock) || 0) <= 5 && <span className="text-[10px] font-bold text-rose-400 uppercase">Baixo</span>}
                       </div>
                     </td>
                     <td className="px-8 py-5">
@@ -170,21 +182,21 @@ export default function ProductsPage() {
                     </td>
                   </tr>
                 ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-8 py-24 text-center">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
-                      <Box size={32} />
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-8 py-24 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                        <Box size={32} />
+                      </div>
+                      <div>
+                        <p className="text-slate-900 font-bold">Nenhum produto cadastrado</p>
+                        <p className="text-slate-500 text-sm">Use o botão "Novo Produto" ou execute o script de semente.</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-slate-900 font-bold">Nenhum produto cadastrado</p>
-                      <p className="text-slate-500 text-sm">Use o botão "Novo Produto" ou execute o script de semente.</p>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            )}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
