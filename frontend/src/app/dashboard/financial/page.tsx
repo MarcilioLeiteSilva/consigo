@@ -137,7 +137,7 @@ export default function FinancialPage() {
                   <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
                     {new Date(tx.createdAt).toLocaleDateString('pt-BR')}
                     <span className="text-xs text-slate-400 ml-2">
-                      {new Date(tx.createdAt).toLocaleTimeString('pt-BR', { hour: '2-2-digit', minute: '2-2-digit' })}
+                      {new Date(tx.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </td>
                   <td className="px-6 py-4">
