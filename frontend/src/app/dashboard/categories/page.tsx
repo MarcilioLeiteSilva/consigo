@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Plus, 
   Search, 
@@ -13,6 +14,7 @@ import {
 import api from '@/lib/api';
 
 export default function CategoriesPage() {
+  const router = useRouter();
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -21,18 +23,19 @@ export default function CategoriesPage() {
     async function loadCategories() {
       try {
         const response = await api.get('/categories');
-        setCategories(response.data);
-      } catch (err) {
+        setCategories(Array.isArray(response.data) ? response.data : []);
+      } catch (err: any) {
         console.error('Erro ao carregar categorias', err);
+        if (err.response?.status === 401) router.push('/login');
       } finally {
         setLoading(false);
       }
     }
     loadCategories();
-  }, []);
+  }, [router]);
 
   const filteredCategories = categories.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase())
+    (c?.name || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -89,12 +92,12 @@ export default function CategoriesPage() {
                         <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
                           <FolderOpen size={20} />
                         </div>
-                        <span className="font-bold text-slate-900">{cat.name}</span>
+                        <span className="font-bold text-slate-900">{cat?.name || 'Sem nome'}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5 text-center">
                       <span className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full">
-                        {cat._count?.products || 0} itens
+                        {cat?._count?.products || 0} itens
                       </span>
                     </td>
                     <td className="px-8 py-5">
@@ -111,7 +114,7 @@ export default function CategoriesPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="px-8 py-20 text-center text-slate-400">
+                  <td colSpan={3} className="px-8 py-20 text-center text-slate-400 font-medium">
                     Nenhuma categoria encontrada.
                   </td>
                 </tr>
