@@ -37,6 +37,10 @@ function RegisterForm() {
       try {
         const response = await api.get('/onboarding/plans');
         setPlans(response.data);
+        // Se não houver plano na URL, seleciona o primeiro por padrão
+        if (!formData.planId && response.data.length > 0) {
+          setFormData(prev => ({ ...prev, planId: response.data[0].id }));
+        }
       } catch (err) {
         console.error('Erro ao carregar planos', err);
       }
@@ -59,7 +63,7 @@ function RegisterForm() {
   const handleRegister = async () => {
     setLoading(true);
     try {
-      const response = await api.post('/onboarding/register', formData);
+      await api.post('/onboarding/register', formData);
       alert('Conta criada com sucesso! Você será redirecionado para o login.');
       router.push('/login');
     } catch (err: any) {
@@ -69,11 +73,11 @@ function RegisterForm() {
     }
   };
 
-  const selectedPlan = plans.find(p => p.id === formData.planId) || plans[0];
-
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-5 bg-white rounded-[32px] shadow-2xl shadow-slate-200 overflow-hidden border border-slate-100">
+        
+        {/* Sidebar Info */}
         <div className="lg:col-span-2 bg-blue-600 p-8 lg:p-12 text-white relative overflow-hidden">
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center gap-2 mb-12 group">
@@ -101,6 +105,8 @@ function RegisterForm() {
           </div>
           <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-50"></div>
         </div>
+
+        {/* Form Content */}
         <div className="lg:col-span-3 p-8 lg:p-12 overflow-y-auto max-h-[90vh]">
           {step === 1 && (
             <div className="space-y-6 animate-fade-in">
@@ -124,21 +130,14 @@ function RegisterForm() {
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400">.consigo.com</span>
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Documento (CPF/CNPJ)</label>
-                  <input name="document" value={formData.document} onChange={handleChange} placeholder="00.000.000/0001-00" className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
-                </div>
               </div>
               <button onClick={() => setStep(2)} disabled={!formData.companyName || !formData.slug} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-100">Próximo Passo <ArrowRight size={20} /></button>
             </div>
           )}
+
           {step === 2 && (
             <div className="space-y-6 animate-fade-in">
               <button onClick={() => setStep(1)} className="flex items-center gap-2 text-slate-400 hover:text-blue-600 text-sm font-bold transition-colors"><ChevronLeft size={18} /> Voltar</button>
-              <div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Sua Conta</h3>
-                <p className="text-slate-500 text-sm">Defina seus dados de acesso ao painel.</p>
-              </div>
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Seu Nome</label>
@@ -162,42 +161,52 @@ function RegisterForm() {
               <button onClick={() => setStep(3)} disabled={!formData.email || !formData.adminPassword} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-100">Revisar e Finalizar <ArrowRight size={20} /></button>
             </div>
           )}
+
           {step === 3 && (
             <div className="space-y-6 animate-fade-in">
               <button onClick={() => setStep(2)} className="flex items-center gap-2 text-slate-400 hover:text-blue-600 text-sm font-bold transition-colors"><ChevronLeft size={18} /> Voltar</button>
+              
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Plano Escolhido</h3>
-                <p className="text-slate-500 text-sm">Confirme os detalhes e inicie seu período de teste.</p>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Confirme seu Plano</h3>
+                <p className="text-slate-500 text-sm">Selecione o plano desejado para sua assinatura.</p>
               </div>
-              <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex justify-between items-center">
-                <div>
-                  <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Plano Selecionado</p>
-                  <h4 className="text-xl font-bold text-blue-900">{selectedPlan?.name || 'Carregando...'}</h4>
+
+              {plans.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3">
+                  {plans.map((p) => (
+                    <div 
+                      key={p.id} 
+                      onClick={() => setFormData(prev => ({ ...prev, planId: p.id }))}
+                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center ${
+                        formData.planId === p.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white hover:border-slate-200'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-bold text-slate-900">{p.name}</p>
+                        <p className="text-xs text-slate-500">Até {p.maxUsers} usuários • {p.maxPos} PDVs</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-slate-900">R$ {p.price}</p>
+                        <p className="text-[10px] text-slate-500 font-bold text-blue-600">POR MÊS</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-black text-blue-900">R$ {selectedPlan?.price || '0'}</p>
-                  <p className="text-[10px] text-blue-600 font-bold">POR MÊS</p>
+              ) : (
+                <div className="p-8 text-center bg-slate-50 rounded-3xl border border-slate-100">
+                  <Loader2 className="animate-spin mx-auto text-blue-600 mb-2" />
+                  <p className="text-sm text-slate-500 font-medium">Buscando planos...</p>
                 </div>
-              </div>
-              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-200 space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500 font-medium">Empresa:</span>
-                  <span className="text-slate-900 font-bold">{formData.companyName}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500 font-medium">Administrador:</span>
-                  <span className="text-slate-900 font-bold">{formData.adminName}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500 font-medium">E-mail:</span>
-                  <span className="text-slate-900 font-bold">{formData.email}</span>
-                </div>
-              </div>
+              )}
+
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3 items-start">
                 <CreditCard className="text-amber-600 shrink-0 mt-0.5" size={18} />
-                <p className="text-xs text-amber-800 leading-relaxed font-medium">Ao clicar em finalizar, sua conta será criada. Um link de pagamento será gerado para que você possa ativar seu acesso após o período de teste.</p>
+                <p className="text-xs text-amber-800 leading-relaxed font-medium">Ao finalizar, sua conta será criada em modo TRIAL. Um link de pagamento será gerado para ativação total.</p>
               </div>
-              <button onClick={handleRegister} disabled={loading} className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold py-5 rounded-2xl transition-all shadow-xl shadow-emerald-100">{loading ? <Loader2 className="animate-spin" /> : 'Finalizar e Ativar Conta'}</button>
+
+              <button onClick={handleRegister} disabled={loading || !formData.planId} className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold py-5 rounded-2xl transition-all shadow-xl shadow-emerald-100">
+                {loading ? <Loader2 className="animate-spin" /> : 'Finalizar e Criar Conta'}
+              </button>
             </div>
           )}
         </div>
@@ -208,11 +217,7 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
-    }>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={48} /></div>}>
       <RegisterForm />
     </Suspense>
   );
