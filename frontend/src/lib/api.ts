@@ -1,18 +1,27 @@
-// Updated: 2026-05-06 19:17
 import axios from 'axios';
 
-const rawBaseURL = process.env.NEXT_PUBLIC_API_URL || 'https://consigo-backend-consigo.xc4mw1.easypanel.host';
-// Limpeza automática para remover o prefixo 'api.' caso o Easypanel injete errado
-const sanitizedBaseURL = rawBaseURL.replace('https://api.consigo', 'https://consigo');
+// Prioriza a variável de ambiente, senão usa a URL fixa do backend
+const BACKEND_URL = 'https://consigo-backend-consigo.xc4mw1.easypanel.host';
+const baseURL = process.env.NEXT_PUBLIC_API_URL || BACKEND_URL;
+
+// Garante que a URL não termine com barra para evitar barras duplas nas rotas
+const sanitizedBaseURL = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL;
+
+console.log('🔌 API Base URL:', sanitizedBaseURL);
 
 const api = axios.create({
   baseURL: sanitizedBaseURL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 api.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -23,7 +32,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('refreshToken');
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
       
       if (refreshToken) {
         try {
