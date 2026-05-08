@@ -11,7 +11,15 @@ async function bootstrap() {
 
   // Security
   app.use(helmet());
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      'https://consigo-frontend-consigo.xc4mw1.easypanel.host',
+      'http://localhost:3001',
+      'http://localhost:3000'
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
   // Global validation pipe
   app.useGlobalPipes(
