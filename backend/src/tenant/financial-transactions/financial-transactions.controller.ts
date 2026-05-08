@@ -1,5 +1,5 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { FinancialTransactionsService } from './financial-transactions.service';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -12,12 +12,10 @@ export class FinancialTransactionsController {
   constructor(private readonly financialTransactionsService: FinancialTransactionsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar histórico de transações financeiras' })
-  @ApiQuery({ name: 'consignor_id', required: false })
+  @ApiOperation({ summary: 'Listar histórico de transações financeiras do tenant' })
   findAll(
     @CurrentUser() user: any,
-    @Query('consignor_id') consignorId?: string,
   ) {
-    return this.financialTransactionsService.findAll(user.tenantId, consignorId);
+    return this.financialTransactionsService.findAll(user.tenantId);
   }
 }

@@ -17,6 +17,7 @@ datasource db {
 
 enum PlatformRole {
   SUPER_ADMIN
+  ADMIN
   SUPPORT
 }
 
