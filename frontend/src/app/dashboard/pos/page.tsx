@@ -21,6 +21,8 @@ import {
   Filter
 } from 'lucide-react';
 import api from '@/lib/api';
+import { formatPercent, safeNumber } from '@/utils/formatters';
+import { CurrencyText } from '@/components/CurrencyText';
 
 export default function POSPage() {
   const router = useRouter();
@@ -51,8 +53,7 @@ export default function POSPage() {
     setLoading(true);
     try {
       const response = await api.get('/pos');
-      const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
-      setPosList(data);
+      setPosList(response.data.data || []);
     } catch (err: any) {
       console.error('Erro ao carregar PDVs:', err);
       if (err.response?.status === 401) router.push('/login');
@@ -93,7 +94,7 @@ export default function POSPage() {
       city: pos.city || '',
       state: pos.state || '',
       location: pos.location || '',
-      defaultCommission: (pos.defaultCommission || 0).toString(),
+      defaultCommission: (pos.defaultCommission || '').toString(),
       isActive: pos.isActive ?? true
     });
     setIsModalOpen(true);
@@ -105,7 +106,7 @@ export default function POSPage() {
     try {
       const payload = {
         ...formData,
-        defaultCommission: parseFloat(formData.defaultCommission) || 0
+        defaultCommission: formData.defaultCommission // Enviando como string
       };
 
       if (editingPos) {
@@ -371,7 +372,7 @@ export default function POSPage() {
                     </td>
                     <td className="px-8 py-6 text-center">
                       <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                        {pos.defaultCommission || 0}%
+                        {formatPercent(pos.defaultCommission)}
                       </span>
                     </td>
                     <td className="px-8 py-6">
