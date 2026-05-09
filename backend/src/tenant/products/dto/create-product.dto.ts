@@ -27,16 +27,6 @@ export class CreateProductDto {
   @IsString()
   imageUrl?: string;
 
-  @ApiProperty({ example: '49.90' })
-  @IsNotEmpty()
-  @IsString()
-  salePrice: string;
-
-  @ApiProperty({ example: '5.0', required: false })
-  @IsOptional()
-  @IsString()
-  commission?: string;
-
   @ApiProperty({ example: 'un', default: 'un' })
   @IsOptional()
   @IsString()

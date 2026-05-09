@@ -2,20 +2,18 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { toPrismaDecimal } from '../../common/utils/prisma-decimal';
+
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(tenantId: string, createProductDto: CreateProductDto) {
-    const { categoryId, salePrice, commission, ...data } = createProductDto;
+    const { categoryId, ...data } = createProductDto;
     
     const product = await this.prisma.product.create({
       data: {
         ...data,
-        salePrice: toPrismaDecimal(salePrice),
-        commission: commission ? toPrismaDecimal(commission) : null,
         tenantId,
         categoryId: categoryId || null,
       },
@@ -54,14 +52,12 @@ export class ProductsService {
 
   async update(tenantId: string, id: string, updateProductDto: UpdateProductDto) {
     await this.findOne(tenantId, id);
-    const { categoryId, salePrice, commission, ...data } = updateProductDto;
+    const { categoryId, ...data } = updateProductDto;
 
     return this.prisma.product.update({
       where: { id },
       data: {
         ...data,
-        salePrice: salePrice !== undefined ? toPrismaDecimal(salePrice) : undefined,
-        commission: commission === undefined ? undefined : (commission ? toPrismaDecimal(commission) : null),
         categoryId: categoryId === undefined ? undefined : (categoryId || null),
       },
     });

@@ -22,8 +22,6 @@ import {
   AlertCircle
 } from 'lucide-react';
 import api from '@/lib/api';
-import { CurrencyText } from '@/components/CurrencyText';
-import { formatCurrency, formatPercent, safeNumber } from '@/utils/formatters';
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -44,8 +42,6 @@ export default function ProductsPage() {
     sku: '',
     description: '',
     categoryId: '',
-    salePrice: '',
-    commission: '',
     isActive: true,
     imageUrl: '',
     initialPosId: '',
@@ -83,8 +79,6 @@ export default function ProductsPage() {
       sku: '',
       description: '',
       categoryId: '',
-      salePrice: '',
-      commission: '',
       isActive: true,
       imageUrl: '',
       initialPosId: '',
@@ -100,8 +94,6 @@ export default function ProductsPage() {
       sku: product.sku || '',
       description: product.description || '',
       categoryId: product.categoryId || '',
-      salePrice: (product.salePrice || '').toString(),
-      commission: (product.commission || '').toString(),
       isActive: product.isActive ?? true,
       imageUrl: product.imageUrl || '',
       initialPosId: '',
@@ -119,8 +111,6 @@ export default function ProductsPage() {
         sku: formData.sku,
         description: formData.description,
         categoryId: formData.categoryId || null,
-        salePrice: formData.salePrice,
-        commission: formData.commission,
         isActive: formData.isActive,
         imageUrl: formData.imageUrl
       };
@@ -229,31 +219,6 @@ export default function ProductsPage() {
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                     />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Preço de Venda</label>
-                      <div className="relative">
-                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold">R$</span>
-                        <input 
-                          type="number" step="0.01" required
-                          value={formData.salePrice}
-                          onChange={(e) => setFormData({...formData, salePrice: e.target.value})}
-                          className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-blue-600"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Comissão (%)</label>
-                      <input 
-                        type="number" step="0.1"
-                        value={formData.commission}
-                        onChange={(e) => setFormData({...formData, commission: e.target.value})}
-                        placeholder="Ex: 20"
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-amber-600"
-                      />
-                    </div>
-                  </div>
                 </div>
 
                 {/* Coluna 2: Foto e Status */}
@@ -353,15 +318,13 @@ export default function ProductsPage() {
             <thead>
               <tr className="bg-slate-50/50">
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Venda</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Comissão</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-8 py-32 text-center">
+                  <td colSpan={2} className="px-8 py-32 text-center">
                     <Loader2 className="animate-spin mx-auto text-blue-600 mb-4" size={40} />
                     <p className="text-slate-500 font-bold">Buscando mercadorias...</p>
                   </td>
@@ -390,24 +353,6 @@ export default function ProductsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-center">
-                      <div className="relative group/debug">
-                        <CurrencyText value={p.salePrice} className="text-sm font-black text-slate-900" />
-                        <div className="hidden group-hover/debug:block absolute top-full bg-black text-white p-2 text-[8px] z-50 rounded mt-1">
-                          Raw: {JSON.stringify(p.salePrice)}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6 text-center">
-                      <div className="relative group/debug">
-                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-                          {formatPercent(p.commission)}
-                        </span>
-                        <div className="hidden group-hover/debug:block absolute top-full bg-black text-white p-2 text-[8px] z-50 rounded mt-1">
-                          Raw: {JSON.stringify(p.commission)}
-                        </div>
-                      </div>
-                    </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center justify-end gap-2">
                         <button 
@@ -428,7 +373,7 @@ export default function ProductsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-8 py-32 text-center">
+                  <td colSpan={2} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
                         <Package size={40} />
