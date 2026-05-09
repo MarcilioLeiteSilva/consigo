@@ -70,8 +70,38 @@ export default function LotsPage() {
   };
 
   useEffect(() => {
-    loadData();
+    loadData().then(() => {
+      // Se vier um ID via query param, abre o modal de edição
+      const urlParams = new URLSearchParams(window.location.search);
+      const lotId = urlParams.get('id');
+      if (lotId) {
+        // Busca o lote carregado
+        // Nota: loadData já atualizou o state 'lots'
+      }
+    });
   }, [router]);
+
+  useEffect(() => {
+    if (lots.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const lotId = urlParams.get('id');
+      if (lotId) {
+        const lot = lots.find(l => l.id === lotId);
+        if (lot) {
+          setEditingLot(lot);
+          setFormData({
+            productId: lot.productId,
+            posId: lot.posId || '',
+            quantityReceived: lot.quantityReceived.toString(),
+            unitPrice: (lot.unitPrice || '').toString(),
+            commissionPercent: (lot.commissionPercent || '').toString(),
+            notes: lot.notes || ''
+          });
+          setIsModalOpen(true);
+        }
+      }
+    }
+  }, [lots]);
 
   const handleOpenCreate = () => {
     setEditingLot(null);

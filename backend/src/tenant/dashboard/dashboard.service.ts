@@ -72,6 +72,8 @@ export class DashboardService {
       },
       select: {
         id: true,
+        productId: true,
+        posId: true,
         quantityReceived: true,
         quantitySold: true,
         quantityReturned: true,
@@ -79,15 +81,22 @@ export class DashboardService {
       }
     });
 
-    const criticalLots = lowStockLots.filter(lot => {
+    // Agrupar por combinação de Produto + PDV para evitar falsos positivos
+    const stockMap: Record<string, number> = {};
+    lowStockLots.forEach(lot => {
+      const key = `${lot.productId}_${lot.posId}`;
       const available = lot.quantityReceived - (lot.quantitySold + lot.quantityReturned);
-      return available > 0 && available <= 3;
+      stockMap[key] = (stockMap[key] || 0) + available;
     });
+
+    const criticalItems = Object.entries(stockMap).filter(([_, available]) => available > 0 && available <= 3);
 
     // Pega o PDV que tem mais itens críticos
     const posCounts: Record<string, number> = {};
-    criticalLots.forEach(lot => {
-      const name = lot.pos?.name || 'PDV';
+    criticalItems.forEach(([key, _]) => {
+      const posId = key.split('_')[1];
+      const lot = lowStockLots.find(l => l.posId === posId);
+      const name = lot?.pos?.name || 'PDV';
       posCounts[name] = (posCounts[name] || 0) + 1;
     });
 
@@ -107,7 +116,7 @@ export class DashboardService {
       totalStock,
       activePosCount,
       balance: account?.balance || 0,
-      lowStockCount: criticalLots.length,
+      lowStockCount: criticalItems.length,
       lowStockPosName: topLowStockPos
     };
   }

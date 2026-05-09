@@ -169,20 +169,42 @@ export class SalesService {
         closedAt: null,
       },
       include: {
-        product: { select: { name: true, sku: true } },
-        pos: { select: { name: true, city: true } },
+        product: { select: { id: true, name: true, sku: true } },
+        pos: { select: { id: true, name: true, city: true } },
       },
     });
 
-    const alerts = lots
-      .map(lot => ({
-        id: lot.id,
-        productName: lot.product.name,
-        productSku: lot.product.sku,
-        posName: lot.pos?.name || 'PDV Desconhecido',
-        posCity: lot.pos?.city || 'Localização não inf.',
-        available: lot.quantityReceived - lot.quantitySold - lot.quantityReturned,
-        unitPrice: lot.unitPrice,
+    // Agrupar por combinação de Produto + PDV
+    const stockMap: Record<string, any> = {};
+
+    lots.forEach(lot => {
+      const key = `${lot.productId}_${lot.posId}`;
+      const available = lot.quantityReceived - (lot.quantitySold + lot.quantityReturned);
+      
+      if (!stockMap[key]) {
+        stockMap[key] = {
+          productId: lot.productId,
+          productName: lot.product.name,
+          productSku: lot.product.sku,
+          posId: lot.posId,
+          posName: lot.pos?.name || 'PDV Desconhecido',
+          posCity: lot.pos?.city || 'Localização não inf.',
+          totalAvailable: 0,
+          lotId: lot.id, // Referência de um dos lotes para o link
+        };
+      }
+      stockMap[key].totalAvailable += available;
+    });
+
+    const alerts = Object.values(stockMap)
+      .map(item => ({
+        id: item.lotId, // Link para a página de lotes
+        productId: item.productId,
+        productName: item.productName,
+        productSku: item.productSku,
+        posName: item.posName,
+        posCity: item.posCity,
+        available: item.totalAvailable,
       }))
       .filter(a => a.available > 0 && a.available <= 3)
       .sort((a, b) => a.available - b.available);
