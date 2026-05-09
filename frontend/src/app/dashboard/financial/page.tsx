@@ -15,11 +15,12 @@ import {
   AlertCircle
 } from 'lucide-react';
 import api from '@/lib/api';
+import { CurrencyText } from '@/components/CurrencyText';
 
 export default function FinancialPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState<string | number>(0);
 
   useEffect(() => {
     async function loadFinancialData() {
@@ -28,8 +29,8 @@ export default function FinancialPage() {
           api.get('/financial-transactions'),
           api.get('/dashboard/metrics')
         ]);
-        setTransactions(tRes.data);
-        setBalance(mRes.data.balance);
+        setTransactions(tRes.data.data || []);
+        setBalance(mRes.data.data?.balance || 0);
       } catch (err) {
         console.error('Erro ao carregar dados financeiros', err);
       } finally {
@@ -72,7 +73,7 @@ export default function FinancialPage() {
         <div className="bg-blue-600 p-8 rounded-3xl text-white shadow-xl shadow-blue-100 relative overflow-hidden">
           <div className="relative z-10">
             <p className="text-blue-100 text-sm font-medium mb-1">Saldo Disponível</p>
-            <h2 className="text-4xl font-bold">R$ {balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h2>
+            <h2 className="text-4xl font-bold"><CurrencyText value={balance} /></h2>
             <div className="mt-6 flex items-center gap-2 text-blue-100 text-sm">
               <CheckCircle2 size={16} />
               <span>Sincronizado com as vendas reais</span>
@@ -160,7 +161,7 @@ export default function FinancialPage() {
                   <td className={`px-6 py-4 text-sm font-bold text-right ${
                     tx.type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
                   }`}>
-                    {tx.type === 'CREDIT' ? '+' : '-'} R$ {Number(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {tx.type === 'CREDIT' ? '+' : '-'} <CurrencyText value={tx.amount} />
                   </td>
                 </tr>
               )) : (

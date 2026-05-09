@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '@/lib/api';
+import { CurrencyText } from '@/components/CurrencyText';
 
 export default function ConsignorsPage() {
   const [consignors, setConsignors] = useState<any[]>([]);
@@ -185,7 +186,7 @@ export default function ConsignorsPage() {
               <div className="balance-section">
                 <div>
                   <p className="balance-label">Saldo Pendente</p>
-                  <p className="balance-value">R$ {Number(consignor.account?.balance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <p className="balance-value"><CurrencyText value={consignor.account?.balance} /></p>
                 </div>
                 <div style={{ color: '#10b981', display: 'flex', alignItems: 'center' }}>
                   <ArrowUpRight size={20} />
