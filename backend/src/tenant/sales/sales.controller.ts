@@ -29,4 +29,10 @@ export class SalesController {
   getStock(@CurrentUser() user: any) {
     return this.salesService.getStock(user.tenantId);
   }
+
+  @Get('stock-alerts')
+  @ApiOperation({ summary: 'Consultar alertas de estoque baixo' })
+  getStockAlerts(@CurrentUser() user: any) {
+    return this.salesService.getStockAlerts(user.tenantId);
+  }
 }

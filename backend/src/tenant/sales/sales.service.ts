@@ -161,4 +161,32 @@ export class SalesService {
       totalStock: p.consignmentLots.reduce((acc, lot) => acc + (lot.quantityReceived - lot.quantitySold - lot.quantityReturned), 0),
     }));
   }
+
+  async getStockAlerts(tenantId: string) {
+    const lots = await this.prisma.consignmentLot.findMany({
+      where: {
+        tenantId,
+        closedAt: null,
+      },
+      include: {
+        product: { select: { name: true, sku: true } },
+        pos: { select: { name: true, city: true } },
+      },
+    });
+
+    const alerts = lots
+      .map(lot => ({
+        id: lot.id,
+        productName: lot.product.name,
+        productSku: lot.product.sku,
+        posName: lot.pos?.name || 'PDV Desconhecido',
+        posCity: lot.pos?.city || 'Localização não inf.',
+        available: lot.quantityReceived - lot.quantitySold - lot.quantityReturned,
+        unitPrice: lot.unitPrice,
+      }))
+      .filter(a => a.available > 0 && a.available <= 3)
+      .sort((a, b) => a.available - b.available);
+
+    return alerts;
+  }
 }

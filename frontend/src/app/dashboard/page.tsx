@@ -185,26 +185,35 @@ export default function DashboardHome() {
 
       {/* Alert Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-amber-50 border border-amber-200 p-6 rounded-2xl flex items-center gap-4">
-          <div className="bg-amber-100 p-3 rounded-full">
-            <AlertTriangle className="text-amber-600 w-6 h-6" />
+        {metrics?.lowStockCount > 0 && (
+          <div 
+            onClick={() => router.push('/dashboard/stock/alerts')}
+            className="bg-amber-50 border border-amber-200 p-6 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-amber-100/50 transition-all group"
+          >
+            <div className="bg-amber-100 p-3 rounded-full group-hover:scale-110 transition-transform">
+              <AlertTriangle className="text-amber-600 w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-amber-900 font-bold">Estoque Baixo Detectado</h3>
+              <p className="text-amber-700 text-sm">
+                {metrics.lowStockCount} {metrics.lowStockCount === 1 ? 'produto' : 'produtos'} em seu {metrics.lowStockPosName} estão abaixo do limite mínimo.
+              </p>
+            </div>
+            <button className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-amber-700 transition-colors">
+              Repor Agora
+            </button>
           </div>
-          <div>
-            <h3 className="text-amber-900 font-bold">Estoque Baixo Detectado</h3>
-            <p className="text-amber-700 text-sm">3 produtos em seu Quiosque Principal estão abaixo do limite mínimo.</p>
-          </div>
-          <button className="ml-auto bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">Repor Agora</button>
-        </div>
+        )}
 
         <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl flex items-center gap-4">
           <div className="bg-blue-100 p-3 rounded-full">
             <DollarSign className="text-blue-600 w-6 h-6" />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-blue-900 font-bold">Fechamento de Ciclo</h3>
             <p className="text-blue-700 text-sm">Seu próximo fechamento financeiro será em 3 dias. Confira os repasses.</p>
           </div>
-          <button className="ml-auto bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">Ver Detalhes</button>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">Ver Detalhes</button>
         </div>
       </div>
     </div>

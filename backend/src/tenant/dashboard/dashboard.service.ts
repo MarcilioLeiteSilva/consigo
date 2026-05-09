@@ -64,6 +64,42 @@ export class DashboardService {
       (stockQuantity._sum.quantityReceived || 0) - 
       ((stockQuantity._sum.quantitySold || 0) + (stockQuantity._sum.quantityReturned || 0));
 
+    // 5. Alertas de Estoque Baixo (Lotes com menos de 3 unidades)
+    const lowStockLots = await this.prisma.consignmentLot.findMany({
+      where: {
+        tenantId,
+        closedAt: null,
+      },
+      select: {
+        id: true,
+        quantityReceived: true,
+        quantitySold: true,
+        quantityReturned: true,
+        pos: { select: { name: true } }
+      }
+    });
+
+    const criticalLots = lowStockLots.filter(lot => {
+      const available = lot.quantityReceived - (lot.quantitySold + lot.quantityReturned);
+      return available > 0 && available <= 3;
+    });
+
+    // Pega o PDV que tem mais itens críticos
+    const posCounts: Record<string, number> = {};
+    criticalLots.forEach(lot => {
+      const name = lot.pos?.name || 'PDV';
+      posCounts[name] = (posCounts[name] || 0) + 1;
+    });
+
+    let topLowStockPos = 'PDVs';
+    let maxCount = 0;
+    Object.entries(posCounts).forEach(([name, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        topLowStockPos = name;
+      }
+    });
+
     return {
       salesToday: salesToday._sum.totalAmount || 0,
       salesMonth: totalSalesMonth,
@@ -71,6 +107,8 @@ export class DashboardService {
       totalStock,
       activePosCount,
       balance: account?.balance || 0,
+      lowStockCount: criticalLots.length,
+      lowStockPosName: topLowStockPos
     };
   }
 
