@@ -26,7 +26,10 @@ export class ProductsService {
 
   async findAll(tenantId: string) {
     return this.prisma.product.findMany({
-      where: { tenantId },
+      where: { 
+        tenantId,
+        isActive: true,
+      },
       include: {
         category: true,
       },
@@ -65,7 +68,27 @@ export class ProductsService {
   }
 
   async remove(tenantId: string, id: string) {
-    await this.findOne(tenantId, id);
+    const product = await this.findOne(tenantId, id);
+
+    // Check for dependencies that prevent hard delete
+    const [hasSales, hasLots] = await Promise.all([
+      this.prisma.saleItem.findFirst({ where: { productId: id } }),
+      this.prisma.consignmentLot.findFirst({ where: { productId: id } }),
+    ]);
+
+    if (hasSales || hasLots) {
+      // If there's history, perform a soft delete
+      return this.prisma.product.update({
+        where: { id },
+        data: { isActive: false },
+      });
+    }
+
+    // If no sales or lots, we can perform a hard delete.
+    // First, remove dependent stock snapshots (temporal data)
+    await this.prisma.stockSnapshot.deleteMany({
+      where: { productId: id },
+    });
 
     return this.prisma.product.delete({
       where: { id },
