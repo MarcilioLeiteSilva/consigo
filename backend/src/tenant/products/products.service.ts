@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -8,19 +8,13 @@ export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(tenantId: string, createProductDto: CreateProductDto) {
-    if (createProductDto.categoryId) {
-      const category = await this.prisma.category.findFirst({
-        where: { id: createProductDto.categoryId, tenantId },
-      });
-      if (!category) {
-        throw new BadRequestException('Categoria inválida ou não pertence ao tenant');
-      }
-    }
-
+    const { categoryId, ...data } = createProductDto;
+    
     return this.prisma.product.create({
       data: {
-        ...createProductDto,
+        ...data,
         tenantId,
+        category: categoryId ? { connect: { id: categoryId } } : undefined,
       },
     });
   }
@@ -28,6 +22,9 @@ export class ProductsService {
   findAll(tenantId: string) {
     return this.prisma.product.findMany({
       where: { tenantId },
+      include: {
+        category: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -35,7 +32,9 @@ export class ProductsService {
   async findOne(tenantId: string, id: string) {
     const product = await this.prisma.product.findFirst({
       where: { id, tenantId },
-      include: { category: true },
+      include: {
+        category: true,
+      },
     });
 
     if (!product) {
@@ -47,19 +46,14 @@ export class ProductsService {
 
   async update(tenantId: string, id: string, updateProductDto: UpdateProductDto) {
     await this.findOne(tenantId, id);
-
-    if (updateProductDto.categoryId) {
-      const category = await this.prisma.category.findFirst({
-        where: { id: updateProductDto.categoryId, tenantId },
-      });
-      if (!category) {
-        throw new BadRequestException('Categoria inválida ou não pertence ao tenant');
-      }
-    }
+    const { categoryId, ...data } = updateProductDto;
 
     return this.prisma.product.update({
       where: { id },
-      data: updateProductDto,
+      data: {
+        ...data,
+        category: categoryId ? { connect: { id: categoryId } } : undefined,
+      },
     });
   }
 
