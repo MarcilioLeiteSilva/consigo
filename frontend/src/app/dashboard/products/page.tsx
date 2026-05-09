@@ -154,8 +154,8 @@ export default function ProductsPage() {
   );
 
   const formatCurrency = (value: any) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? '0,00' : num.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    const num = Number(value || 0);
+    return isNaN(num) ? '0,00' : num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   return (
