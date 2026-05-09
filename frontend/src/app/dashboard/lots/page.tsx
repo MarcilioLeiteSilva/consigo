@@ -96,13 +96,10 @@ export default function LotsPage() {
   };
 
   const handleProductChange = (productId: string) => {
-    const selectedProduct = products.find(p => p.id === productId);
     setFormData(prev => ({
       ...prev,
-      productId,
-      unitPrice: selectedProduct?.salePrice?.toString() || prev.unitPrice,
-      // Se o produto tiver comissão específica, sobrepõe a do PDV
-      commissionPercent: selectedProduct?.commission?.toString() || prev.commissionPercent
+      productId
+      // unitPrice e commission não vêm mais do produto
     }));
   };
 
