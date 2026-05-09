@@ -127,8 +127,6 @@ export default function ProductsPage() {
         await api.patch(`/products/${editingProduct.id}`, payload);
       } else {
         await api.post('/products', payload);
-        // Se houver estoque inicial e PDV, poderíamos disparar a criação do lote aqui
-        // Mas vamos focar no cadastro cirúrgico por enquanto.
       }
       
       setIsModalOpen(false);
@@ -161,7 +159,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -179,7 +177,7 @@ export default function ProductsPage() {
       {/* Modal de Produto */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-[40px] w-full max-w-4xl my-8 shadow-2xl animate-scale-in overflow-hidden">
+          <div className="bg-white rounded-[40px] w-full max-w-4xl my-8 shadow-2xl overflow-hidden">
             <div className="flex justify-between items-center p-8 border-b border-slate-50 bg-slate-50/30">
               <div>
                 <h3 className="text-2xl font-black text-slate-900">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h3>
