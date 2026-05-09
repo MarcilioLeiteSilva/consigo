@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { toDecimal, safeDivide } from '../../common/utils/money';
+import { toDecimal, safeDivide, safeAdd } from '../../common/utils/money';
 
 @Injectable()
 export class DashboardService {
@@ -92,13 +92,16 @@ export class DashboardService {
     });
 
     // Agrupar por dia (isso pode ser otimizado via SQL bruto se houver volume alto)
-    const chartData = sales.reduce((acc: any, sale) => {
+    const chartData = sales.reduce((acc: Record<string, any>, sale) => {
       const date = sale.createdAt.toISOString().split('T')[0];
-      acc[date] = (acc[date] || 0) + Number(sale.totalAmount);
+      acc[date] = safeAdd(acc[date] || 0, sale.totalAmount);
       return acc;
     }, {});
 
-    return Object.entries(chartData).map(([date, total]) => ({ date, total }));
+    return Object.entries(chartData).map(([date, total]) => ({ 
+      date, 
+      total: (total as any).toString() 
+    }));
   }
 
   async getTopProducts(tenantId: string) {

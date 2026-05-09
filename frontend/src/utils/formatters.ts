@@ -19,11 +19,8 @@ export const formatPercent = (value: string | number | null | undefined): string
   return `${num.toFixed(2)}%`;
 };
 
-export const safeNumber = (value: string | number | null | undefined): number => {
-  if (value === null || value === undefined || value === '') return 0;
-  
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  
-  if (isNaN(num)) return 0;
-  return num;
+export const safeNumber = (value: any): number => {
+  if (value === null || value === undefined) return 0;
+  const parsed = parseFloat(String(value));
+  return isNaN(parsed) ? 0 : parsed;
 };

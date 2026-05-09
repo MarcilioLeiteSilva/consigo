@@ -45,7 +45,16 @@ export default function DashboardHome() {
           api.get('/dashboard/sales-chart').catch(e => ({ data: [] })),
           api.get('/dashboard/top-products').catch(e => ({ data: [] }))
         ]);
-        setMetrics(mRes.data.data); // Acessa .data.data devido ao TransformInterceptor
+        setMetrics(mRes.data.data);
+        console.log('--- DEBUG FINANCEIRO (DASHBOARD) ---');
+        console.log('Metricas:', mRes.data.data);
+        console.log('Tipos:', {
+          salesToday: typeof mRes.data.data?.salesToday,
+          balance: typeof mRes.data.data?.balance,
+          avgTicket: typeof mRes.data.data?.avgTicket
+        });
+        console.log('------------------------------------');
+        // Acessa .data.data devido ao TransformInterceptor
         setChartData(Array.isArray(cRes.data.data) ? cRes.data.data : []);
         setTopProducts(Array.isArray(pRes.data.data) ? pRes.data.data : []);
       } catch (err: any) {

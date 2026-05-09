@@ -387,8 +387,8 @@ export default function LotsPage() {
                                 productId: lot.productId,
                                 posId: lot.posId || '',
                                 quantityReceived: lot.quantityReceived.toString(),
-                                unitPrice: (lot.unitPrice || 0).toString(),
-                                commissionPercent: (lot.commissionPercent || 0).toString(),
+                                unitPrice: (lot.unitPrice || '').toString(),
+                                commissionPercent: (lot.commissionPercent || '').toString(),
                                 notes: lot.notes || ''
                               });
                               setIsModalOpen(true);
