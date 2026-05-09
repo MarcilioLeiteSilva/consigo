@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { toDecimal, safeDivide } from '../../common/utils/money';
 
 @Injectable()
 export class DashboardService {
@@ -30,9 +31,11 @@ export class DashboardService {
     });
 
     // 2. Ticket Médio (Mês)
-    const totalSalesMonth = Number(salesMetrics._sum.totalAmount || 0);
-    const countSalesMonth = salesMetrics._count.id || 1;
-    const avgTicket = totalSalesMonth / countSalesMonth;
+    const totalSalesMonth = salesMetrics._sum.totalAmount || toDecimal(0);
+    
+    // Ticket Médio
+    const salesCount = await this.prisma.sale.count({ where: { tenantId } });
+    const avgTicket = salesCount > 0 ? safeDivide(totalSalesMonth, salesCount) : toDecimal(0);
 
     // 3. Saldo Financeiro (ConsignorAccount)
     const account = await this.prisma.consignorAccount.findUnique({
@@ -58,16 +61,16 @@ export class DashboardService {
     });
 
     const totalStock = 
-      Number(stockQuantity._sum.quantityReceived || 0) - 
-      (Number(stockQuantity._sum.quantitySold || 0) + Number(stockQuantity._sum.quantityReturned || 0));
+      (stockQuantity._sum.quantityReceived || 0) - 
+      ((stockQuantity._sum.quantitySold || 0) + (stockQuantity._sum.quantityReturned || 0));
 
     return {
-      salesToday: Number(salesToday._sum.totalAmount || 0),
+      salesToday: salesToday._sum.totalAmount || 0,
       salesMonth: totalSalesMonth,
-      avgTicket: Number(avgTicket.toFixed(2)),
+      avgTicket: avgTicket,
       totalStock,
       activePosCount,
-      balance: Number(account?.balance || 0),
+      balance: account?.balance || 0,
     };
   }
 

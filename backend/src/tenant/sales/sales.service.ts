@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { TransactionType, FinancialReferenceType } from '@prisma/client';
+import { toDecimal, safeAdd, safeMultiply, safeDivide, safeSubtract } from '../../common/utils/money';
 
 @Injectable()
 export class SalesService {
@@ -17,7 +18,7 @@ export class SalesService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      let totalAmount = 0;
+      let totalAmount = toDecimal(0);
       const saleItemsToCreate: any[] = [];
 
       for (const item of dto.items) {
@@ -35,7 +36,8 @@ export class SalesService {
         });
 
         const totalAvailable = lots.reduce((acc, lot) => {
-          return acc + (Number(lot.quantityReceived) - Number(lot.quantitySold) - Number(lot.quantityReturned));
+          const lotQty = Number(lot.quantityReceived) - Number(lot.quantitySold) - Number(lot.quantityReturned);
+          return acc + lotQty;
         }, 0);
 
         if (totalAvailable < item.quantity) {
@@ -50,8 +52,8 @@ export class SalesService {
           if (lotAvailable <= 0) continue;
 
           const quantityFromThisLot = Math.min(remainingToSell, lotAvailable);
-          const itemTotal = quantityFromThisLot * Number(item.unitPrice);
-          totalAmount += itemTotal;
+          const itemTotal = safeMultiply(quantityFromThisLot, item.unitPrice);
+          totalAmount = safeAdd(totalAmount, itemTotal);
 
           // Atualizar estoque no lote
           await tx.consignmentLot.update({
@@ -60,11 +62,9 @@ export class SalesService {
           });
 
           // --- LÓGICA FINANCEIRA SaaS ---
-          // No novo modelo, o Tenant é o Consignador. 
-          // O valor da venda (menos comissões se houver) entra no saldo dele.
-          const commissionPercent = Number(lot.commissionPercent);
-          const commissionAmount = (itemTotal * commissionPercent) / 100;
-          const consignorAmount = itemTotal - commissionAmount;
+          const commissionPercent = toDecimal(lot.commissionPercent);
+          const commissionAmount = safeDivide(safeMultiply(itemTotal, commissionPercent), 100);
+          const consignorAmount = safeSubtract(itemTotal, commissionAmount);
 
           // Atualizar Saldo do Tenant (ConsignorAccount)
           await tx.consignorAccount.update({

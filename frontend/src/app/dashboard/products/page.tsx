@@ -22,6 +22,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import api from '@/lib/api';
+import { CurrencyText } from '@/components/CurrencyText';
+import { formatCurrency, formatPercent, safeNumber } from '@/utils/formatters';
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -59,9 +61,9 @@ export default function ProductsPage() {
         api.get('/pos')
       ]);
       
-      setProducts(Array.isArray(prodRes.data) ? prodRes.data : prodRes.data?.data || []);
-      setCategories(Array.isArray(catRes.data) ? catRes.data : catRes.data?.data || []);
-      setPosList(Array.isArray(posRes.data) ? posRes.data : posRes.data?.data || []);
+      setProducts(prodRes.data.data || []);
+      setCategories(catRes.data.data || []);
+      setPosList(posRes.data.data || []);
     } catch (err: any) {
       console.error('Erro ao carregar dados:', err);
       if (err.response?.status === 401) router.push('/login');
@@ -98,8 +100,8 @@ export default function ProductsPage() {
       sku: product.sku || '',
       description: product.description || '',
       categoryId: product.categoryId || '',
-      salePrice: Number(product.salePrice || 0).toString(),
-      commission: Number(product.commission || 0).toString(),
+      salePrice: (product.salePrice || '').toString(),
+      commission: (product.commission || '').toString(),
       isActive: product.isActive ?? true,
       imageUrl: product.imageUrl || '',
       initialPosId: '',
@@ -117,8 +119,8 @@ export default function ProductsPage() {
         sku: formData.sku,
         description: formData.description,
         categoryId: formData.categoryId || null,
-        salePrice: parseFloat(formData.salePrice) || 0,
-        commission: parseFloat(formData.commission) || 0,
+        salePrice: formData.salePrice,
+        commission: formData.commission,
         isActive: formData.isActive,
         imageUrl: formData.imageUrl
       };
@@ -153,10 +155,6 @@ export default function ProductsPage() {
     (p?.sku || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const formatCurrency = (value: any) => {
-    const num = Number(value || 0);
-    return isNaN(num) ? '0,00' : num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
 
   return (
     <div className="space-y-8">
@@ -393,11 +391,11 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-center">
-                      <span className="text-sm font-black text-slate-900">R$ {formatCurrency(p.salePrice)}</span>
+                      <CurrencyText value={p.salePrice} className="text-sm font-black text-slate-900" />
                     </td>
                     <td className="px-8 py-6 text-center">
                       <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-                        {Number(p.commission || 0)}%
+                        {formatPercent(p.commission)}
                       </span>
                     </td>
                     <td className="px-8 py-6">

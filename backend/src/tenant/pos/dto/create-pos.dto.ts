@@ -42,10 +42,10 @@ export class CreatePosDto {
   @IsString()
   location?: string;
 
-  @ApiProperty({ example: 25.0, required: false })
+  @ApiProperty({ example: '25.0', required: false })
   @IsOptional()
-  @IsNumber()
-  defaultCommission?: number;
+  @IsString()
+  defaultCommission?: string;
 
   @ApiProperty({ example: true, default: true })
   @IsOptional()

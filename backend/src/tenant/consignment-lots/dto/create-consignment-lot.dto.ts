@@ -18,18 +18,15 @@ export class CreateConsignmentLotDto {
   @Min(1)
   quantityReceived: number;
 
-  @ApiProperty({ example: 20.0 })
+  @ApiProperty({ example: '20.0' })
   @IsNotEmpty()
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  commissionPercent: number;
+  @IsString()
+  commissionPercent: string;
 
-  @ApiProperty({ example: 50.0 })
+  @ApiProperty({ example: '50.0' })
   @IsNotEmpty()
-  @IsNumber()
-  @Min(0)
-  unitPrice: number;
+  @IsString()
+  unitPrice: string;
 
   @ApiProperty({ example: 'Lote de verão 2026', required: false })
   @IsOptional()

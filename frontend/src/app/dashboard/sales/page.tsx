@@ -10,6 +10,7 @@ import {
   FileText
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { CurrencyText } from '@/components/CurrencyText';
 import api from '@/lib/api';
 
 export default function SalesHistoryPage() {
@@ -127,7 +128,7 @@ export default function SalesHistoryPage() {
                   <td>{sale.pos?.name || 'Geral'}</td>
                   <td>{sale.items?.length || 0} itens</td>
                   <td style={{ fontWeight: 800 }}>
-                    R$ {Number(sale.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    <CurrencyText value={sale.totalAmount} />
                   </td>
                   <td><span className="status-pill">Concluída</span></td>
                   <td>

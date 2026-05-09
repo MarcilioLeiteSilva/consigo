@@ -27,6 +27,8 @@ import {
   Area
 } from 'recharts';
 import api from '@/lib/api';
+import { formatCurrency } from '@/utils/formatters';
+import { CurrencyText } from '@/components/CurrencyText';
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -43,9 +45,9 @@ export default function DashboardHome() {
           api.get('/dashboard/sales-chart').catch(e => ({ data: [] })),
           api.get('/dashboard/top-products').catch(e => ({ data: [] }))
         ]);
-        setMetrics(mRes.data);
-        setChartData(Array.isArray(cRes.data) ? cRes.data : []);
-        setTopProducts(Array.isArray(pRes.data) ? pRes.data : []);
+        setMetrics(mRes.data.data); // Acessa .data.data devido ao TransformInterceptor
+        setChartData(Array.isArray(cRes.data.data) ? cRes.data.data : []);
+        setTopProducts(Array.isArray(pRes.data.data) ? pRes.data.data : []);
       } catch (err: any) {
         console.error('Erro ao carregar dados do dashboard', err);
         if (err.response?.status === 401) {
@@ -66,18 +68,11 @@ export default function DashboardHome() {
     );
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   const kpis = [
-    { label: 'Vendas Hoje', value: formatCurrency(metrics?.salesToday || 0), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-100', trend: '+12.5%' },
-    { label: 'Vendas Mês', value: formatCurrency(metrics?.salesMonth || 0), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-100', trend: '+8.2%' },
-    { label: 'Ticket Médio', value: formatCurrency(metrics?.avgTicket || 0), icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-100', trend: '-2.4%' },
-    { label: 'Saldo Disponível', value: formatCurrency(metrics?.balance || 0), icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-100', trend: null },
+    { label: 'Vendas Hoje', value: formatCurrency(metrics?.salesToday), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-100', trend: '+12.5%' },
+    { label: 'Vendas Mês', value: formatCurrency(metrics?.salesMonth), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-100', trend: '+8.2%' },
+    { label: 'Ticket Médio', value: formatCurrency(metrics?.avgTicket), icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-100', trend: '-2.4%' },
+    { label: 'Saldo Disponível', value: formatCurrency(metrics?.balance), icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-100', trend: null },
     { label: 'Estoque Total', value: `${metrics?.totalStock || 0} un`, icon: Package, color: 'text-slate-600', bg: 'bg-slate-100', trend: null },
     { label: 'PDVs Ativos', value: `${metrics?.activePosCount || 0}`, icon: Store, color: 'text-rose-600', bg: 'bg-rose-100', trend: null },
   ];

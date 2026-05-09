@@ -7,35 +7,23 @@ import { UpdatePosDto } from './dto/update-pos.dto';
 export class PosService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapPos(pos: any) {
-    if (!pos) return null;
-    return {
-      ...pos,
-      defaultCommission: pos.defaultCommission ? Number(pos.defaultCommission) : 0,
-    };
-  }
-
   async create(tenantId: string, createPosDto: CreatePosDto) {
     const { defaultCommission, ...data } = createPosDto;
     
-    const pos = await this.prisma.pOS.create({
+    return this.prisma.pOS.create({
       data: {
         ...data,
         tenantId,
-        defaultCommission: defaultCommission ? Number(defaultCommission) : null,
+        defaultCommission: defaultCommission || null,
       },
     });
-
-    return this.mapPos(pos);
   }
 
   async findAll(tenantId: string) {
-    const posList = await this.prisma.pOS.findMany({
+    return this.prisma.pOS.findMany({
       where: { tenantId },
       orderBy: { name: 'asc' },
     });
-
-    return posList.map(p => this.mapPos(p));
   }
 
   async findOne(tenantId: string, id: string) {
@@ -47,22 +35,20 @@ export class PosService {
       throw new NotFoundException('Ponto de Venda não encontrado');
     }
 
-    return this.mapPos(pos);
+    return pos;
   }
 
   async update(tenantId: string, id: string, updatePosDto: UpdatePosDto) {
     await this.findOne(tenantId, id);
     const { defaultCommission, ...data } = updatePosDto;
 
-    const updated = await this.prisma.pOS.update({
+    return this.prisma.pOS.update({
       where: { id },
       data: {
         ...data,
-        ...(defaultCommission !== undefined && { defaultCommission: defaultCommission !== null ? Number(defaultCommission) : null }),
+        defaultCommission: defaultCommission === undefined ? undefined : (defaultCommission || null),
       },
     });
-
-    return this.mapPos(updated);
   }
 
   async remove(tenantId: string, id: string) {

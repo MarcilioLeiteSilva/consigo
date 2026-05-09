@@ -23,6 +23,8 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import api from '@/lib/api';
+import { CurrencyText } from '@/components/CurrencyText';
+import { formatCurrency, formatPercent, safeNumber } from '@/utils/formatters';
 
 export default function LotsPage() {
   const router = useRouter();
@@ -56,9 +58,9 @@ export default function LotsPage() {
         api.get('/pos')
       ]);
 
-      setLots(Array.isArray(lotsRes.data) ? lotsRes.data : lotsRes.data?.data || []);
-      setProducts(Array.isArray(productsRes.data) ? productsRes.data : productsRes.data?.data || []);
-      setPosList(Array.isArray(posRes.data) ? posRes.data : posRes.data?.data || []);
+      setLots(lotsRes.data.data || []);
+      setProducts(productsRes.data.data || []);
+      setPosList(posRes.data.data || []);
     } catch (err: any) {
       console.error('Erro ao carregar dados:', err);
       if (err.response?.status === 401) router.push('/login');
@@ -111,8 +113,8 @@ export default function LotsPage() {
       const payload = {
         ...formData,
         quantityReceived: parseInt(formData.quantityReceived),
-        unitPrice: parseFloat(formData.unitPrice),
-        commissionPercent: parseFloat(formData.commissionPercent)
+        unitPrice: formData.unitPrice, // Enviando como string
+        commissionPercent: formData.commissionPercent // Enviando como string
       };
 
       if (editingLot) {
@@ -370,11 +372,9 @@ export default function LotsPage() {
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex flex-col items-center">
-                          <span className="text-sm font-bold text-slate-900">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lot.unitPrice || 0)}
-                          </span>
+                          <CurrencyText value={lot.unitPrice} className="text-sm font-bold text-slate-900" />
                           <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
-                            {lot.commissionPercent}% Comis.
+                            {formatPercent(lot.commissionPercent)} Comis.
                           </span>
                         </div>
                       </td>
