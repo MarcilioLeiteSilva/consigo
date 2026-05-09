@@ -2,8 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { TransactionType, FinancialReferenceType } from '@prisma/client';
-import { toPrismaDecimal } from '../../common/utils/prisma-decimal';
-import { safeAdd, safeMultiply, safeDivide, safeSubtract } from '../../common/utils/money';
+import { toPrismaDecimal, safeAdd, safeMultiply, safeDivide, safeSubtract } from '../../common/utils/prisma-decimal';
 
 @Injectable()
 export class SalesService {

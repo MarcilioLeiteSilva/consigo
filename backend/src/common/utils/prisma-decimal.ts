@@ -53,3 +53,31 @@ export const toMoneyString = (value: any): string => {
     return '0.00';
   }
 };
+
+/**
+ * Funções matemáticas seguras para lidar com Prisma.Decimal
+ */
+export const safeAdd = (a: any, b: any): Prisma.Decimal => {
+  const decA = toPrismaDecimal(a);
+  const decB = toPrismaDecimal(b);
+  return decA.plus(decB);
+};
+
+export const safeSubtract = (a: any, b: any): Prisma.Decimal => {
+  const decA = toPrismaDecimal(a);
+  const decB = toPrismaDecimal(b);
+  return decA.minus(decB);
+};
+
+export const safeMultiply = (a: any, b: any): Prisma.Decimal => {
+  const decA = toPrismaDecimal(a);
+  const decB = toPrismaDecimal(b);
+  return decA.times(decB);
+};
+
+export const safeDivide = (a: any, b: any): Prisma.Decimal => {
+  const decA = toPrismaDecimal(a);
+  const decB = toPrismaDecimal(b);
+  if (decB.isZero()) return new Prisma.Decimal(0);
+  return decA.div(decB);
+};

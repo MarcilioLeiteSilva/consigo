@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { toDecimal, safeDivide, safeAdd } from '../../common/utils/money';
+import { toPrismaDecimal, safeDivide, safeAdd } from '../../common/utils/prisma-decimal';
 
 @Injectable()
 export class DashboardService {
@@ -31,11 +31,11 @@ export class DashboardService {
     });
 
     // 2. Ticket Médio (Mês)
-    const totalSalesMonth = salesMetrics._sum.totalAmount || toDecimal(0);
+    const totalSalesMonth = salesMetrics._sum.totalAmount || toPrismaDecimal(0);
     
     // Ticket Médio
     const salesCount = await this.prisma.sale.count({ where: { tenantId } });
-    const avgTicket = salesCount > 0 ? safeDivide(totalSalesMonth, salesCount) : toDecimal(0);
+    const avgTicket = salesCount > 0 ? safeDivide(totalSalesMonth, salesCount) : toPrismaDecimal(0);
 
     // 3. Saldo Financeiro (ConsignorAccount)
     const account = await this.prisma.consignorAccount.findUnique({
