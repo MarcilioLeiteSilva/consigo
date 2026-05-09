@@ -6,6 +6,20 @@ import { UpdateConsignmentLotDto } from './dto/update-consignment-lot.dto';
 @Injectable()
 export class ConsignmentLotsService {
   constructor(private readonly prisma: PrismaService) {}
+  
+  private mapLot(lot: any) {
+    if (!lot) return null;
+    return {
+      ...lot,
+      unitPrice: lot.unitPrice ? Number(lot.unitPrice) : 0,
+      commissionPercent: lot.commissionPercent ? Number(lot.commissionPercent) : 0,
+      product: lot.product ? {
+        ...lot.product,
+        salePrice: lot.product.salePrice ? Number(lot.product.salePrice) : 0,
+        commission: lot.product.commission ? Number(lot.product.commission) : 0,
+      } : undefined,
+    };
+  }
 
   async create(tenantId: string, createConsignmentLotDto: CreateConsignmentLotDto) {
     // Validar Produto
@@ -26,7 +40,7 @@ export class ConsignmentLotsService {
       }
     }
 
-    return this.prisma.consignmentLot.create({
+    const lot = await this.prisma.consignmentLot.create({
       data: {
         ...createConsignmentLotDto,
         tenantId,
@@ -36,10 +50,12 @@ export class ConsignmentLotsService {
         pos: true,
       },
     });
+
+    return this.mapLot(lot);
   }
 
-  findAll(tenantId: string) {
-    return this.prisma.consignmentLot.findMany({
+  async findAll(tenantId: string) {
+    const lots = await this.prisma.consignmentLot.findMany({
       where: { tenantId },
       include: {
         product: true,
@@ -47,6 +63,8 @@ export class ConsignmentLotsService {
       },
       orderBy: { receivedAt: 'desc' },
     });
+
+    return lots.map(l => this.mapLot(l));
   }
 
   async findOne(tenantId: string, id: string) {
@@ -62,7 +80,7 @@ export class ConsignmentLotsService {
       throw new NotFoundException('Lote de consignação não encontrado');
     }
 
-    return lot;
+    return this.mapLot(lot);
   }
 
   async update(tenantId: string, id: string, updateConsignmentLotDto: UpdateConsignmentLotDto) {
@@ -86,7 +104,7 @@ export class ConsignmentLotsService {
       }
     }
 
-    return this.prisma.consignmentLot.update({
+    const updated = await this.prisma.consignmentLot.update({
       where: { id },
       data: updateConsignmentLotDto,
       include: {
@@ -94,6 +112,8 @@ export class ConsignmentLotsService {
         pos: true,
       },
     });
+
+    return this.mapLot(updated);
   }
 
   async remove(tenantId: string, id: string) {
