@@ -5,8 +5,17 @@ import { Decimal } from '@prisma/client/runtime/library';
  * Evita problemas de arredondamento de floats do JavaScript.
  */
 
-export const toMoneyString = (value: number | string | Decimal): string => {
-  return new Decimal(value.toString()).toFixed(2);
+export const toMoneyString = (value: any): string => {
+  if (value === null || value === undefined) return '0.00';
+  try {
+    // Se for um objeto com a estrutura do Decimal.js {d, e, s} mas sem métodos
+    if (value.d && Array.isArray(value.d) && value.hasOwnProperty('e') && value.hasOwnProperty('s')) {
+      return new Decimal(value).toFixed(2);
+    }
+    return new Decimal(value.toString()).toFixed(2);
+  } catch (e) {
+    return '0.00';
+  }
 };
 
 export const toDecimal = (value: any): Decimal => {

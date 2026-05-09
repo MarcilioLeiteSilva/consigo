@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { toMoneyString } from '../utils/money';
 
 export interface ApiResponse<T> {
   data: T;
@@ -46,10 +47,10 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
       // Em produção, constructor.name pode ser minificado, então usamos duck-typing
       const isDecimal = 
         obj.constructor?.name === 'Decimal' || 
-        (obj.d && Array.isArray(obj.d) && typeof obj.e === 'number' && typeof obj.s === 'number');
+        (obj.hasOwnProperty('d') && Array.isArray(obj.d) && obj.hasOwnProperty('e') && obj.hasOwnProperty('s'));
 
       if (isDecimal) {
-        return typeof obj.toString === 'function' ? obj.toString() : String(obj);
+        return toMoneyString(obj);
       }
 
       // Recursão para objetos aninhados (Date, etc. são mantidos)
