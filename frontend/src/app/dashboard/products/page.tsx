@@ -374,7 +374,11 @@ export default function ProductsPage() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-5">
                         <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-200 overflow-hidden">
-                          {p.imageUrl ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" /> : <Box size={24} />}
+                          {p.imageUrl && p.imageUrl.length < 2000 ? (
+                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Box size={24} />
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1">
@@ -393,7 +397,7 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-8 py-6 text-center">
                       <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-                        {p.commission || 0}%
+                        {Number(p.commission || 0)}%
                       </span>
                     </td>
                     <td className="px-8 py-6">
