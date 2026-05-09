@@ -15,7 +15,7 @@ export class PosService {
       data: {
         ...data,
         tenantId,
-        defaultCommission: defaultCommission ? toDecimal(defaultCommission) : null,
+        defaultCommission: defaultCommission ? toPrismaDecimal(defaultCommission) : null,
       },
     });
   }
