@@ -42,11 +42,11 @@ async function main() {
 
   // Inserir Produtos
   const saved3d = await Promise.all(products3d.map(p => 
-    prisma.product.create({ data: { ...p, salePrice: p.price, tenantId: tenant.id, categoryId: cat3d.id } })
+    prisma.product.create({ data: { name: p.name, sku: p.sku, tenantId: tenant.id, categoryId: cat3d.id } })
   ));
 
   const savedPkg = await Promise.all(productsPkg.map(p => 
-    prisma.product.create({ data: { ...p, salePrice: p.price, tenantId: tenant.id, categoryId: catPkg.id } })
+    prisma.product.create({ data: { name: p.name, sku: p.sku, tenantId: tenant.id, categoryId: catPkg.id } })
   ));
 
   // 5. Criar Pontos de Venda (PDVs)
