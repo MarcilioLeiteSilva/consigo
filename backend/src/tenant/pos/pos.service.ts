@@ -1,26 +1,41 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreatePoDto } from './dto/create-po.dto';
-import { UpdatePoDto } from './dto/update-po.dto';
+import { CreatePosDto } from './dto/create-pos.dto';
+import { UpdatePosDto } from './dto/update-pos.dto';
 
 @Injectable()
 export class PosService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(tenantId: string, createPoDto: CreatePoDto) {
-    return this.prisma.pOS.create({
-      data: {
-        ...createPoDto,
-        tenantId,
-      },
-    });
+  private mapPos(pos: any) {
+    if (!pos) return null;
+    return {
+      ...pos,
+      defaultCommission: pos.defaultCommission ? Number(pos.defaultCommission) : 0,
+    };
   }
 
-  findAll(tenantId: string) {
-    return this.prisma.pOS.findMany({
+  async create(tenantId: string, createPosDto: CreatePosDto) {
+    const { defaultCommission, ...data } = createPosDto;
+    
+    const pos = await this.prisma.pOS.create({
+      data: {
+        ...data,
+        tenantId,
+        defaultCommission: defaultCommission ? Number(defaultCommission) : null,
+      },
+    });
+
+    return this.mapPos(pos);
+  }
+
+  async findAll(tenantId: string) {
+    const posList = await this.prisma.pOS.findMany({
       where: { tenantId },
       orderBy: { name: 'asc' },
     });
+
+    return posList.map(p => this.mapPos(p));
   }
 
   async findOne(tenantId: string, id: string) {
@@ -29,19 +44,25 @@ export class PosService {
     });
 
     if (!pos) {
-      throw new NotFoundException('Ponto de venda não encontrado');
+      throw new NotFoundException('Ponto de Venda não encontrado');
     }
 
-    return pos;
+    return this.mapPos(pos);
   }
 
-  async update(tenantId: string, id: string, updatePoDto: UpdatePoDto) {
+  async update(tenantId: string, id: string, updatePosDto: UpdatePosDto) {
     await this.findOne(tenantId, id);
+    const { defaultCommission, ...data } = updatePosDto;
 
-    return this.prisma.pOS.update({
+    const updated = await this.prisma.pOS.update({
       where: { id },
-      data: updatePoDto,
+      data: {
+        ...data,
+        ...(defaultCommission !== undefined && { defaultCommission: defaultCommission !== null ? Number(defaultCommission) : null }),
+      },
     });
+
+    return this.mapPos(updated);
   }
 
   async remove(tenantId: string, id: string) {

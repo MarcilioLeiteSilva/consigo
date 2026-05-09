@@ -267,13 +267,20 @@ model Product {
 }
 
 model POS {
-  id        String   @id @default(uuid())
-  tenantId  String
-  name      String
-  location  String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(uuid())
+  tenantId          String
+  name              String
+  responsibleName   String?
+  document          String?
+  whatsapp          String?
+  email             String?
+  city              String?
+  state             String?
+  location          String?
+  defaultCommission Decimal? @db.Decimal(5, 2)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sales          Sale[]
