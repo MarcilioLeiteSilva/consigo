@@ -47,7 +47,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
       // Em produção, constructor.name pode ser minificado, então usamos duck-typing
       const isDecimal = 
         obj.constructor?.name === 'Decimal' || 
-        (obj.hasOwnProperty('d') && Array.isArray(obj.d) && obj.hasOwnProperty('e') && obj.hasOwnProperty('s'));
+        ('d' in obj && Array.isArray(obj.d) && 'e' in obj && 's' in obj);
 
       if (isDecimal) {
         return toMoneyString(obj);

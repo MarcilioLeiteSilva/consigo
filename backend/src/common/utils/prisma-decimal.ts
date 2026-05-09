@@ -40,7 +40,8 @@ export const toMoneyString = (value: any): string => {
   // Se for um objeto plano {d, e, s}
   if (typeof value === 'object' && value.d && Array.isArray(value.d)) {
     try {
-      return new Prisma.Decimal(value).toFixed(2);
+      Object.setPrototypeOf(value, Prisma.Decimal.prototype);
+      return value.toFixed(2);
     } catch (e) {
       return '0.00';
     }
