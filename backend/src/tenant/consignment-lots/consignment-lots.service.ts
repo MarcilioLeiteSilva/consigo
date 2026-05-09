@@ -2,12 +2,14 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateConsignmentLotDto } from './dto/create-consignment-lot.dto';
 import { UpdateConsignmentLotDto } from './dto/update-consignment-lot.dto';
+import { toDecimal } from '../../common/utils/money';
 
 @Injectable()
 export class ConsignmentLotsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(tenantId: string, createConsignmentLotDto: CreateConsignmentLotDto) {
+    const { unitPrice, commissionPercent, ...rest } = createConsignmentLotDto;
     // Validar Produto
     const product = await this.prisma.product.findFirst({
       where: { id: createConsignmentLotDto.productId, tenantId },
@@ -28,7 +30,9 @@ export class ConsignmentLotsService {
 
     return this.prisma.consignmentLot.create({
       data: {
-        ...createConsignmentLotDto,
+        ...rest,
+        unitPrice: toDecimal(unitPrice),
+        commissionPercent: toDecimal(commissionPercent),
         tenantId,
       },
       include: {
@@ -86,9 +90,15 @@ export class ConsignmentLotsService {
       }
     }
 
+    const { unitPrice, commissionPercent, ...rest } = updateConsignmentLotDto;
+
     return this.prisma.consignmentLot.update({
       where: { id },
-      data: updateConsignmentLotDto,
+      data: {
+        ...rest,
+        unitPrice: unitPrice !== undefined ? toDecimal(unitPrice) : undefined,
+        commissionPercent: commissionPercent !== undefined ? toDecimal(commissionPercent) : undefined,
+      },
       include: {
         product: true,
         pos: true,
