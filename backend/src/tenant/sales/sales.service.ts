@@ -23,11 +23,12 @@ export class SalesService {
       for (const item of dto.items) {
         let remainingToSell = item.quantity;
 
-        // Buscar lotes com estoque disponível
+        // Buscar lotes com estoque disponível NO PDV ESPECÍFICO
         const lots = await tx.consignmentLot.findMany({
           where: {
             productId: item.productId,
             tenantId,
+            posId: dto.posId, // Filtro por PDV
             closedAt: null,
           },
           orderBy: { receivedAt: 'asc' }, // FIFO

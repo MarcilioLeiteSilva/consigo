@@ -16,10 +16,24 @@ export class ConsignmentLotsService {
       throw new BadRequestException('Produto inválido ou não pertence ao tenant');
     }
 
+    // Validar POS if provided
+    if (createConsignmentLotDto.posId) {
+      const pos = await this.prisma.pOS.findFirst({
+        where: { id: createConsignmentLotDto.posId, tenantId },
+      });
+      if (!pos) {
+        throw new BadRequestException('Ponto de Venda inválido ou não pertence ao tenant');
+      }
+    }
+
     return this.prisma.consignmentLot.create({
       data: {
         ...createConsignmentLotDto,
         tenantId,
+      },
+      include: {
+        product: true,
+        pos: true,
       },
     });
   }
@@ -29,6 +43,7 @@ export class ConsignmentLotsService {
       where: { tenantId },
       include: {
         product: true,
+        pos: true,
       },
       orderBy: { receivedAt: 'desc' },
     });
@@ -39,6 +54,7 @@ export class ConsignmentLotsService {
       where: { id, tenantId },
       include: {
         product: true,
+        pos: true,
       },
     });
 
@@ -61,9 +77,22 @@ export class ConsignmentLotsService {
       }
     }
 
+    if (updateConsignmentLotDto.posId) {
+      const pos = await this.prisma.pOS.findFirst({
+        where: { id: updateConsignmentLotDto.posId, tenantId },
+      });
+      if (!pos) {
+        throw new BadRequestException('Ponto de Venda inválido');
+      }
+    }
+
     return this.prisma.consignmentLot.update({
       where: { id },
       data: updateConsignmentLotDto,
+      include: {
+        product: true,
+        pos: true,
+      },
     });
   }
 

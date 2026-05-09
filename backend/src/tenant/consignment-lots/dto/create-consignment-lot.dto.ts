@@ -7,6 +7,11 @@ export class CreateConsignmentLotDto {
   @IsUUID()
   productId: string;
 
+  @ApiProperty({ example: 'uuid-do-pos', required: false })
+  @IsOptional()
+  @IsUUID()
+  posId?: string;
+
   @ApiProperty({ example: 100 })
   @IsNotEmpty()
   @IsInt()
