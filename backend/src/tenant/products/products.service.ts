@@ -14,7 +14,7 @@ export class ProductsService {
       data: {
         ...data,
         tenantId,
-        category: categoryId ? { connect: { id: categoryId } } : undefined,
+        categoryId: categoryId || null,
       },
     });
   }
@@ -52,7 +52,7 @@ export class ProductsService {
       where: { id },
       data: {
         ...data,
-        category: categoryId ? { connect: { id: categoryId } } : undefined,
+        categoryId: categoryId || null,
       },
     });
   }
