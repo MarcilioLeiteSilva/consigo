@@ -9,8 +9,15 @@ export const toMoneyString = (value: number | string | Decimal): string => {
   return new Decimal(value.toString()).toFixed(2);
 };
 
-export const toDecimal = (value: number | string | Decimal): Decimal => {
-  return new Decimal(value.toString());
+export const toDecimal = (value: any): Decimal => {
+  try {
+    if (value === null || value === undefined || value === '' || value === '[object Object]') {
+      return new Decimal(0);
+    }
+    return new Decimal(value.toString());
+  } catch (e) {
+    return new Decimal(0);
+  }
 };
 
 export const safeAdd = (a: number | string | Decimal, b: number | string | Decimal): Decimal => {

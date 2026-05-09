@@ -43,9 +43,13 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
 
     if (typeof obj === 'object') {
       // Identifica se é um objeto Decimal (Prisma/decimal.js)
-      // Checamos pelo nome da classe ou pela estrutura interna (d, e, s)
-      if (obj.constructor?.name === 'Decimal' || (obj.d && Array.isArray(obj.d) && obj.e !== undefined)) {
-        return obj.toString();
+      // Em produção, constructor.name pode ser minificado, então usamos duck-typing
+      const isDecimal = 
+        obj.constructor?.name === 'Decimal' || 
+        (obj.d && Array.isArray(obj.d) && typeof obj.e === 'number' && typeof obj.s === 'number');
+
+      if (isDecimal) {
+        return typeof obj.toString === 'function' ? obj.toString() : String(obj);
       }
 
       // Recursão para objetos aninhados (Date, etc. são mantidos)
