@@ -1,8 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Build forced at: 2026-05-09T12:53:00
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "binary"
 }
 
@@ -82,7 +83,7 @@ model PlatformAdmin {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  auditLogs    PlatformAuditLog[]
+  auditLogs PlatformAuditLog[]
 
   @@map("platform_admins")
 }
@@ -91,7 +92,7 @@ model Tenant {
   id                 String       @id @default(uuid())
   companyName        String
   slug               String       @unique
-  document           String?      // CPF or CNPJ
+  document           String? // CPF or CNPJ
   email              String       @unique
   phone              String?
   status             TenantStatus @default(TRIAL)
@@ -100,21 +101,21 @@ model Tenant {
   updatedAt          DateTime     @updatedAt
 
   // SaaS Relations
-  subscriptions      Subscription[]
-  payments           Payment[]
-  invoices           Invoice[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  invoices      Invoice[]
 
   // Operations Relations
-  users              User[]
-  categories         Category[]
-  products           Product[]
-  pointsOfSale       POS[]
-  consignmentLots    ConsignmentLot[]
-  sales              Sale[]
-  operationLogs      OperationLog[]
-  transactions       FinancialTransaction[]
-  consignorAccount   ConsignorAccount?
-  stockSnapshots     StockSnapshot[]
+  users            User[]
+  categories       Category[]
+  products         Product[]
+  pointsOfSale     POS[]
+  consignmentLots  ConsignmentLot[]
+  sales            Sale[]
+  operationLogs    OperationLog[]
+  transactions     FinancialTransaction[]
+  consignorAccount ConsignorAccount?
+  stockSnapshots   StockSnapshot[]
 
   @@map("tenants")
 }
@@ -136,16 +137,16 @@ model SubscriptionPlan {
 }
 
 model Subscription {
-  id          String   @id @default(uuid())
-  tenantId    String
-  planId      String
-  status      String   @default("active")
-  startDate   DateTime @default(now())
-  endDate     DateTime?
+  id                  String    @id @default(uuid())
+  tenantId            String
+  planId              String
+  status              String    @default("active")
+  startDate           DateTime  @default(now())
+  endDate             DateTime?
   renewalDate         DateTime?
-  asaasSubscriptionId String?   // ID da assinatura no Asaas
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  asaasSubscriptionId String? // ID da assinatura no Asaas
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   plan     SubscriptionPlan @relation(fields: [planId], references: [id])
@@ -163,7 +164,7 @@ model Payment {
   method         String
   gateway        String        @default("asaas")
   status         PaymentStatus @default(PENDING)
-  externalId     String?       // ID no gateway de pagamento
+  externalId     String? // ID no gateway de pagamento
   paidAt         DateTime?
   createdAt      DateTime      @default(now())
 
@@ -190,15 +191,15 @@ model Invoice {
 }
 
 model PlatformAuditLog {
-  id         String   @id @default(uuid())
-  adminId    String
-  action     String
-  entity     String
-  entityId   String
-  metadata   Json?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
 
-  admin      PlatformAdmin @relation(fields: [adminId], references: [id])
+  admin PlatformAdmin @relation(fields: [adminId], references: [id])
 
   @@map("platform_audit_logs")
 }
@@ -282,9 +283,9 @@ model POS {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  sales          Sale[]
-  stockSnapshots StockSnapshot[]
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sales           Sale[]
+  stockSnapshots  StockSnapshot[]
   consignmentLots ConsignmentLot[]
 
   @@index([tenantId])
@@ -292,24 +293,24 @@ model POS {
 }
 
 model ConsignmentLot {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   tenantId          String
-  posId             String?  // Opcional por enquanto, para permitir lotes "globais" ou em trânsito
+  posId             String? // Opcional por enquanto, para permitir lotes "globais" ou em trânsito
   productId         String
   quantityReceived  Int
-  quantitySold      Int      @default(0)
-  quantityReturned  Int      @default(0)
-  unitPrice         Decimal? @db.Decimal(12, 2)
-  commissionPercent Decimal  @db.Decimal(5, 2)
-  notes             String?  @db.Text
-  receivedAt        DateTime @default(now())
+  quantitySold      Int       @default(0)
+  quantityReturned  Int       @default(0)
+  unitPrice         Decimal?  @db.Decimal(12, 2)
+  commissionPercent Decimal   @db.Decimal(5, 2)
+  notes             String?   @db.Text
+  receivedAt        DateTime  @default(now())
   closedAt          DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  pos       POS?      @relation(fields: [posId], references: [id])
-  product   Product   @relation(fields: [productId], references: [id])
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pos       POS?       @relation(fields: [posId], references: [id])
+  product   Product    @relation(fields: [productId], references: [id])
   saleItems SaleItem[]
 
   @@index([tenantId])
@@ -341,7 +342,7 @@ model Sale {
   tenantId    String
   posId       String
   totalAmount Decimal  @db.Decimal(12, 2)
-  createdBy   String?  // userId
+  createdBy   String? // userId
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -356,15 +357,15 @@ model Sale {
 }
 
 model SaleItem {
-  id                String  @id @default(uuid())
+  id                String   @id @default(uuid())
   tenantId          String
   saleId            String
   productId         String
   consignmentLotId  String
   quantity          Int
-  unitPrice         Decimal @db.Decimal(12, 2)
-  commissionPercent Decimal @db.Decimal(5, 2)
-  consignorAmount   Decimal @db.Decimal(12, 2) // Valor que fica para o consignador (tenant)
+  unitPrice         Decimal  @db.Decimal(12, 2)
+  commissionPercent Decimal  @db.Decimal(5, 2)
+  consignorAmount   Decimal  @db.Decimal(12, 2) // Valor que fica para o consignador (tenant)
   createdAt         DateTime @default(now())
 
   sale           Sale           @relation(fields: [saleId], references: [id], onDelete: Cascade)
@@ -393,7 +394,7 @@ model FinancialTransaction {
   type          TransactionType
   amount        Decimal                @db.Decimal(15, 2)
   referenceType FinancialReferenceType
-  referenceId   String?                // e.g. saleId
+  referenceId   String? // e.g. saleId
   description   String?
   createdAt     DateTime               @default(now())
 
