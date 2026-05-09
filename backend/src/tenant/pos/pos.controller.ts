@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PosService } from './pos.service';
-import { CreatePoDto } from './dto/create-po.dto';
-import { UpdatePoDto } from './dto/update-po.dto';
+import { CreatePosDto } from './dto/create-pos.dto';
+import { UpdatePosDto } from './dto/update-pos.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -24,8 +24,8 @@ export class PosController {
 
   @Post()
   @ApiOperation({ summary: 'Criar um ponto de venda' })
-  create(@CurrentUser() user: any, @Body() createPoDto: CreatePoDto) {
-    return this.posService.create(user.tenantId, createPoDto);
+  create(@CurrentUser() user: any, @Body() createPosDto: CreatePosDto) {
+    return this.posService.create(user.tenantId, createPosDto);
   }
 
   @Get()
@@ -45,9 +45,9 @@ export class PosController {
   update(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() updatePoDto: UpdatePoDto,
+    @Body() updatePosDto: UpdatePosDto,
   ) {
-    return this.posService.update(user.tenantId, id, updatePoDto);
+    return this.posService.update(user.tenantId, id, updatePosDto);
   }
 
   @Delete(':id')
