@@ -391,12 +391,22 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-center">
-                      <CurrencyText value={p.salePrice} className="text-sm font-black text-slate-900" />
+                      <div className="relative group/debug">
+                        <CurrencyText value={p.salePrice} className="text-sm font-black text-slate-900" />
+                        <div className="hidden group-hover/debug:block absolute top-full bg-black text-white p-2 text-[8px] z-50 rounded mt-1">
+                          Raw: {JSON.stringify(p.salePrice)}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-8 py-6 text-center">
-                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-                        {formatPercent(p.commission)}
-                      </span>
+                      <div className="relative group/debug">
+                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+                          {formatPercent(p.commission)}
+                        </span>
+                        <div className="hidden group-hover/debug:block absolute top-full bg-black text-white p-2 text-[8px] z-50 rounded mt-1">
+                          Raw: {JSON.stringify(p.commission)}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center justify-end gap-2">

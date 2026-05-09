@@ -371,11 +371,15 @@ export default function LotsPage() {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center relative">
                           <CurrencyText value={lot.unitPrice} className="text-sm font-bold text-slate-900" />
                           <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
                             {formatPercent(lot.commissionPercent)} Comis.
                           </span>
+                          {/* Fallback de Debug */}
+                          <div className="hidden group-hover:block absolute top-full bg-black text-white p-2 text-[8px] z-50 rounded mt-1">
+                            Raw: {JSON.stringify({ price: lot.unitPrice, comis: lot.commissionPercent })}
+                          </div>
                         </div>
                       </td>
                       <td className="px-8 py-6">
