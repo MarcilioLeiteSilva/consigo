@@ -262,24 +262,32 @@ export default function ProductsPage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Identificação Visual</label>
-                    <div className="h-48 border-2 border-dashed border-slate-200 rounded-[32px] flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer group">
+                    <div className="h-48 border-2 border-dashed border-slate-200 rounded-[32px] flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 transition-all overflow-hidden relative group">
                       {formData.imageUrl ? (
-                        <img src={formData.imageUrl} className="w-full h-full object-cover rounded-[30px]" />
+                        <>
+                          <img src={formData.imageUrl} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-white text-[10px] font-bold uppercase tracking-widest">Preview da Foto</span>
+                          </div>
+                        </>
                       ) : (
                         <>
-                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-400 group-hover:text-blue-500 shadow-sm transition-all">
+                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-400 shadow-sm transition-all">
                             <ImageIcon size={24} />
                           </div>
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mídia do Produto</span>
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center px-4">Insira o link da imagem abaixo para ver o preview</span>
                         </>
                       )}
                     </div>
-                    <input 
-                      value={formData.imageUrl}
-                      onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-                      placeholder="URL da Imagem (Opcional)"
-                      className="w-full mt-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-mono outline-none"
-                    />
+                    <div className="relative mt-2">
+                      <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                      <input 
+                        value={formData.imageUrl}
+                        onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+                        placeholder="Cole aqui o link da imagem (Ex: https://...)"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
