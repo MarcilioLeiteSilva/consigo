@@ -242,15 +242,15 @@ export default function LotsPage() {
                 {/* Coluna 2: Regras e Notas */}
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Comissão deste Lote (%)</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Comissão do PDV (%)</label>
                     <input 
-                      type="number" step="0.1" required
-                      value={formData.commissionPercent}
-                      onChange={(e) => setFormData({...formData, commissionPercent: e.target.value})}
-                      placeholder="Ex: 30"
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-amber-600"
+                      type="text" 
+                      disabled
+                      value={formData.commissionPercent ? `${formData.commissionPercent}%` : ''}
+                      placeholder="Selecione o destino..."
+                      className="w-full px-6 py-4 bg-slate-100 border border-slate-200 rounded-2xl outline-none font-bold text-slate-400 cursor-not-allowed"
                     />
-                    <p className="text-[10px] text-slate-400 font-medium ml-1 italic">* Esta comissão será aplicada apenas para as vendas deste lote.</p>
+                    <p className="text-[10px] text-slate-400 font-medium ml-1 italic">* Herdado automaticamente do cadastro do Ponto de Venda.</p>
                   </div>
 
                   <div className="space-y-2">
