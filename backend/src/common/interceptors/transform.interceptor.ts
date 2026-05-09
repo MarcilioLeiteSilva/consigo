@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { toMoneyString } from '../utils/money';
+import { toMoneyString } from '../utils/prisma-decimal';
 
 export interface ApiResponse<T> {
   data: T;

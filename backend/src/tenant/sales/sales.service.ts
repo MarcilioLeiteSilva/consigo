@@ -2,7 +2,8 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { TransactionType, FinancialReferenceType } from '@prisma/client';
-import { toDecimal, safeAdd, safeMultiply, safeDivide, safeSubtract } from '../../common/utils/money';
+import { toPrismaDecimal } from '../../common/utils/prisma-decimal';
+import { safeAdd, safeMultiply, safeDivide, safeSubtract } from '../../common/utils/money';
 
 @Injectable()
 export class SalesService {
@@ -18,7 +19,7 @@ export class SalesService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      let totalAmount = toDecimal(0);
+      let totalAmount = toPrismaDecimal(0);
       const saleItemsToCreate: any[] = [];
 
       for (const item of dto.items) {
@@ -62,7 +63,7 @@ export class SalesService {
           });
 
           // --- LÓGICA FINANCEIRA SaaS ---
-          const commissionPercent = toDecimal(lot.commissionPercent);
+          const commissionPercent = toPrismaDecimal(lot.commissionPercent);
           const commissionAmount = safeDivide(safeMultiply(itemTotal, commissionPercent), 100);
           const consignorAmount = safeSubtract(itemTotal, commissionAmount);
 
@@ -88,8 +89,8 @@ export class SalesService {
             productId: item.productId,
             consignmentLotId: lot.id,
             quantity: quantityFromThisLot,
-            unitPrice: item.unitPrice,
-            commissionPercent: lot.commissionPercent,
+            unitPrice: toPrismaDecimal(item.unitPrice),
+            commissionPercent: toPrismaDecimal(lot.commissionPercent),
             consignorAmount: consignorAmount,
           });
 

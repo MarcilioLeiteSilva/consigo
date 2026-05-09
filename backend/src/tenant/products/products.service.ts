@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { toDecimal } from '../../common/utils/money';
+import { toPrismaDecimal } from '../../common/utils/prisma-decimal';
 
 @Injectable()
 export class ProductsService {
@@ -14,8 +14,8 @@ export class ProductsService {
     const product = await this.prisma.product.create({
       data: {
         ...data,
-        salePrice: toDecimal(salePrice),
-        commission: commission ? toDecimal(commission) : null,
+        salePrice: toPrismaDecimal(salePrice),
+        commission: commission ? toPrismaDecimal(commission) : null,
         tenantId,
         categoryId: categoryId || null,
       },
@@ -57,8 +57,8 @@ export class ProductsService {
       where: { id },
       data: {
         ...data,
-        salePrice: salePrice !== undefined ? toDecimal(salePrice) : undefined,
-        commission: commission === undefined ? undefined : (commission ? toDecimal(commission) : null),
+        salePrice: salePrice !== undefined ? toPrismaDecimal(salePrice) : undefined,
+        commission: commission === undefined ? undefined : (commission ? toPrismaDecimal(commission) : null),
         categoryId: categoryId === undefined ? undefined : (categoryId || null),
       },
     });

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePosDto } from './dto/create-pos.dto';
 import { UpdatePosDto } from './dto/update-pos.dto';
-import { toDecimal } from '../../common/utils/money';
+import { toPrismaDecimal } from '../../common/utils/prisma-decimal';
 
 @Injectable()
 export class PosService {
@@ -47,7 +47,7 @@ export class PosService {
       where: { id },
       data: {
         ...data,
-        defaultCommission: defaultCommission === undefined ? undefined : (defaultCommission ? toDecimal(defaultCommission) : null),
+        defaultCommission: defaultCommission !== undefined ? (defaultCommission ? toPrismaDecimal(defaultCommission) : null) : undefined,
       },
     });
   }

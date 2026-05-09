@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsUUID, IsArray, ValidateNested, IsInt, Min, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsUUID, IsArray, ValidateNested, IsInt, Min, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -14,11 +14,10 @@ class CreateSaleItemDto {
   @Min(1)
   quantity: number;
 
-  @ApiProperty({ example: 45.90 })
+  @ApiProperty({ example: '45.90' })
   @IsNotEmpty()
-  @IsNumber()
-  @Min(0)
-  unitPrice: number;
+  @IsString()
+  unitPrice: string;
 }
 
 export class CreateSaleDto {

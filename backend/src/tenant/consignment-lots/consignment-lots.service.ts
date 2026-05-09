@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateConsignmentLotDto } from './dto/create-consignment-lot.dto';
 import { UpdateConsignmentLotDto } from './dto/update-consignment-lot.dto';
-import { toDecimal } from '../../common/utils/money';
+import { toPrismaDecimal } from '../../common/utils/prisma-decimal';
 
 @Injectable()
 export class ConsignmentLotsService {
@@ -31,8 +31,8 @@ export class ConsignmentLotsService {
     return this.prisma.consignmentLot.create({
       data: {
         ...rest,
-        unitPrice: toDecimal(unitPrice),
-        commissionPercent: toDecimal(commissionPercent),
+        unitPrice: toPrismaDecimal(unitPrice),
+        commissionPercent: toPrismaDecimal(commissionPercent),
         tenantId,
       },
       include: {
@@ -96,8 +96,8 @@ export class ConsignmentLotsService {
       where: { id },
       data: {
         ...rest,
-        unitPrice: unitPrice !== undefined ? toDecimal(unitPrice) : undefined,
-        commissionPercent: commissionPercent !== undefined ? toDecimal(commissionPercent) : undefined,
+        unitPrice: unitPrice !== undefined ? toPrismaDecimal(unitPrice) : undefined,
+        commissionPercent: commissionPercent !== undefined ? toPrismaDecimal(commissionPercent) : undefined,
       },
       include: {
         product: true,
