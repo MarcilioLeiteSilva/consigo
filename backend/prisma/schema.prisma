@@ -285,6 +285,7 @@ model POS {
   tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sales          Sale[]
   stockSnapshots StockSnapshot[]
+  consignmentLots ConsignmentLot[]
 
   @@index([tenantId])
   @@map("points_of_sale")
