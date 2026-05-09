@@ -8,11 +8,13 @@ export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(tenantId: string, createProductDto: CreateProductDto) {
-    const { categoryId, ...data } = createProductDto;
+    const { categoryId, salePrice, commission, ...data } = createProductDto;
     
     return this.prisma.product.create({
       data: {
         ...data,
+        salePrice: Number(salePrice),
+        commission: commission ? Number(commission) : null,
         tenantId,
         categoryId: categoryId || null,
       },
@@ -46,13 +48,16 @@ export class ProductsService {
 
   async update(tenantId: string, id: string, updateProductDto: UpdateProductDto) {
     await this.findOne(tenantId, id);
-    const { categoryId, ...data } = updateProductDto;
+    const { categoryId, salePrice, commission, ...data } = updateProductDto;
 
     return this.prisma.product.update({
       where: { id },
       data: {
         ...data,
-        categoryId: categoryId || null,
+        // Só atualiza se o valor for enviado (evita zerar campos não enviados)
+        ...(salePrice !== undefined && { salePrice: Number(salePrice) }),
+        ...(commission !== undefined && { commission: commission !== null ? Number(commission) : null }),
+        categoryId: categoryId === undefined ? undefined : (categoryId || null),
       },
     });
   }
