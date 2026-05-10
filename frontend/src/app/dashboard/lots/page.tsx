@@ -437,6 +437,7 @@ export default function LotsPage() {
                                 quantityReceived: lot.quantityReceived.toString(),
                                 unitPrice: (lot.unitPrice || '').toString(),
                                 commissionPercent: (lot.commissionPercent || '').toString(),
+                                reference: lot.reference || '',
                                 notes: lot.notes || ''
                               });
                               setIsModalOpen(true);
