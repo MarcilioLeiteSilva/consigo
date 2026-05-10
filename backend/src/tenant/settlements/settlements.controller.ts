@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { SettlementsService } from './settlements.service';
 import { CreateSettlementDto } from './dto/create-settlement.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('settlements')
 @UseGuards(JwtAuthGuard)
