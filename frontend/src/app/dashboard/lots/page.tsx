@@ -46,6 +46,7 @@ export default function LotsPage() {
     quantityReceived: '',
     unitPrice: '',
     commissionPercent: '',
+    reference: '',
     notes: ''
   });
 
@@ -95,6 +96,7 @@ export default function LotsPage() {
             quantityReceived: lot.quantityReceived.toString(),
             unitPrice: (lot.unitPrice || '').toString(),
             commissionPercent: (lot.commissionPercent || '').toString(),
+            reference: lot.reference || '',
             notes: lot.notes || ''
           });
           setIsModalOpen(true);
@@ -111,6 +113,7 @@ export default function LotsPage() {
       quantityReceived: '',
       unitPrice: '',
       commissionPercent: '',
+      reference: '',
       notes: ''
     });
     setIsModalOpen(true);
@@ -172,6 +175,7 @@ export default function LotsPage() {
   const filteredLots = lots.filter(l => 
     (l?.product?.name || '').toLowerCase().includes(search.toLowerCase()) ||
     (l?.pos?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (l?.reference || '').toLowerCase().includes(search.toLowerCase()) ||
     (l?.notes || '').toLowerCase().includes(search.toLowerCase())
   );
 
@@ -284,6 +288,18 @@ export default function LotsPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Referência do Lote</label>
+                    <input 
+                      type="text" 
+                      value={formData.reference}
+                      onChange={(e) => setFormData({...formData, reference: e.target.value})}
+                      placeholder="Ex: Maio/2026 ou Lote Especial"
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-900"
+                    />
+                    <p className="text-[10px] text-slate-400 font-medium ml-1 italic">* Ajuda a identificar envios específicos.</p>
+                  </div>
+
+                  <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Observações / Notas</label>
                     <textarea 
                       rows={5}
@@ -368,6 +384,11 @@ export default function LotsPage() {
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-bold text-slate-900">{lot.product?.name || 'Produto Removido'}</p>
+                              {lot.reference && (
+                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase rounded border border-indigo-100">
+                                  Ref: {lot.reference}
+                                </span>
+                              )}
                               <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-black uppercase rounded">
                                 SKU: {lot.product?.sku || 'N/D'}
                               </span>
