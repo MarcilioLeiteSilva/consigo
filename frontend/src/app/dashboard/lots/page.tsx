@@ -21,7 +21,8 @@ import {
   Filter,
   ArrowUpRight,
   ArrowDownRight,
-  Eye
+  Eye,
+  DollarSign
 } from 'lucide-react';
 import api from '@/lib/api';
 import { CurrencyText } from '@/components/CurrencyText';
