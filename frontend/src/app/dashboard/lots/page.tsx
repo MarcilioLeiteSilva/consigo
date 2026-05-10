@@ -48,7 +48,8 @@ export default function LotsPage() {
     unitPrice: '',
     commissionPercent: '',
     reference: '',
-    notes: ''
+    notes: '',
+    isImmediateSale: false,
   });
 
   const loadData = async () => {
@@ -298,6 +299,29 @@ export default function LotsPage() {
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-900"
                     />
                     <p className="text-[10px] text-slate-400 font-medium ml-1 italic">* Ajuda a identificar envios específicos.</p>
+                  </div>
+
+                  <div className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                          <DollarSign size={20} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-blue-900 text-sm">Venda Imediata</p>
+                          <p className="text-blue-500 text-[10px]">Registrar como venda total no envio.</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer"
+                          checked={formData.isImmediateSale}
+                          onChange={(e) => setFormData({...formData, isImmediateSale: e.target.checked})}
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
                   </div>
 
                   <div className="space-y-2">

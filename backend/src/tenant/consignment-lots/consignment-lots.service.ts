@@ -3,13 +3,17 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateConsignmentLotDto } from './dto/create-consignment-lot.dto';
 import { UpdateConsignmentLotDto } from './dto/update-consignment-lot.dto';
 import { toPrismaDecimal } from '../../common/utils/prisma-decimal';
+import { SalesService } from '../sales/sales.service';
 
 @Injectable()
 export class ConsignmentLotsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly salesService: SalesService
+  ) {}
 
   async create(tenantId: string, createConsignmentLotDto: CreateConsignmentLotDto) {
-    const { unitPrice, commissionPercent, ...rest } = createConsignmentLotDto;
+    const { unitPrice, commissionPercent, isImmediateSale, ...rest } = createConsignmentLotDto;
     // Validar Produto
     const product = await this.prisma.product.findFirst({
       where: { id: createConsignmentLotDto.productId, tenantId },
@@ -28,7 +32,7 @@ export class ConsignmentLotsService {
       }
     }
 
-    return this.prisma.consignmentLot.create({
+    const lot = await this.prisma.consignmentLot.create({
       data: {
         ...rest,
         unitPrice: toPrismaDecimal(unitPrice),
@@ -40,6 +44,23 @@ export class ConsignmentLotsService {
         pos: true,
       },
     });
+
+    // Se for venda imediata e tiver PDV vinculado
+    if (isImmediateSale && createConsignmentLotDto.posId) {
+      // Usar o sistema para registrar a venda total do lote
+      await this.salesService.create(tenantId, 'SYSTEM', {
+        posId: createConsignmentLotDto.posId,
+        items: [
+          {
+            productId: createConsignmentLotDto.productId,
+            quantity: createConsignmentLotDto.quantityReceived,
+            unitPrice: unitPrice
+          }
+        ]
+      });
+    }
+
+    return lot;
   }
 
   async findAll(tenantId: string) {

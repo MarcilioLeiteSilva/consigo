@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { SettlementsService } from './settlements.service';
-import { CreateSettlementDto } from './dto/create-settlement.dto';
+import { CreateSettlementDto, InventorySettlementDto } from './dto/create-settlement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('settlements')
@@ -21,6 +21,16 @@ export class SettlementsController {
   @Post()
   create(@Request() req, @Body() dto: CreateSettlementDto) {
     return this.settlementsService.create(req.user.tenantId, dto);
+  }
+
+  @Get('active-lots/:posId')
+  getActiveLots(@Request() req, @Param('posId') posId: string) {
+    return this.settlementsService.getActiveLotsByPos(req.user.tenantId, posId);
+  }
+
+  @Post('inventory-based')
+  createFromInventory(@Request() req, @Body() dto: InventorySettlementDto) {
+    return this.settlementsService.createFromInventory(req.user.tenantId, dto);
   }
 
   @Get()

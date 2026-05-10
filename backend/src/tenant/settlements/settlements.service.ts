@@ -2,11 +2,16 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSettlementDto } from './dto/create-settlement.dto';
 import { TransactionType, FinancialReferenceType } from '@prisma/client';
-import { toPrismaDecimal, safeAdd } from '../../common/utils/prisma-decimal';
+import { toPrismaDecimal, safeAdd, safeSubtract } from '../../common/utils/prisma-decimal';
+import { InventorySettlementDto } from './dto/create-settlement.dto';
+import { SalesService } from '../sales/sales.service';
 
 @Injectable()
 export class SettlementsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly salesService: SalesService
+  ) {}
 
   async getPendingPOS(tenantId: string) {
     // Busca PDVs que possuem SaleItems não liquidados
@@ -184,6 +189,90 @@ export class SettlementsService {
           include: { product: true },
         },
       },
+    });
+  }
+
+  async getActiveLotsByPos(tenantId: string, posId: string) {
+    return this.prisma.consignmentLot.findMany({
+      where: {
+        tenantId,
+        posId,
+        closedAt: null,
+      },
+      include: {
+        product: { select: { name: true, sku: true } },
+      },
+      orderBy: { receivedAt: 'asc' },
+    });
+  }
+
+  async createFromInventory(tenantId: string, dto: InventorySettlementDto) {
+    const { posId, items, notes } = dto;
+
+    // 1. Validar PDV
+    const pos = await this.prisma.pOS.findFirst({
+      where: { id: posId, tenantId },
+    });
+    if (!pos) throw new BadRequestException('PDV inválido');
+
+    return await this.prisma.$transaction(async (tx) => {
+      const saleItemIds: string[] = [];
+
+      for (const item of items) {
+        // Buscar o lote
+        const lot = await tx.consignmentLot.findUnique({
+          where: { id: item.lotId },
+        });
+
+        if (!lot || lot.tenantId !== tenantId) {
+          throw new BadRequestException(`Lote ${item.lotId} não encontrado`);
+        }
+
+        // Calcular quanto foi vendido desde o último acerto
+        const currentTotalSold = Number(lot.quantitySold);
+        const totalReceived = Number(lot.quantityReceived);
+        const totalReturned = Number(lot.quantityReturned);
+        
+        // Vendidos = Recebidos - Devolvidos - Restantes
+        const theoreticalTotalSold = totalReceived - totalReturned - item.remainingQuantity;
+        const newlySold = theoreticalTotalSold - currentTotalSold;
+
+        if (newlySold < 0) {
+          throw new BadRequestException(`A contagem para o lote ${lot.id} indica um estoque maior do que o registrado.`);
+        }
+
+        if (newlySold > 0) {
+          // Registrar a venda da diferença
+          const sale = await this.salesService.create(tenantId, 'SYSTEM', {
+            posId,
+            items: [
+              {
+                productId: lot.productId,
+                quantity: newlySold,
+                unitPrice: Number(lot.unitPrice)
+              }
+            ]
+          });
+
+          // Pegar os IDs dos itens de venda criados para vincular ao fechamento
+          // Como usamos o salesService.create, ele já criou os SaleItems
+          const createdItems = await tx.saleItem.findMany({
+            where: { saleId: sale.id }
+          });
+          saleItemIds.push(...createdItems.map(i => i.id));
+        }
+      }
+
+      if (saleItemIds.length === 0) {
+        throw new BadRequestException('Não houve variação de estoque para gerar um fechamento');
+      }
+
+      // Agora criamos o fechamento real usando os itens que acabamos de "vender" por inventário
+      return this.create(tenantId, {
+        posId,
+        notes: notes || 'Fechamento baseado em inventário',
+        saleItemIds
+      });
     });
   }
 }

@@ -14,3 +14,26 @@ export class CreateSettlementDto {
   @IsOptional()
   saleItemIds?: string[]; // Opcional: se não enviado, fecha todas as vendas pendentes do PDV
 }
+
+export class InventorySettlementItemDto {
+  @IsString()
+  @IsNotEmpty()
+  lotId: string;
+
+  @IsNumber()
+  @Min(0)
+  remainingQuantity: number;
+}
+
+export class InventorySettlementDto {
+  @IsString()
+  @IsNotEmpty()
+  posId: string;
+
+  @IsArray()
+  items: InventorySettlementItemDto[];
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+}

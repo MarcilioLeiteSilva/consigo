@@ -37,4 +37,8 @@ export class CreateConsignmentLotDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
+  isImmediateSale?: boolean;
 }
