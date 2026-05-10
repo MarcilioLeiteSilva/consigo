@@ -66,6 +66,7 @@ enum TransactionType {
 enum FinancialReferenceType {
   SALE
   PAYOUT
+  SETTLEMENT
   ADJUSTMENT
   MANUAL
 }
@@ -106,16 +107,17 @@ model Tenant {
   invoices      Invoice[]
 
   // Operations Relations
-  users            User[]
-  categories       Category[]
-  products         Product[]
-  pointsOfSale     POS[]
-  consignmentLots  ConsignmentLot[]
-  sales            Sale[]
-  operationLogs    OperationLog[]
-  transactions     FinancialTransaction[]
-  consignorAccount ConsignorAccount?
-  stockSnapshots   StockSnapshot[]
+  users                  User[]
+  categories             Category[]
+  products               Product[]
+  pointsOfSale           POS[]
+  consignmentLots        ConsignmentLot[]
+  sales                  Sale[]
+  consignmentSettlements ConsignmentSettlement[]
+  operationLogs          OperationLog[]
+  transactions           FinancialTransaction[]
+  consignorAccount       ConsignorAccount?
+  stockSnapshots         StockSnapshot[]
 
   @@map("tenants")
 }
@@ -282,9 +284,10 @@ model POS {
   updatedAt         DateTime @updatedAt
 
   tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  sales           Sale[]
-  stockSnapshots  StockSnapshot[]
-  consignmentLots ConsignmentLot[]
+  sales                  Sale[]
+  stockSnapshots         StockSnapshot[]
+  consignmentLots        ConsignmentLot[]
+  consignmentSettlements ConsignmentSettlement[]
 
   @@index([tenantId])
   @@map("points_of_sale")
@@ -365,11 +368,13 @@ model SaleItem {
   unitPrice         Decimal  @db.Decimal(12, 2)
   commissionPercent Decimal  @db.Decimal(5, 2)
   consignorAmount   Decimal  @db.Decimal(12, 2) // Valor que fica para o consignador (tenant)
+  settlementId      String?
   createdAt         DateTime @default(now())
 
-  sale           Sale           @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  product        Product        @relation(fields: [productId], references: [id])
-  consignmentLot ConsignmentLot @relation(fields: [consignmentLotId], references: [id])
+  sale                 Sale                  @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product              Product               @relation(fields: [productId], references: [id])
+  consignmentLot       ConsignmentLot        @relation(fields: [consignmentLotId], references: [id])
+  consignmentSettlement ConsignmentSettlement? @relation(fields: [settlementId], references: [id])
 
   @@index([tenantId])
   @@map("sale_items")
@@ -385,6 +390,26 @@ model ConsignorAccount {
 
   @@index([tenantId])
   @@map("consignor_accounts")
+}
+
+model ConsignmentSettlement {
+  id              String   @id @default(uuid())
+  tenantId        String
+  posId           String
+  totalAmount     Decimal  @db.Decimal(12, 2) // Total das vendas líquidas neste fechamento
+  status          String   @default("PENDING") // PENDING, COMPLETED
+  notes           String?
+  settledAt       DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pos       POS        @relation(fields: [posId], references: [id])
+  saleItems SaleItem[]
+
+  @@index([tenantId])
+  @@index([posId])
+  @@map("consignment_settlements")
 }
 
 model FinancialTransaction {

@@ -10,6 +10,7 @@ import { OperationLogsModule } from './operation-logs/operation-logs.module';
 import { FinancialTransactionsModule } from './financial-transactions/financial-transactions.module';
 import { ConsignorAccountsModule } from './consignor-accounts/consignor-accounts.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { SettlementsModule } from './settlements/settlements.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     FinancialTransactionsModule,
     ConsignorAccountsModule,
     DashboardModule,
+    SettlementsModule,
   ],
 })
 export class TenantModule {}
