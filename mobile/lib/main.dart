@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'features/auth/login_screen.dart';
+import 'features/splash/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ConsigoApp());
 }
 
@@ -18,13 +19,12 @@ class ConsigoApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF6366F1),
-          brightness: Brightness.dark,
+          brightness: Brightness.light,
         ),
-        textTheme: GoogleFonts.interTextTheme(
-          ThemeData.dark().textTheme,
-        ),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        textTheme: GoogleFonts.interTextTheme(),
       ),
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }

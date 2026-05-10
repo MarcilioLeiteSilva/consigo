@@ -4,10 +4,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class ApiClient {
   late Dio dio;
   final storage = const FlutterSecureStorage();
-
-  ApiClient() {
+  static final ApiClient _instance = ApiClient._internal();
+  factory ApiClient() => _instance;
+  ApiClient._internal() {
     dio = Dio(BaseOptions(
-      baseUrl: 'https://consigo-backend-consigo.xc4mw1.easypanel.host', // Altere para o IP da sua máquina se testar em dispositivo real
+      baseUrl: 'https://consigo-backend-consigo.xc4mw1.easypanel.host',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ));
@@ -40,13 +41,16 @@ class ApiClient {
               final retryRes = await dio.fetch(opts);
               return handler.resolve(retryRes);
             } catch (err) {
-              await storage.deleteAll();
-              // Aqui você pode disparar um evento de logout global
+              await logout();
             }
           }
         }
         return handler.next(e);
       },
     ));
+  }
+
+  Future<void> logout() async {
+    await storage.deleteAll();
   }
 }

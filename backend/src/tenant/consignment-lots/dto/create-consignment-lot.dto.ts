@@ -28,6 +28,11 @@ export class CreateConsignmentLotDto {
   @IsString()
   unitPrice: string;
 
+  @ApiProperty({ example: 'Maio/2026', required: false })
+  @IsOptional()
+  @IsString()
+  reference?: string;
+
   @ApiProperty({ example: 'Lote de verão 2026', required: false })
   @IsOptional()
   @IsString()

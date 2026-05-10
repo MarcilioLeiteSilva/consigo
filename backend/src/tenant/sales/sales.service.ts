@@ -205,6 +205,7 @@ export class SalesService {
         posName: item.posName,
         posCity: item.posCity,
         available: item.totalAvailable,
+        posId: item.posId,
       }))
       .filter(a => a.available > 0 && a.available <= 3)
       .sort((a, b) => a.available - b.available);

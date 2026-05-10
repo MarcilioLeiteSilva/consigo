@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import '../sales/new_sale_screen.dart';
+import 'package:dio/dio.dart';
+import '../../core/api_client.dart';
+import '../dashboard/main_navigation_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -78,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ],
                             ),
-                            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 40),
+                            child: Image.asset('assets/images/logo.png', height: 40, width: 40),
                           ),
                           const SizedBox(height: 20),
                           Text(
@@ -274,16 +276,55 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() async {
-    setState(() => _isLoading = true);
-    // Simular login por enquanto
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isLoading = false);
-    
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const NewSaleScreen()),
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, preencha todos os campos')),
       );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    
+    try {
+      final response = await ApiClient().dio.post('/auth/login', data: {
+        'email': _emailController.text,
+        'password': _passwordController.text,
+      });
+
+      final data = response.data['data'];
+      final storage = ApiClient().storage;
+      
+      await storage.write(key: 'accessToken', value: data['accessToken']);
+      await storage.write(key: 'refreshToken', value: data['refreshToken']);
+      
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        );
+      }
+    } catch (e) {
+      String message = 'Erro ao realizar login. Tente novamente.';
+      if (e is DioException) {
+        if (e.response?.statusCode == 401) {
+          message = 'E-mail ou senha inválidos.';
+        } else {
+          message = e.response?.data?['message'] ?? message;
+        }
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 }
