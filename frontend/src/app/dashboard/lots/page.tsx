@@ -20,7 +20,8 @@ import {
   TrendingUp,
   Filter,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Eye
 } from 'lucide-react';
 import api from '@/lib/api';
 import { CurrencyText } from '@/components/CurrencyText';
@@ -383,7 +384,12 @@ export default function LotsPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <p className="font-bold text-slate-900">{lot.product?.name || 'Produto Removido'}</p>
+                              <p 
+                                onClick={() => router.push(`/dashboard/lots/${lot.id}`)}
+                                className="font-bold text-slate-900 hover:text-indigo-600 cursor-pointer transition-colors"
+                              >
+                                {lot.product?.name || 'Produto Removido'}
+                              </p>
                               {lot.reference && (
                                 <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase rounded border border-indigo-100">
                                   Ref: {lot.reference}
@@ -428,6 +434,13 @@ export default function LotsPage() {
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => router.push(`/dashboard/lots/${lot.id}`)}
+                            className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                            title="Ver Detalhes"
+                          >
+                            <Eye size={18} />
+                          </button>
                           <button 
                             onClick={() => {
                               setEditingLot(lot);
