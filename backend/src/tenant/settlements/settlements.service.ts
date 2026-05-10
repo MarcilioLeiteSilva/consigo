@@ -249,7 +249,7 @@ export class SettlementsService {
               {
                 productId: lot.productId,
                 quantity: newlySold,
-                unitPrice: Number(lot.unitPrice)
+                unitPrice: lot.unitPrice.toString()
               }
             ]
           });
