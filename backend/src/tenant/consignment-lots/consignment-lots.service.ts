@@ -111,7 +111,7 @@ export class ConsignmentLotsService {
       }
     }
 
-    const { unitPrice, commissionPercent, ...rest } = updateConsignmentLotDto;
+    const { unitPrice, commissionPercent, isImmediateSale, productId, posId, ...rest } = updateConsignmentLotDto;
 
     return this.prisma.consignmentLot.update({
       where: { id },
@@ -119,6 +119,8 @@ export class ConsignmentLotsService {
         ...rest,
         unitPrice: unitPrice !== undefined ? toPrismaDecimal(unitPrice) : undefined,
         commissionPercent: commissionPercent !== undefined ? toPrismaDecimal(commissionPercent) : undefined,
+        product: productId ? { connect: { id: productId } } : undefined,
+        pos: posId ? { connect: { id: posId } } : undefined,
       },
       include: {
         product: true,
