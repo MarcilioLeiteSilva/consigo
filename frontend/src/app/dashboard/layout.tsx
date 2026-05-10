@@ -38,7 +38,17 @@ const menuItems = [
   { icon: Database, label: 'Estoque', href: '/dashboard/stock' },
   { icon: Store, label: 'PDVs', href: '/dashboard/pos' },
   { icon: ShoppingCart, label: 'Vendas', href: '/dashboard/sales' },
-  { icon: DollarSign, label: 'Financeiro', href: '/dashboard/financial' },
+  { icon: ClipboardList, label: 'Fechamento', href: '/dashboard/settlements' },
+  { 
+    icon: DollarSign, 
+    label: 'Financeiro', 
+    href: '/dashboard/financial',
+    children: [
+      { label: 'Extrato Geral', href: '/dashboard/financial/transactions' },
+      { label: 'Saldos de Parceiros', href: '/dashboard/financial/balances' },
+      { label: 'Calculadora de Custos', href: '/dashboard/financial/calculator', badge: 'Em breve' },
+    ]
+  },
   { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
   { icon: Users, label: 'Usuários', href: '/dashboard/users' },
   { icon: Settings, label: 'Configurações', href: '/dashboard/settings' },
@@ -90,28 +100,66 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Menu */}
           <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             {menuItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || (item.children?.some(child => pathname === child.href));
+              const hasChildren = item.children && item.children.length > 0;
+              
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center p-3 rounded-xl transition-all duration-200 group",
-                    isActive 
-                      ? "bg-blue-50 text-blue-600 shadow-sm" 
-                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                <div key={item.href} className="space-y-1">
+                  <Link
+                    href={hasChildren ? '#' : item.href}
+                    onClick={(e) => {
+                      if (hasChildren) {
+                        e.preventDefault();
+                        // No futuro: implementar toggle de colapso se necessário
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center p-3 rounded-xl transition-all duration-200 group",
+                      isActive 
+                        ? "bg-blue-50 text-blue-600 shadow-sm" 
+                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    )}
+                  >
+                    <item.icon className={cn("w-5 h-5 min-w-[20px]", isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600")} />
+                    {isSidebarOpen && (
+                      <span className="ml-3 font-medium text-sm whitespace-nowrap overflow-hidden">
+                        {item.label}
+                      </span>
+                    )}
+                    {isActive && isSidebarOpen && !hasChildren && (
+                      <div className="ml-auto w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                    )}
+                  </Link>
+
+                  {hasChildren && isSidebarOpen && (
+                    <div className="ml-9 space-y-1 border-l border-slate-100 pl-4 py-1">
+                      {item.children.map((child) => {
+                        const isChildActive = pathname === child.href;
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={cn(
+                              "block py-2 px-3 text-xs font-medium rounded-lg transition-all",
+                              isChildActive 
+                                ? "text-blue-600 bg-blue-50/50" 
+                                : "text-slate-400 hover:text-slate-700 hover:bg-slate-50"
+                            )}
+                          >
+                            <div className="flex items-center justify-between">
+                              {child.label}
+                              {child.badge && (
+                                <span className="text-[8px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-black uppercase">
+                                  {child.badge}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
                   )}
-                >
-                  <item.icon className={cn("w-5 h-5 min-w-[20px]", isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600")} />
-                  {isSidebarOpen && (
-                    <span className="ml-3 font-medium text-sm whitespace-nowrap overflow-hidden">
-                      {item.label}
-                    </span>
-                  )}
-                  {isActive && isSidebarOpen && (
-                    <div className="ml-auto w-1.5 h-1.5 bg-blue-600 rounded-full" />
-                  )}
-                </Link>
+                </div>
               );
             })}
           </nav>
