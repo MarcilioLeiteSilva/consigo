@@ -99,7 +99,8 @@ export default function LotsPage() {
             unitPrice: (lot.unitPrice || '').toString(),
             commissionPercent: (lot.commissionPercent || '').toString(),
             reference: lot.reference || '',
-            notes: lot.notes || ''
+            notes: lot.notes || '',
+            isImmediateSale: false,
           });
           setIsModalOpen(true);
         }
@@ -116,7 +117,8 @@ export default function LotsPage() {
       unitPrice: '',
       commissionPercent: '',
       reference: '',
-      notes: ''
+      notes: '',
+      isImmediateSale: false,
     });
     setIsModalOpen(true);
   };
@@ -475,7 +477,8 @@ export default function LotsPage() {
                                 unitPrice: (lot.unitPrice || '').toString(),
                                 commissionPercent: (lot.commissionPercent || '').toString(),
                                 reference: lot.reference || '',
-                                notes: lot.notes || ''
+                                notes: lot.notes || '',
+                                isImmediateSale: false,
                               });
                               setIsModalOpen(true);
                             }}
