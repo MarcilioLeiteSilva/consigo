@@ -194,10 +194,12 @@ export default function LotsPage() {
   };
 
   const filteredLots = lots.filter(l => 
-    (l?.product?.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (l?.pos?.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (l?.reference || '').toLowerCase().includes(search.toLowerCase()) ||
-    (l?.notes || '').toLowerCase().includes(search.toLowerCase())
+    l.posId !== null && (
+      (l?.product?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (l?.pos?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (l?.reference || '').toLowerCase().includes(search.toLowerCase()) ||
+      (l?.notes || '').toLowerCase().includes(search.toLowerCase())
+    )
   );
 
   return (
