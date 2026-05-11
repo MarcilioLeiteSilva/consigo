@@ -278,6 +278,11 @@ model POS {
   city              String?
   state             String?
   location          String?
+  street            String?
+  number            String?
+  neighborhood      String?
+  zipCode           String?
+  complement        String?
   defaultCommission Decimal? @db.Decimal(5, 2)
   isActive          Boolean  @default(true)
   openingDate       DateTime?

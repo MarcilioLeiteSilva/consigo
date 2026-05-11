@@ -15,7 +15,10 @@ import {
   Clock,
   ChevronRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  MapPin,
+  Phone,
+  Mail
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate, formatOnlyDate } from '@/utils/formatters';
@@ -73,6 +76,19 @@ export default function POSDetailsPage() {
     return acc + (quantitySold * unitPrice * (1 - commissionPercent / 100));
   }, 0) || 0;
 
+    const address = [
+      pos.street,
+      pos.number,
+      pos.neighborhood,
+      pos.city,
+      pos.state,
+      pos.zipCode
+    ].filter(Boolean).join(', ');
+    
+    const query = address || pos.location || `${pos.city} ${pos.state}`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       {/* Header */}
@@ -92,10 +108,29 @@ export default function POSDetailsPage() {
               ) : (
                 <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-black uppercase rounded-full border border-rose-100">Inativo</span>
               )}
+              <a 
+                href={getGoogleMapsUrl()} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100"
+                title="Ver no Mapa"
+              >
+                <MapPin size={20} />
+              </a>
             </div>
-            <p className="text-slate-500 text-sm font-medium">
-              {pos.city} - {pos.state} | Responsável: {pos.responsibleName || 'N/D'} | Criado em: {formatOnlyDate(pos.openingDate || pos.createdAt)}
-            </p>
+            <div className="flex items-center gap-4 text-slate-500 text-sm font-medium mt-1">
+              <span className="flex items-center gap-1">
+                <MapPin size={14} className="text-blue-400" />
+                {pos.city} - {pos.state}
+              </span>
+              <span className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+              <span>Responsável: {pos.responsibleName || 'N/D'}</span>
+              <span className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+              <span className="flex items-center gap-1">
+                <Calendar size={14} className="text-slate-400" />
+                Criado em: {formatOnlyDate(pos.openingDate || pos.createdAt)}
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex gap-3">

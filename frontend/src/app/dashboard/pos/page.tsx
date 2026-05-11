@@ -49,7 +49,12 @@ export default function POSPage() {
     isActive: true,
     openingDate: '',
     billingDay: '',
-    isRecurring: false
+    isRecurring: false,
+    street: '',
+    number: '',
+    neighborhood: '',
+    zipCode: '',
+    complement: ''
   });
 
   const loadPos = async () => {
@@ -84,7 +89,12 @@ export default function POSPage() {
       isActive: true,
       openingDate: '',
       billingDay: '',
-      isRecurring: false
+      isRecurring: false,
+      street: '',
+      number: '',
+      neighborhood: '',
+      zipCode: '',
+      complement: ''
     });
     setIsModalOpen(true);
   };
@@ -104,7 +114,12 @@ export default function POSPage() {
       isActive: pos.isActive ?? true,
       openingDate: pos.openingDate ? pos.openingDate.split('T')[0] : '',
       billingDay: pos.billingDay ? pos.billingDay.toString() : '',
-      isRecurring: pos.isRecurring ?? false
+      isRecurring: pos.isRecurring ?? false,
+      street: pos.street || '',
+      number: pos.number || '',
+      neighborhood: pos.neighborhood || '',
+      zipCode: pos.zipCode || '',
+      complement: pos.complement || ''
     });
     setIsModalOpen(true);
   };
@@ -248,8 +263,8 @@ export default function POSPage() {
 
                 {/* Coluna 2: Localização e Status */}
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Localização</label>
+                  <div className="space-y-4">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Localização e Endereço</label>
                     <div className="grid grid-cols-3 gap-4">
                       <input 
                         value={formData.city}
@@ -265,11 +280,41 @@ export default function POSPage() {
                         className="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center uppercase"
                       />
                     </div>
-                    <textarea 
-                      rows={3}
-                      value={formData.location}
-                      onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      placeholder="Endereço completo (Rua, Número, Bairro)..."
+                    
+                    <div className="grid grid-cols-4 gap-4">
+                      <input 
+                        value={formData.street}
+                        onChange={(e) => setFormData({...formData, street: e.target.value})}
+                        placeholder="Logradouro (Rua/Av)"
+                        className="col-span-3 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                      />
+                      <input 
+                        value={formData.number}
+                        onChange={(e) => setFormData({...formData, number: e.target.value})}
+                        placeholder="Nº"
+                        className="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <input 
+                        value={formData.neighborhood}
+                        onChange={(e) => setFormData({...formData, neighborhood: e.target.value})}
+                        placeholder="Bairro"
+                        className="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                      />
+                      <input 
+                        value={formData.zipCode}
+                        onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
+                        placeholder="CEP"
+                        className="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                      />
+                    </div>
+
+                    <input 
+                      value={formData.complement}
+                      onChange={(e) => setFormData({...formData, complement: e.target.value})}
+                      placeholder="Complemento (Opcional)"
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                     />
                   </div>

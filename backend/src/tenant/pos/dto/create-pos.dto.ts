@@ -66,4 +66,29 @@ export class CreatePosDto {
   @IsOptional()
   @IsBoolean()
   isRecurring?: boolean;
+
+  @ApiProperty({ example: 'Rua Principal', required: false })
+  @IsOptional()
+  @IsString()
+  street?: string;
+
+  @ApiProperty({ example: '123', required: false })
+  @IsOptional()
+  @IsString()
+  number?: string;
+
+  @ApiProperty({ example: 'Centro', required: false })
+  @IsOptional()
+  @IsString()
+  neighborhood?: string;
+
+  @ApiProperty({ example: '12345-678', required: false })
+  @IsOptional()
+  @IsString()
+  zipCode?: string;
+
+  @ApiProperty({ example: 'Sala 01', required: false })
+  @IsOptional()
+  @IsString()
+  complement?: string;
 }
