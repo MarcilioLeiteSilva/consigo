@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -11,7 +12,11 @@ import {
   Settings, 
   LogOut,
   Sparkles,
-  BarChart3
+  BarChart3,
+  ChevronDown,
+  Calculator,
+  Box,
+  Repeat
 } from 'lucide-react';
 
 const menuItems = [
@@ -19,12 +24,30 @@ const menuItems = [
   { icon: ShoppingCart, label: 'Vendas', href: '/dashboard/sales' },
   { icon: Package, label: 'Produtos', href: '/dashboard/products' },
   { icon: Users, label: 'Consignadores', href: '/dashboard/consignors' },
-  { icon: Wallet, label: 'Financeiro', href: '/dashboard/finance' },
+  { 
+    icon: Wallet, 
+    label: 'Financeiro', 
+    href: '/dashboard/finance',
+    children: [
+      { icon: Calculator, label: 'Geral', href: '/dashboard/finance' },
+      { icon: Box, label: 'Calculadora 3D', href: '/dashboard/finance/calc-3d' },
+      { icon: Repeat, label: 'Calculadora Revenda', href: '/dashboard/finance/calc-resale' },
+    ]
+  },
   { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['Financeiro']);
+
+  const toggleMenu = (label: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(label) 
+        ? prev.filter(l => l !== label) 
+        : [...prev, label]
+    );
+  };
 
   return (
     <aside className="sidebar glass">
@@ -74,7 +97,7 @@ export default function Sidebar() {
         .nav {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 0.25rem;
           flex: 1;
         }
 
@@ -87,6 +110,8 @@ export default function Sidebar() {
           color: var(--muted-foreground);
           font-weight: 500;
           transition: all 0.2s ease;
+          width: 100%;
+          text-align: left;
         }
 
         .nav-item:hover {
@@ -98,6 +123,39 @@ export default function Sidebar() {
           background: var(--primary);
           color: white;
           box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        }
+
+        .submenu {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          margin-left: 1.5rem;
+          margin-top: 0.25rem;
+          margin-bottom: 0.5rem;
+          padding-left: 0.5rem;
+          border-left: 1px solid var(--border);
+        }
+
+        .sub-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.625rem 0.875rem;
+          border-radius: 0.625rem;
+          color: var(--muted-foreground);
+          font-size: 0.875rem;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .sub-item:hover {
+          color: var(--primary);
+          background: rgba(99, 102, 241, 0.05);
+        }
+
+        .sub-item.active {
+          color: var(--primary);
+          font-weight: 700;
         }
 
         .footer {
@@ -128,7 +186,38 @@ export default function Sidebar() {
 
       <nav className="nav">
         {menuItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.children?.some(c => pathname === c.href));
+          const isExpanded = expandedMenus.includes(item.label);
+
+          if (item.children) {
+            return (
+              <div key={item.label}>
+                <button 
+                  onClick={() => toggleMenu(item.label)}
+                  className={`nav-item ${isActive && !isExpanded ? 'active' : ''}`}
+                >
+                  <item.icon size={20} />
+                  <span className="flex-1">{item.label}</span>
+                  <ChevronDown size={16} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                </button>
+                {isExpanded && (
+                  <div className="submenu">
+                    {item.children.map(child => (
+                      <Link 
+                        key={child.href} 
+                        href={child.href}
+                        className={`sub-item ${pathname === child.href ? 'active' : ''}`}
+                      >
+                        <child.icon size={16} />
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <Link 
               key={item.href} 
