@@ -133,7 +133,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                   {hasChildren && isSidebarOpen && (
                     <div className="ml-9 space-y-1 border-l border-slate-100 pl-4 py-1">
-                      {item.children.map((child) => {
+                      {item.children.map((child: any) => {
                         const isChildActive = pathname === child.href;
                         return (
                           <Link
