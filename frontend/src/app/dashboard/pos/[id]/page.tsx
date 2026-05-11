@@ -93,7 +93,10 @@ export default function POSDetailsPage() {
                 <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-black uppercase rounded-full border border-rose-100">Inativo</span>
               )}
             </div>
-            <p className="text-slate-500 text-sm font-medium">{pos.city} - {pos.state} | Responsável: {pos.responsibleName || 'N/D'}</p>
+            <p className="text-slate-500 text-sm font-medium">
+              {pos.city} - {pos.state} | Responsável: {pos.responsibleName || 'N/D'} | Criado em: {formatDate(pos.createdAt)}
+              {pos.openingDate && ` | Inauguração: ${formatDate(pos.openingDate)}`}
+            </p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -141,7 +144,8 @@ export default function POSDetailsPage() {
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Período Atual</p>
             <p className="text-xl font-bold text-slate-900">Maio / 2026</p>
             <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1">
-              <Clock size={10} /> Próxima cobrança: 15/05
+              <Clock size={10} /> Próxima cobrança: {pos.billingDay ? `${pos.billingDay.toString().padStart(2, '0')}/05` : 'N/D'}
+              {pos.isRecurring && <span className="ml-2 text-blue-500 font-black">(RECORRENTE)</span>}
             </p>
           </div>
         </div>
