@@ -24,3 +24,14 @@ export const safeNumber = (value: any): number => {
   const parsed = parseFloat(String(value));
   return isNaN(parsed) ? 0 : parsed;
 };
+
+export const formatDate = (date: string | Date | null | undefined): string => {
+  if (!date) return 'N/D';
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(date));
+};

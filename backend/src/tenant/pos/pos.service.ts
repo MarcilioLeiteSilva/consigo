@@ -30,6 +30,21 @@ export class PosService {
   async findOne(tenantId: string, id: string) {
     const pos = await this.prisma.pOS.findFirst({
       where: { id, tenantId },
+      include: {
+        consignmentLots: {
+          include: { product: true },
+          where: { closedAt: null }, // Apenas lotes ativos
+        },
+        sales: {
+          take: 5,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            items: {
+              include: { product: true }
+            }
+          }
+        }
+      }
     });
 
     if (!pos) {

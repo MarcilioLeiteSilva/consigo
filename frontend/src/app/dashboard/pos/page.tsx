@@ -339,13 +339,16 @@ export default function POSPage() {
                 filteredPos.map((pos) => (
                   <tr key={pos.id} className="hover:bg-slate-50/30 transition-colors group">
                     <td className="px-8 py-6">
-                      <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-200">
+                      <div 
+                        className="flex items-center gap-5 cursor-pointer group/item"
+                        onClick={() => router.push(`/dashboard/pos/${pos.id}`)}
+                      >
+                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-200 group-hover/item:bg-blue-50 group-hover/item:text-blue-600 group-hover/item:border-blue-100 transition-all">
                           <Store size={24} />
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-bold text-slate-900">{pos.name}</p>
+                            <p className="font-bold text-slate-900 group-hover/item:text-blue-600 transition-colors">{pos.name}</p>
                             {!pos.isActive && <span className="px-2 py-0.5 bg-rose-50 text-rose-500 text-[8px] font-black uppercase rounded">Inativo</span>}
                           </div>
                           <div className="flex items-center gap-3">
