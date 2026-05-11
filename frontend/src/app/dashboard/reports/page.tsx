@@ -12,7 +12,8 @@ import {
   ArrowDownRight,
   Package,
   Store,
-  DollarSign
+  DollarSign,
+  ShoppingCart
 } from 'lucide-react';
 
 export default function ReportsPage() {
