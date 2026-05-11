@@ -32,35 +32,83 @@ export class ConsignmentLotsService {
       }
     }
 
-    const lot = await this.prisma.consignmentLot.create({
-      data: {
-        ...rest,
-        unitPrice: toPrismaDecimal(unitPrice),
-        commissionPercent: toPrismaDecimal(commissionPercent),
-        tenantId,
-      },
-      include: {
-        product: true,
-        pos: true,
-      },
-    });
-
-    // Se for venda imediata e tiver PDV vinculado
-    if (isImmediateSale && createConsignmentLotDto.posId) {
-      // Usar o sistema para registrar a venda total do lote
-      await this.salesService.create(tenantId, 'SYSTEM', {
-        posId: createConsignmentLotDto.posId,
-        items: [
-          {
+    // Início da Transação para garantir integridade do estoque
+    return await this.prisma.$transaction(async (tx) => {
+      // Se for uma reposição para PDV (posId presente), validar Estoque Geral
+      if (createConsignmentLotDto.posId) {
+        const generalLots = await tx.consignmentLot.findMany({
+          where: {
             productId: createConsignmentLotDto.productId,
-            quantity: createConsignmentLotDto.quantityReceived,
-            unitPrice: unitPrice
-          }
-        ]
-      });
-    }
+            tenantId,
+            posId: null,
+            closedAt: null,
+          },
+          orderBy: { receivedAt: 'asc' }, // FIFO
+        });
 
-    return lot;
+        const totalGeneralStock = generalLots.reduce((acc, l) => {
+          return acc + (l.quantityReceived - l.quantitySold - l.quantityReturned);
+        }, 0);
+
+        if (totalGeneralStock < createConsignmentLotDto.quantityReceived) {
+          throw new BadRequestException(
+            `Estoque insuficiente no Estoque Geral. Disponível: ${totalGeneralStock} unidades.`
+          );
+        }
+
+        // Realizar a baixa no Estoque Geral (consumindo os lotes via FIFO)
+        let remainingToTransfer = createConsignmentLotDto.quantityReceived;
+        for (const genLot of generalLots) {
+          if (remainingToTransfer <= 0) break;
+          
+          const availableInLot = genLot.quantityReceived - genLot.quantitySold - genLot.quantityReturned;
+          if (availableInLot <= 0) continue;
+
+          const amountFromThisLot = Math.min(remainingToTransfer, availableInLot);
+          
+          await tx.consignmentLot.update({
+            where: { id: genLot.id },
+            data: { 
+              // Incrementamos quantitySold para 'bloquear' essas unidades como transferidas
+              // Nota: Isso não gera venda financeira, apenas reduz disponibilidade no estoque geral
+              quantitySold: { increment: amountFromThisLot } 
+            },
+          });
+
+          remainingToTransfer -= amountFromThisLot;
+        }
+      }
+
+      // Criar o novo lote no PDV (ou no Geral se posId for null)
+      const lot = await tx.consignmentLot.create({
+        data: {
+          ...rest,
+          unitPrice: toPrismaDecimal(unitPrice),
+          commissionPercent: toPrismaDecimal(commissionPercent),
+          tenantId,
+        },
+        include: {
+          product: true,
+          pos: true,
+        },
+      });
+
+      // Se for venda imediata e tiver PDV vinculado (lógica mantida)
+      if (isImmediateSale && createConsignmentLotDto.posId) {
+        await this.salesService.create(tenantId, 'SYSTEM', {
+          posId: createConsignmentLotDto.posId,
+          items: [
+            {
+              productId: createConsignmentLotDto.productId,
+              quantity: createConsignmentLotDto.quantityReceived,
+              unitPrice: unitPrice
+            }
+          ]
+        });
+      }
+
+      return lot;
+    });
   }
 
   async findAll(tenantId: string) {

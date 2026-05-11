@@ -151,15 +151,32 @@ export class SalesService {
   async getStock(tenantId: string) {
     const products = await this.prisma.product.findMany({
       where: { tenantId },
-      include: { consignmentLots: { where: { closedAt: null } } },
+      include: { 
+        consignmentLots: { 
+          where: { closedAt: null },
+          include: { pos: true }
+        } 
+      },
     });
 
-    return products.map(p => ({
-      id: p.id,
-      name: p.name,
-      sku: p.sku,
-      totalStock: p.consignmentLots.reduce((acc, lot) => acc + (lot.quantityReceived - lot.quantitySold - lot.quantityReturned), 0),
-    }));
+    return products.map(p => {
+      const generalStock = p.consignmentLots
+        .filter(l => l.posId === null)
+        .reduce((acc, lot) => acc + (lot.quantityReceived - lot.quantitySold - lot.quantityReturned), 0);
+        
+      const networkStock = p.consignmentLots
+        .filter(l => l.posId !== null)
+        .reduce((acc, lot) => acc + (lot.quantityReceived - lot.quantitySold - lot.quantityReturned), 0);
+
+      return {
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        generalStock,
+        networkStock,
+        totalStock: generalStock + networkStock,
+      };
+    });
   }
 
   async getStockAlerts(tenantId: string) {

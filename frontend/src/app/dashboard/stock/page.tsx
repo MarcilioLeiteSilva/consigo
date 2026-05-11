@@ -19,6 +19,7 @@ import api from '@/lib/api';
 
 export default function StockPage() {
   const router = useRouter();
+  const [activeView, setActiveView] = useState<'geral' | 'rede'>('geral');
   const [stock, setStock] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -40,68 +41,94 @@ export default function StockPage() {
     loadStock();
   }, [router]);
 
-  const filteredStock = stock.filter(item => 
-    (item?.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (item?.sku || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredStock = stock.filter(item => {
+    const searchMatch = (item?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+                        (item?.sku || '').toLowerCase().includes(search.toLowerCase());
+    
+    if (activeView === 'geral') return searchMatch && item.generalStock > 0;
+    return searchMatch && item.networkStock > 0;
+  });
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Visão Geral de Estoque</h1>
-          <p className="text-slate-500 text-sm">Acompanhe a disponibilidade de produtos em toda a rede.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Gestão de Estoque</h1>
+          <p className="text-slate-500 text-sm">Controle centralizado e distribuição para a rede.</p>
         </div>
         <div className="flex gap-3">
           <button 
             onClick={() => router.push('/dashboard/lots')}
-            className="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3.5 px-6 rounded-2xl transition-all"
+            className="flex items-center justify-center gap-2 bg-slate-900 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-slate-800 transition-all shadow-lg"
           >
-            <ArrowUpRight size={20} className="text-blue-500" /> Movimentar Estoque
+            <ArrowUpRight size={20} /> Abastecer Geral
           </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-6">
-          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-            <Archive size={32} />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+          <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-4">
+            <Archive size={24} />
           </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total de Itens</p>
-            <p className="text-3xl font-black text-slate-900">
-              {stock.reduce((acc, item) => acc + item.totalStock, 0)}
-            </p>
-          </div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Geral</p>
+          <p className="text-2xl font-black text-slate-900">
+            {stock.reduce((acc, item) => acc + (item.generalStock || 0), 0)}
+          </p>
         </div>
         
-        <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-6">
-          <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
-            <AlertTriangle size={32} />
+        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+          <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-4">
+            <Store size={24} />
           </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estoque Baixo</p>
-            <p className="text-3xl font-black text-slate-900">
-              {stock.filter(item => item.totalStock < 5).length}
-            </p>
-          </div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total na Rede</p>
+          <p className="text-2xl font-black text-slate-900">
+            {stock.reduce((acc, item) => acc + (item.networkStock || 0), 0)}
+          </p>
         </div>
 
-        <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-6">
-          <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-            <Package size={32} />
+        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+          <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-4">
+            <Package size={24} />
           </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SKUs Ativos</p>
-            <p className="text-3xl font-black text-slate-900">{stock.length}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Consolidado</p>
+          <p className="text-2xl font-black text-slate-900">
+            {stock.reduce((acc, item) => acc + (item.totalStock || 0), 0)}
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+          <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 mb-4">
+            <AlertTriangle size={24} />
           </div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Abaixo do Mínimo</p>
+          <p className="text-2xl font-black text-slate-900">
+            {stock.filter(item => (item.generalStock || 0) < 5).length}
+          </p>
         </div>
       </div>
 
-      {/* Stock Table */}
+      {/* Tabs & Table */}
       <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-8 pt-8 flex items-center justify-between border-b border-slate-50">
+          <div className="flex gap-8">
+            <button 
+              onClick={() => setActiveView('geral')}
+              className={`pb-4 text-sm font-black uppercase tracking-widest transition-all border-b-2 ${activeView === 'geral' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+            >
+              Estoque Geral (Central)
+            </button>
+            <button 
+              onClick={() => setActiveView('rede')}
+              className={`pb-4 text-sm font-black uppercase tracking-widest transition-all border-b-2 ${activeView === 'rede' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+            >
+              Estoque na Rede (PDVs)
+            </button>
+          </div>
+        </div>
+
         <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -124,7 +151,7 @@ export default function StockPage() {
               <tr className="bg-slate-50/50">
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">SKU</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Quantidade Total</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Qtd. no {activeView === 'geral' ? 'Geral' : 'PDV'}</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ações</th>
               </tr>
@@ -134,7 +161,7 @@ export default function StockPage() {
                 <tr>
                   <td colSpan={5} className="px-8 py-32 text-center">
                     <Loader2 className="animate-spin mx-auto text-blue-600 mb-4" size={40} />
-                    <p className="text-slate-500 font-bold">Calculando níveis de estoque...</p>
+                    <p className="text-slate-500 font-bold">Processando inventário...</p>
                   </td>
                 </tr>
               ) : filteredStock.length > 0 ? (
@@ -142,12 +169,14 @@ export default function StockPage() {
                   <tr key={item.id} className="hover:bg-slate-50/30 transition-colors group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-200">
+                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-200 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
                           <Package size={24} />
                         </div>
                         <div>
                           <p className="font-bold text-slate-900">{item.name}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Consignado em rede</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">
+                            {activeView === 'geral' ? 'Disponível para envio' : 'Consignado em rede'}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -157,23 +186,23 @@ export default function StockPage() {
                       </span>
                     </td>
                     <td className="px-8 py-6 text-center">
-                      <span className={`text-xl font-black ${item.totalStock < 5 ? 'text-rose-600' : 'text-slate-900'}`}>
-                        {item.totalStock}
+                      <span className={`text-xl font-black ${ (activeView === 'geral' ? item.generalStock : item.networkStock) < 5 ? 'text-rose-600' : 'text-slate-900'}`}>
+                        {activeView === 'geral' ? item.generalStock : item.networkStock}
                       </span>
                       <span className="text-[10px] font-bold text-slate-400 ml-1">UN</span>
                     </td>
                     <td className="px-8 py-6 text-center">
-                      {item.totalStock === 0 ? (
+                      {(activeView === 'geral' ? item.generalStock : item.networkStock) === 0 ? (
                         <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-black uppercase rounded-full border border-rose-100">
                           Esgotado
                         </span>
-                      ) : item.totalStock < 5 ? (
-                        <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-full border border-amber-100">
-                          Baixo Estoque
+                      ) : (activeView === 'geral' ? item.generalStock : item.networkStock) < 5 ? (
+                        <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-full border border-rose-100">
+                          Crítico
                         </span>
                       ) : (
                         <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-full border border-emerald-100">
-                          Estável
+                          Abastecido
                         </span>
                       )}
                     </td>
@@ -197,8 +226,8 @@ export default function StockPage() {
                         <Database size={40} />
                       </div>
                       <div>
-                        <p className="text-slate-900 font-black text-lg">Nenhum estoque encontrado</p>
-                        <p className="text-slate-500 text-sm">Registre lotes para que os produtos apareçam aqui.</p>
+                        <p className="text-slate-900 font-black text-lg">Nenhum estoque nesta visão</p>
+                        <p className="text-slate-500 text-sm">Altere o filtro ou realize movimentações.</p>
                       </div>
                     </div>
                   </td>
