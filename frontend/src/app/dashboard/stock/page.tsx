@@ -13,7 +13,8 @@ import {
   Filter,
   BarChart3,
   Archive,
-  ArrowRight
+  ArrowRight,
+  PlusCircle
 } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -21,14 +22,29 @@ export default function StockPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<'geral' | 'rede'>('geral');
   const [stock, setStock] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    productId: '',
+    quantityReceived: '',
+    unitPrice: '',
+    commissionPercent: '0',
+    reference: '',
+    notes: ''
+  });
 
   const loadStock = async () => {
     setLoading(true);
     try {
       const response = await api.get('/sales/stock');
       setStock(Array.isArray(response.data) ? response.data : response.data?.data || []);
+      
+      const prodRes = await api.get('/products');
+      setProducts(Array.isArray(prodRes.data) ? prodRes.data : prodRes.data?.data || []);
     } catch (err: any) {
       console.error('Erro ao carregar estoque:', err);
       if (err.response?.status === 401) router.push('/login');
@@ -40,6 +56,26 @@ export default function StockPage() {
   useEffect(() => {
     loadStock();
   }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.post('/consignment-lots', {
+        ...formData,
+        quantityReceived: parseInt(formData.quantityReceived),
+        posId: null
+      });
+      setIsModalOpen(false);
+      setFormData({ productId: '', quantityReceived: '', unitPrice: '', commissionPercent: '0', reference: '', notes: '' });
+      loadStock();
+    } catch (err) {
+      console.error('Erro ao incluir produto no estoque:', err);
+      alert('Falha ao incluir produto. Verifique os dados.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const filteredStock = stock.filter(item => {
     const searchMatch = (item?.name || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -56,14 +92,6 @@ export default function StockPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Gestão de Estoque</h1>
           <p className="text-slate-500 text-sm">Controle centralizado e distribuição para a rede.</p>
-        </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={() => router.push('/dashboard/lots')}
-            className="flex items-center justify-center gap-2 bg-slate-900 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-slate-800 transition-all shadow-lg"
-          >
-            <ArrowUpRight size={20} /> Abastecer Geral
-          </button>
         </div>
       </div>
 
@@ -112,20 +140,38 @@ export default function StockPage() {
 
       {/* Tabs & Table */}
       <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="px-8 pt-8 flex items-center justify-between border-b border-slate-50">
-          <div className="flex gap-8">
+        <div className="px-8 pt-8 flex items-center justify-between border-b border-slate-50 flex-wrap gap-4">
+          <div className="flex gap-12">
             <button 
               onClick={() => setActiveView('geral')}
-              className={`pb-4 text-sm font-black uppercase tracking-widest transition-all border-b-2 ${activeView === 'geral' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+              className={`pb-4 text-xl font-black uppercase tracking-tight transition-all border-b-4 ${activeView === 'geral' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
             >
-              Estoque Geral (Central)
+              Estoque Geral
             </button>
             <button 
               onClick={() => setActiveView('rede')}
-              className={`pb-4 text-sm font-black uppercase tracking-widest transition-all border-b-2 ${activeView === 'rede' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+              className={`pb-4 text-xl font-black uppercase tracking-tight transition-all border-b-4 ${activeView === 'rede' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
             >
-              Estoque na Rede (PDVs)
+              Estoque na Rede
             </button>
+          </div>
+          
+          <div className="pb-4">
+            {activeView === 'geral' ? (
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 bg-blue-600 text-white font-bold py-3 px-8 rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-100 text-sm"
+              >
+                <PlusCircle size={20} /> Incluir Produtos - Estoque Central
+              </button>
+            ) : (
+              <button 
+                onClick={() => router.push('/dashboard/lots')}
+                className="flex items-center gap-2 bg-slate-900 text-white font-bold py-3 px-8 rounded-2xl hover:bg-slate-800 transition-all shadow-lg text-sm"
+              >
+                <ArrowUpRight size={20} /> Abastecer Rede
+              </button>
+            )}
           </div>
         </div>
 
@@ -140,9 +186,6 @@ export default function StockPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="p-3 bg-slate-50 text-slate-500 rounded-xl border border-slate-100 hover:bg-slate-100 transition-all">
-            <Filter size={20} />
-          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -237,6 +280,97 @@ export default function StockPage() {
           </table>
         </div>
       </div>
+
+      {/* Modal Incluir Produtos */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Incluir Produtos</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Estoque Central</p>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Produto</label>
+                <select 
+                  required
+                  value={formData.productId}
+                  onChange={(e) => setFormData({...formData, productId: e.target.value})}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium appearance-none"
+                >
+                  <option value="">Selecione um produto...</option>
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.sku || 'S/ SKU'})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantidade</label>
+                  <input 
+                    required
+                    type="number"
+                    min="1"
+                    placeholder="0"
+                    value={formData.quantityReceived}
+                    onChange={(e) => setFormData({...formData, quantityReceived: e.target.value})}
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-black"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Preço de Custo (Un)</label>
+                  <input 
+                    required
+                    type="text"
+                    placeholder="0.00"
+                    value={formData.unitPrice}
+                    onChange={(e) => setFormData({...formData, unitPrice: e.target.value})}
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-black"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Referência (Opcional)</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Lote Junho/26"
+                  value={formData.reference}
+                  onChange={(e) => setFormData({...formData, reference: e.target.value})}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-4 bg-slate-100 text-slate-600 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-200 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-[2] py-4 bg-blue-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : 'Confirmar Entrada'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
