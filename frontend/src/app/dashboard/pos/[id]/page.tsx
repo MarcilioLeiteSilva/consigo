@@ -253,7 +253,11 @@ export default function POSDetailsPage() {
             
             <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm p-8 space-y-6">
               {pos.sales?.map((sale: any) => (
-                <div key={sale.id} className="flex items-center justify-between group">
+                <div 
+                  key={sale.id} 
+                  onClick={() => router.push(`/dashboard/sales/${sale.id}`)}
+                  className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-4 -m-4 rounded-[32px] transition-all"
+                >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-emerald-100">
                       <TrendingUp size={20} />
@@ -263,9 +267,12 @@ export default function POSDetailsPage() {
                       <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{formatDate(sale.createdAt)}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-slate-900 leading-tight">{formatCurrency(sale.totalAmount)}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">#{sale.id.slice(0, 8).toUpperCase()}</p>
+                  <div className="text-right flex items-center gap-4">
+                    <div>
+                      <p className="text-sm font-black text-slate-900 leading-tight">{formatCurrency(sale.totalAmount)}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">#{sale.id.slice(0, 8).toUpperCase()}</p>
+                    </div>
+                    <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
                   </div>
                 </div>
               ))}

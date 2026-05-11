@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   ShoppingCart, 
   Search, 
@@ -14,6 +15,7 @@ import { CurrencyText } from '@/components/CurrencyText';
 import api from '@/lib/api';
 
 export default function SalesHistoryPage() {
+  const router = useRouter();
   const [sales, setSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -132,7 +134,11 @@ export default function SalesHistoryPage() {
                   </td>
                   <td><span className="status-pill">Concluída</span></td>
                   <td>
-                    <button className="btn btn-outline" style={{ padding: '0.5rem' }}>
+                    <button 
+                      onClick={() => router.push(`/dashboard/sales/${sale.id}`)}
+                      className="btn btn-outline" 
+                      style={{ padding: '0.5rem' }}
+                    >
                       <Eye size={16} />
                     </button>
                   </td>

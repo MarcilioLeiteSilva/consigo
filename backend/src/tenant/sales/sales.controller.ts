@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
@@ -34,5 +34,11 @@ export class SalesController {
   @ApiOperation({ summary: 'Consultar alertas de estoque baixo' })
   getStockAlerts(@CurrentUser() user: any) {
     return this.salesService.getStockAlerts(user.tenantId);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Buscar detalhes de uma venda por ID' })
+  findOne(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.salesService.findOne(user.tenantId, id);
   }
 }

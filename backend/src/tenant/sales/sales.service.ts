@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { TransactionType, FinancialReferenceType } from '@prisma/client';
@@ -211,5 +211,23 @@ export class SalesService {
       .sort((a, b) => a.available - b.available);
 
     return alerts;
+  }
+
+  async findOne(tenantId: string, id: string) {
+    const sale = await this.prisma.sale.findFirst({
+      where: { id, tenantId },
+      include: {
+        items: {
+          include: { product: true }
+        },
+        pos: true,
+      }
+    });
+
+    if (!sale) {
+      throw new NotFoundException('Venda não encontrada');
+    }
+
+    return sale;
   }
 }
