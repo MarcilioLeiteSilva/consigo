@@ -18,7 +18,8 @@ import {
   AlertCircle,
   MapPin,
   Phone,
-  Mail
+  Mail,
+  X
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate, formatOnlyDate } from '@/utils/formatters';
@@ -29,6 +30,7 @@ export default function POSDetailsPage() {
   const [pos, setPos] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isMovimentarOpen, setIsMovimentarOpen] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const loadDetails = async () => {
     setLoading(true);
@@ -109,15 +111,13 @@ export default function POSDetailsPage() {
               ) : (
                 <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-black uppercase rounded-full border border-rose-100">Inativo</span>
               )}
-              <a 
-                href={getGoogleMapsUrl()} 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <button 
+                onClick={() => setIsMapModalOpen(true)}
                 className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100"
                 title="Ver no Mapa"
               >
                 <MapPin size={20} />
-              </a>
+              </button>
             </div>
             <div className="flex items-center gap-4 text-slate-500 text-sm font-medium mt-1">
               <span className="flex items-center gap-1">
@@ -341,6 +341,57 @@ export default function POSDetailsPage() {
           </div>
         </div>
       </div>
+      {/* Map Modal */}
+      {isMapModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[40px] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col h-[85vh]">
+            {/* Modal Header */}
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                  <MapPin size={28} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{pos.name}</h2>
+                  <p className="text-sm font-bold text-slate-500">
+                    {[pos.street, pos.number, pos.neighborhood, pos.city, pos.state].filter(Boolean).join(', ')}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsMapModalOpen(false)} 
+                className="w-12 h-12 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:rotate-90 transition-all duration-300 shadow-sm"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Map Area */}
+            <div className="flex-1 bg-slate-100 relative">
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                  [pos.street, pos.number, pos.neighborhood, pos.city, pos.state, pos.zipCode].filter(Boolean).join(', ') || pos.location || `${pos.city} ${pos.state}`
+                )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                allowFullScreen
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button 
+                onClick={() => setIsMapModalOpen(false)}
+                className="px-8 py-3 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-800 transition-all"
+              >
+                Fechar Mapa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
