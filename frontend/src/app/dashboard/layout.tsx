@@ -34,10 +34,8 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Package, label: 'Produtos', href: '/dashboard/products' },
   { icon: Tags, label: 'Categorias', href: '/dashboard/categories' },
-  { icon: Layers, label: 'Lotes', href: '/dashboard/lots' },
   { icon: Database, label: 'Estoque', href: '/dashboard/stock' },
   { icon: Store, label: 'PDVs', href: '/dashboard/pos' },
-  { icon: ShoppingCart, label: 'Vendas', href: '/dashboard/sales' },
   { icon: ClipboardList, label: 'Fechamento', href: '/dashboard/settlements' },
   { 
     icon: DollarSign, 
@@ -45,14 +43,21 @@ const menuItems = [
     href: '/dashboard/financial',
     children: [
       { label: 'Extrato Geral', href: '/dashboard/financial' },
+      { icon: ShoppingCart, label: 'Vendas', href: '/dashboard/sales' },
       { label: 'Calculadora 3D', href: '/dashboard/finance/calc-3d' },
       { label: 'Calculadora Revenda', href: '/dashboard/finance/calc-resale' },
     ]
   },
   { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
-  { icon: Users, label: 'Usuários', href: '/dashboard/users' },
-  { icon: Settings, label: 'Configurações', href: '/dashboard/settings' },
-  { icon: ClipboardList, label: 'Auditoria', href: '/dashboard/audit' },
+  { 
+    icon: Settings, 
+    label: 'Configurações', 
+    href: '/dashboard/settings',
+    children: [
+      { label: 'Meu Perfil', href: '/dashboard/settings' },
+      { icon: Users, label: 'Usuários', href: '/dashboard/users' },
+    ]
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
