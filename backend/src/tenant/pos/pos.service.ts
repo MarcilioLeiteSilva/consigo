@@ -9,13 +9,14 @@ export class PosService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(tenantId: string, createPosDto: CreatePosDto) {
-    const { defaultCommission, ...data } = createPosDto;
+    const { defaultCommission, openingDate, ...data } = createPosDto;
     
     return this.prisma.pOS.create({
       data: {
         ...data,
         tenantId,
         defaultCommission: defaultCommission ? toPrismaDecimal(defaultCommission) : null,
+        openingDate: openingDate ? new Date(openingDate) : null,
       },
     });
   }
@@ -56,13 +57,14 @@ export class PosService {
 
   async update(tenantId: string, id: string, updatePosDto: UpdatePosDto) {
     await this.findOne(tenantId, id);
-    const { defaultCommission, ...data } = updatePosDto;
+    const { defaultCommission, openingDate, ...data } = updatePosDto;
 
     return this.prisma.pOS.update({
       where: { id },
       data: {
         ...data,
         defaultCommission: defaultCommission !== undefined ? (defaultCommission ? toPrismaDecimal(defaultCommission) : null) : undefined,
+        openingDate: openingDate !== undefined ? (openingDate ? new Date(openingDate) : null) : undefined,
       },
     });
   }
