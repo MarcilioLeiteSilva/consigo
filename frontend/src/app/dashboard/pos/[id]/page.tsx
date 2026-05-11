@@ -29,7 +29,7 @@ export default function POSDetailsPage() {
     setLoading(true);
     try {
       const response = await api.get(`/pos/${params.id}`);
-      setPos(response.data);
+      setPos(response.data.data);
     } catch (err) {
       console.error('Erro ao carregar detalhes do PDV:', err);
     } finally {
