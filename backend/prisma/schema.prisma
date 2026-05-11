@@ -280,6 +280,9 @@ model POS {
   location          String?
   defaultCommission Decimal? @db.Decimal(5, 2)
   isActive          Boolean  @default(true)
+  openingDate       DateTime?
+  billingDay        Int?
+  isRecurring       Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

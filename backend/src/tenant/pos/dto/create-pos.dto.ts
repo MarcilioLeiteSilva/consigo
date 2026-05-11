@@ -51,4 +51,19 @@ export class CreatePosDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiProperty({ example: '2026-05-11', required: false })
+  @IsOptional()
+  @IsString()
+  openingDate?: string;
+
+  @ApiProperty({ example: 15, required: false })
+  @IsOptional()
+  @IsNumber()
+  billingDay?: number;
+
+  @ApiProperty({ example: false, default: false })
+  @IsOptional()
+  @IsBoolean()
+  isRecurring?: boolean;
 }

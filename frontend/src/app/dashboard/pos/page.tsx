@@ -46,7 +46,10 @@ export default function POSPage() {
     state: '',
     location: '',
     defaultCommission: '',
-    isActive: true
+    isActive: true,
+    openingDate: '',
+    billingDay: '',
+    isRecurring: false
   });
 
   const loadPos = async () => {
@@ -78,7 +81,10 @@ export default function POSPage() {
       state: '',
       location: '',
       defaultCommission: '',
-      isActive: true
+      isActive: true,
+      openingDate: '',
+      billingDay: '',
+      isRecurring: false
     });
     setIsModalOpen(true);
   };
@@ -95,7 +101,10 @@ export default function POSPage() {
       state: pos.state || '',
       location: pos.location || '',
       defaultCommission: (pos.defaultCommission || '').toString(),
-      isActive: pos.isActive ?? true
+      isActive: pos.isActive ?? true,
+      openingDate: pos.openingDate ? pos.openingDate.split('T')[0] : '',
+      billingDay: pos.billingDay ? pos.billingDay.toString() : '',
+      isRecurring: pos.isRecurring ?? false
     });
     setIsModalOpen(true);
   };
@@ -106,7 +115,8 @@ export default function POSPage() {
     try {
       const payload = {
         ...formData,
-        defaultCommission: formData.defaultCommission // Enviando como string
+        defaultCommission: formData.defaultCommission, // Enviando como string
+        billingDay: formData.billingDay ? parseInt(formData.billingDay) : null,
       };
 
       if (editingPos) {
@@ -276,6 +286,42 @@ export default function POSPage() {
                     >
                       <div className={`w-6 h-6 bg-white rounded-full shadow-sm transition-all duration-300 ${formData.isActive ? 'translate-x-6' : 'translate-x-0'}`} />
                     </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        Data de Abertura
+                      </label>
+                      <input 
+                        type="date"
+                        value={formData.openingDate}
+                        onChange={(e) => setFormData({...formData, openingDate: e.target.value})}
+                        className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ciclo de Acerto</label>
+                      <div className="flex gap-2">
+                        <input 
+                          type="number" min="1" max="31"
+                          value={formData.billingDay}
+                          onChange={(e) => setFormData({...formData, billingDay: e.target.value})}
+                          placeholder="Dia"
+                          className="w-20 px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-black text-center"
+                        />
+                        <div className="flex-1 flex items-center justify-between px-4 py-4 bg-slate-50 rounded-2xl border border-slate-100">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recorrente</span>
+                          <button 
+                            type="button"
+                            onClick={() => setFormData({...formData, isRecurring: !formData.isRecurring})}
+                            className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${formData.isRecurring ? 'bg-blue-500' : 'bg-slate-200'}`}
+                          >
+                            <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${formData.isRecurring ? 'translate-x-4' : 'translate-x-0'}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
