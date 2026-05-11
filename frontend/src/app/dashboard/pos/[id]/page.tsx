@@ -94,7 +94,7 @@ export default function POSDetailsPage() {
               )}
             </div>
             <p className="text-slate-500 text-sm font-medium">
-              {pos.city} - {pos.state} | Responsável: {pos.responsibleName || 'N/D'} | Criado em: {formatOnlyDate(pos.createdAt)}
+              {pos.city} - {pos.state} | Responsável: {pos.responsibleName || 'N/D'} | Criado em: {formatOnlyDate(pos.openingDate || pos.createdAt)}
             </p>
           </div>
         </div>
