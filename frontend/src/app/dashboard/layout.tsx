@@ -57,9 +57,18 @@ const menuItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['Financeiro']);
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+
+  const toggleMenu = (label: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(label) 
+        ? prev.filter(l => l !== label) 
+        : [...prev, label]
+    );
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -102,37 +111,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {menuItems.map((item) => {
               const isActive = pathname === item.href || (item.children?.some(child => pathname === child.href));
               const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = expandedMenus.includes(item.label);
               
               return (
-                <div key={item.href} className="space-y-1">
-                  <Link
-                    href={hasChildren ? '#' : item.href}
-                    onClick={(e) => {
+                <div key={item.label} className="space-y-1">
+                  <div
+                    onClick={() => {
                       if (hasChildren) {
-                        e.preventDefault();
-                        // No futuro: implementar toggle de colapso se necessário
+                        toggleMenu(item.label);
+                      } else {
+                        router.push(item.href);
                       }
                     }}
                     className={cn(
-                      "flex items-center p-3 rounded-xl transition-all duration-200 group",
-                      isActive 
+                      "flex items-center p-3 rounded-xl transition-all duration-200 group cursor-pointer",
+                      isActive && !hasChildren
                         ? "bg-blue-50 text-blue-600 shadow-sm" 
                         : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                     )}
                   >
                     <item.icon className={cn("w-5 h-5 min-w-[20px]", isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600")} />
                     {isSidebarOpen && (
-                      <span className="ml-3 font-medium text-sm whitespace-nowrap overflow-hidden">
+                      <span className="ml-3 font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
                         {item.label}
                       </span>
+                    )}
+                    {hasChildren && isSidebarOpen && (
+                      <ChevronRight size={14} className={cn("transition-transform duration-200", isExpanded ? "rotate-90" : "")} />
                     )}
                     {isActive && isSidebarOpen && !hasChildren && (
                       <div className="ml-auto w-1.5 h-1.5 bg-blue-600 rounded-full" />
                     )}
-                  </Link>
+                  </div>
 
-                  {hasChildren && isSidebarOpen && (
-                    <div className="ml-9 space-y-1 border-l border-slate-100 pl-4 py-1">
+                  {hasChildren && isSidebarOpen && isExpanded && (
+                    <div className="ml-9 space-y-1 border-l border-slate-100 pl-4 py-1 animate-in slide-in-from-top-1 duration-200">
                       {item.children.map((child: any) => {
                         const isChildActive = pathname === child.href;
                         return (
