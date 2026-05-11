@@ -75,15 +75,31 @@ export default function LotsPage() {
 
   useEffect(() => {
     loadData().then(() => {
-      // Se vier um ID via query param, abre o modal de edição
       const urlParams = new URLSearchParams(window.location.search);
+      
+      // Verificar se deve abrir criação para um PDV específico
+      const posId = urlParams.get('posId');
+      const shouldCreate = urlParams.get('create') === 'true';
+      
+      if (shouldCreate && posId) {
+        handleOpenCreate();
+        // O setFormData no handleOpenCreate é assíncrono, 
+        // então injetamos o posId diretamente ou via helper
+        const selectedPos = posList.find(p => p.id === posId);
+        setFormData(prev => ({
+          ...prev,
+          posId: posId,
+          commissionPercent: selectedPos?.defaultCommission?.toString() || ''
+        }));
+      }
+
+      // Edição por ID
       const lotId = urlParams.get('id');
       if (lotId) {
-        // Busca o lote carregado
-        // Nota: loadData já atualizou o state 'lots'
+        // ...
       }
     });
-  }, [router]);
+  }, [router, posList.length]); // Adicionado dependência para garantir que posList esteja disponível
 
   useEffect(() => {
     if (lots.length > 0) {

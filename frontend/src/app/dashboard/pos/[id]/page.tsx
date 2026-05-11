@@ -14,7 +14,8 @@ import {
   Info,
   Clock,
   ChevronRight,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate } from '@/utils/formatters';
@@ -24,6 +25,7 @@ export default function POSDetailsPage() {
   const router = useRouter();
   const [pos, setPos] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isMovimentarOpen, setIsMovimentarOpen] = useState(false);
 
   const loadDetails = async () => {
     setLoading(true);
@@ -95,11 +97,36 @@ export default function POSDetailsPage() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center justify-center gap-2 bg-slate-900 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-slate-800 transition-all shadow-lg text-sm">
-            <RefreshCcw size={18} /> Movimentar
-          </button>
-          <button className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-100 text-sm">
-            <PlusCircle size={18} /> Abastecer
+          <div className="relative">
+            <button 
+              onClick={() => setIsMovimentarOpen(!isMovimentarOpen)}
+              className="flex items-center justify-center gap-2 bg-slate-900 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-slate-800 transition-all shadow-lg text-sm"
+            >
+              <RefreshCcw size={18} /> Movimentar
+            </button>
+            
+            {isMovimentarOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <button className="w-full text-left px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50">
+                  <ArrowLeft size={16} className="text-amber-500" /> Devolver Produtos
+                </button>
+                <button 
+                  onClick={() => router.push(`/dashboard/lots?posId=${pos.id}&create=true`)}
+                  className="w-full text-left px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                >
+                  <PlusCircle size={16} className="text-blue-500" /> Abastecer (Novo Lote)
+                </button>
+                <button className="w-full text-left px-6 py-4 text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
+                  <AlertCircle size={16} /> Registrar Perda
+                </button>
+              </div>
+            )}
+          </div>
+          <button 
+            onClick={() => router.push(`/dashboard/lots?posId=${pos.id}&create=true`)}
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-100 text-sm"
+          >
+            <PlusCircle size={18} /> Novo Lote
           </button>
         </div>
       </div>
@@ -141,9 +168,9 @@ export default function POSDetailsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="space-y-12">
         {/* Produtos Enviados */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 uppercase tracking-tighter">
               <Package className="text-blue-600" /> Produtos Enviados
@@ -214,53 +241,57 @@ export default function POSDetailsPage() {
           </div>
         </div>
 
-        {/* Movimentações Recentes */}
-        <div className="space-y-6">
-          <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 px-2 uppercase tracking-tighter">
-            <History className="text-blue-600" /> Movimentações
-          </h3>
-          
-          <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm p-8 space-y-6">
-            {pos.sales?.map((sale: any) => (
-              <div key={sale.id} className="flex items-center justify-between group">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-emerald-100">
-                    <TrendingUp size={20} />
+        {/* Movimentações Recentes - Agora em baixo */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-6">
+            <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 px-2 uppercase tracking-tighter">
+              <History className="text-blue-600" /> Histórico de Movimentações
+            </h3>
+            
+            <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm p-8 space-y-6">
+              {pos.sales?.map((sale: any) => (
+                <div key={sale.id} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-emerald-100">
+                      <TrendingUp size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900 leading-tight">Venda Realizada</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{formatDate(sale.createdAt)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900 leading-tight">Venda Realizada</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{formatDate(sale.createdAt)}</p>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-slate-900 leading-tight">{formatCurrency(sale.totalAmount)}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">#{sale.id.slice(0, 8).toUpperCase()}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-black text-slate-900 leading-tight">{formatCurrency(sale.totalAmount)}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">#{sale.id.slice(0, 8).toUpperCase()}</p>
+              ))}
+              {(!pos.sales || pos.sales.length === 0) && (
+                <div className="text-center py-10 flex flex-col items-center gap-3">
+                  <History className="text-slate-100" size={40} />
+                  <p className="text-slate-400 text-sm font-bold">Nenhuma venda registrada.</p>
                 </div>
-              </div>
-            ))}
-            {(!pos.sales || pos.sales.length === 0) && (
-              <div className="text-center py-10 flex flex-col items-center gap-3">
-                <History className="text-slate-100" size={40} />
-                <p className="text-slate-400 text-sm font-bold">Nenhuma venda registrada.</p>
-              </div>
-            )}
-            <button className="w-full py-4 text-[10px] font-black text-blue-600 uppercase tracking-widest border-t border-slate-50 mt-4 hover:text-blue-700 transition-all flex items-center justify-center gap-2">
-              Ver Histórico Completo <ChevronRight size={14} />
-            </button>
+              )}
+              <button className="w-full py-4 text-[10px] font-black text-blue-600 uppercase tracking-widest border-t border-slate-50 mt-4 hover:text-blue-700 transition-all flex items-center justify-center gap-2">
+                Ver Histórico Completo <ChevronRight size={14} />
+              </button>
+            </div>
           </div>
 
-          <div className="bg-blue-50 rounded-[40px] p-8 border border-blue-100 relative overflow-hidden group">
-             <div className="absolute -bottom-8 -right-8 text-blue-200/30 transition-transform duration-500 group-hover:scale-110">
-               <Info size={140} />
-             </div>
-             <div className="relative z-10">
-                <h4 className="text-blue-900 font-black text-lg mb-2 flex items-center gap-2">
-                  <Info size={20} /> Dica de Gestão
-                </h4>
-                <p className="text-blue-700 text-xs font-bold leading-relaxed opacity-80">
-                  Lotes com menos de 5 unidades restantes aparecem em destaque para facilitar o abastecimento proativo de seus parceiros.
-                </p>
-             </div>
+          <div className="space-y-6">
+            <div className="bg-blue-50 rounded-[40px] p-8 border border-blue-100 relative overflow-hidden group h-full">
+              <div className="absolute -bottom-8 -right-8 text-blue-200/30 transition-transform duration-500 group-hover:scale-110">
+                <Info size={140} />
+              </div>
+              <div className="relative z-10">
+                  <h4 className="text-blue-900 font-black text-lg mb-2 flex items-center gap-2">
+                    <Info size={20} /> Dica de Gestão
+                  </h4>
+                  <p className="text-blue-700 text-xs font-bold leading-relaxed opacity-80">
+                    Lotes com menos de 5 unidades restantes aparecem em destaque para facilitar o abastecimento proativo de seus parceiros.
+                  </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
