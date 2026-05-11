@@ -155,24 +155,6 @@ export default function StockPage() {
               Estoque na Rede
             </button>
           </div>
-          
-          <div className="pb-4">
-            {activeView === 'geral' ? (
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 bg-blue-600 text-white font-bold py-3 px-8 rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-100 text-sm"
-              >
-                <PlusCircle size={20} /> Incluir Produtos - Estoque Central
-              </button>
-            ) : (
-              <button 
-                onClick={() => router.push('/dashboard/lots')}
-                className="flex items-center gap-2 bg-slate-900 text-white font-bold py-3 px-8 rounded-2xl hover:bg-slate-800 transition-all shadow-lg text-sm"
-              >
-                <ArrowUpRight size={20} /> Abastecer Rede
-              </button>
-            )}
-          </div>
         </div>
 
         <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -185,6 +167,24 @@ export default function StockPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+          </div>
+
+          <div>
+            {activeView === 'geral' ? (
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-4 px-8 rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-100 text-sm"
+              >
+                <PlusCircle size={20} /> Incluir Produtos - Estoque Central
+              </button>
+            ) : (
+              <button 
+                onClick={() => router.push('/dashboard/lots')}
+                className="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-900 text-white font-bold py-4 px-8 rounded-2xl hover:bg-slate-800 transition-all shadow-lg text-sm"
+              >
+                <ArrowUpRight size={20} /> Abastecer Rede
+              </button>
+            )}
           </div>
         </div>
 
@@ -252,7 +252,7 @@ export default function StockPage() {
                     <td className="px-8 py-6">
                       <div className="flex items-center justify-end">
                         <button 
-                          onClick={() => router.push(`/dashboard/lots?product=${item.id}`)}
+                          onClick={() => router.push(activeView === 'geral' ? `/dashboard/stock/lots?product=${item.id}` : `/dashboard/lots?product=${item.id}`)}
                           className="flex items-center gap-2 px-4 py-2 text-blue-600 font-bold text-xs hover:bg-blue-50 rounded-xl transition-all"
                         >
                           Ver Lotes <ArrowRight size={14} />
