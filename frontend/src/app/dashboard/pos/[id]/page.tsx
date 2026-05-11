@@ -18,7 +18,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import api from '@/lib/api';
-import { formatCurrency, formatDate } from '@/utils/formatters';
+import { formatCurrency, formatDate, formatOnlyDate } from '@/utils/formatters';
 
 export default function POSDetailsPage() {
   const params = useParams();
@@ -94,8 +94,7 @@ export default function POSDetailsPage() {
               )}
             </div>
             <p className="text-slate-500 text-sm font-medium">
-              {pos.city} - {pos.state} | Responsável: {pos.responsibleName || 'N/D'} | Criado em: {formatDate(pos.createdAt)}
-              {pos.openingDate && ` | Inauguração: ${formatDate(pos.openingDate)}`}
+              {pos.city} - {pos.state} | Responsável: {pos.responsibleName || 'N/D'} | Criado em: {formatOnlyDate(pos.createdAt)}
             </p>
           </div>
         </div>

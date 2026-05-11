@@ -35,3 +35,12 @@ export const formatDate = (date: string | Date | null | undefined): string => {
     minute: '2-digit',
   }).format(new Date(date));
 };
+
+export const formatOnlyDate = (date: string | Date | null | undefined): string => {
+  if (!date) return 'N/D';
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(date));
+};
