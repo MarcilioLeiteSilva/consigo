@@ -76,6 +76,7 @@ export default function POSDetailsPage() {
     return acc + (quantitySold * unitPrice * (1 - commissionPercent / 100));
   }, 0) || 0;
 
+  const getGoogleMapsUrl = () => {
     const address = [
       pos.street,
       pos.number,
