@@ -44,9 +44,9 @@ const menuItems = [
     label: 'Financeiro', 
     href: '/dashboard/financial',
     children: [
-      { label: 'Extrato Geral', href: '/dashboard/financial/transactions' },
-      { label: 'Saldos de Parceiros', href: '/dashboard/financial/balances' },
-      { label: 'Calculadora de Custos', href: '/dashboard/financial/calculator', badge: 'Em breve' },
+      { label: 'Extrato Geral', href: '/dashboard/financial' },
+      { label: 'Calculadora 3D', href: '/dashboard/finance/calc-3d' },
+      { label: 'Calculadora Revenda', href: '/dashboard/finance/calc-resale' },
     ]
   },
   { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
