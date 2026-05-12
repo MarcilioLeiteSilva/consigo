@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   ClipboardList, 
   Search, 
@@ -23,6 +24,7 @@ import { CurrencyText } from '@/components/CurrencyText';
 import { formatCurrency } from '@/utils/formatters';
 
 export default function SettlementsPage() {
+  const router = useRouter();
   const [pendingPOS, setPendingPOS] = useState<any[]>([]);
   const [settlementsHistory, setSettlementsHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
