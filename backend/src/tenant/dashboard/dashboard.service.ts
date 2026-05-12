@@ -121,15 +121,16 @@ export class DashboardService {
     };
   }
 
-  async getSalesByPeriod(tenantId: string) {
-    // Agregação de vendas nos últimos 7 dias para o gráfico
-    const last7Days = new Date();
-    last7Days.setDate(last7Days.getDate() - 7);
+  async getSalesByPeriod(tenantId: string, days: number = 7) {
+    // Agregação de vendas nos últimos X dias para o gráfico
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (days === 0 ? 1 : days)); // 0 means today, we take last 1 day
+    if (days === 0) startDate.setHours(0, 0, 0, 0);
 
     const sales = await this.prisma.sale.findMany({
       where: {
         tenantId,
-        createdAt: { gte: last7Days },
+        createdAt: { gte: startDate },
       },
       select: {
         totalAmount: true,

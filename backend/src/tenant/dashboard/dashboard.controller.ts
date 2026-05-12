@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -23,8 +23,9 @@ export class DashboardController {
   @Get('sales-chart')
   @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
   @ApiOperation({ summary: 'Dados de vendas para gráfico por período' })
-  getSalesChart(@CurrentUser() user: any) {
-    return this.dashboardService.getSalesByPeriod(user.tenantId);
+  getSalesChart(@CurrentUser() user: any, @Query('days') days?: string) {
+    const numDays = days ? parseInt(days) : 7;
+    return this.dashboardService.getSalesByPeriod(user.tenantId, numDays);
   }
 
   @Get('top-products')
