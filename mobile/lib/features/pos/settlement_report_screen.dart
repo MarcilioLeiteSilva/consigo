@@ -253,17 +253,25 @@ class _SettlementReportScreenState extends State<SettlementReportScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('TOTAL A RECEBER', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white38, letterSpacing: 1)),
-                              const SizedBox(height: 2),
-                              Text('Líquido para o Consignador', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF818CF8), fontStyle: FontStyle.italic)),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('TOTAL A RECEBER', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white38, letterSpacing: 1)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Líquido para o Consignador', 
+                                  style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF818CF8), fontStyle: FontStyle.italic),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 10),
                           Text(
                             _currencyFormat.format(totalAmount),
-                            style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
+                            style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
                           ),
                         ],
                       ),
