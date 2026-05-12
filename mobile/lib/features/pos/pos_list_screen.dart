@@ -314,9 +314,11 @@ class _PosListScreenState extends State<PosListScreen> {
               ),
           ],
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  ),
+);
+}
 
   Widget _buildInfoChip(IconData icon, String label) {
     return Container(
