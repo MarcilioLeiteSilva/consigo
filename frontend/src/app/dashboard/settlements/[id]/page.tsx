@@ -13,7 +13,8 @@ import {
   FileText,
   Loader2,
   ChevronRight,
-  Package
+  Package,
+  AlertCircle
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate, formatOnlyDate } from '@/utils/formatters';
