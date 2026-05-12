@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/api_client.dart';
 import '../../core/models.dart';
 import 'pos_form_screen.dart';
+import 'pos_map_screen.dart';
 
 class PosDetailsScreen extends StatefulWidget {
   final POS pos;
@@ -144,7 +145,22 @@ class _PosDetailsScreenState extends State<PosDetailsScreen> {
             const Divider(height: 30, color: Color(0xFFF1F5F9)),
             _buildInfoRow(Icons.phone_outlined, 'WhatsApp', _currentPos.whatsapp ?? 'Não informado'),
             const Divider(height: 30, color: Color(0xFFF1F5F9)),
-            _buildInfoRow(Icons.location_on_outlined, 'Endereço', '${_currentPos.city ?? ''} - ${_currentPos.state ?? ''}'),
+            InkWell(
+              onTap: () {
+                final fullAddress = '${_currentPos.city}, ${_currentPos.state}, ${_currentPos.location ?? ""}';
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PosMapScreen(
+                      address: fullAddress,
+                      posName: _currentPos.name,
+                    ),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: _buildInfoRow(Icons.location_on_outlined, 'Endereço', '${_currentPos.city ?? ''} - ${_currentPos.state ?? ''}'),
+            ),
             const Divider(height: 30, color: Color(0xFFF1F5F9)),
             _buildInfoRow(Icons.percent_outlined, 'Comissão Padrão', '${_currentPos.defaultCommission}%'),
           ],
