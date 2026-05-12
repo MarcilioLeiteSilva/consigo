@@ -220,11 +220,11 @@ class _PosDetailsScreenState extends State<PosDetailsScreen> {
         ),
         child: Column(
           children: [
-            Icon(Icons.inventory_2_outlined, size: 48, color: Colors.slate[200]),
+            Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey[200]),
             const SizedBox(height: 15),
             Text(
               'Nenhum lote ativo neste PDV',
-              style: GoogleFonts.inter(color: Colors.slate[400], fontWeight: FontWeight.w500),
+              style: GoogleFonts.inter(color: Colors.grey[400], fontWeight: FontWeight.w500),
             ),
           ],
         ),
