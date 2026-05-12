@@ -17,26 +17,34 @@ class LotListScreen extends StatefulWidget {
 class _LotListScreenState extends State<LotListScreen> {
   final ApiClient _api = ApiClient();
   List<ConsignmentLot> _lots = [];
+  List<Product> _products = [];
   bool _isLoading = true;
   final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
     super.initState();
-    _loadLots();
+    _loadData();
   }
 
-  Future<void> _loadLots() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _api.dio.get('/consignment-lots');
-      final List<dynamic> data = response.data['data'];
+      final responses = await Future.wait([
+        _api.dio.get('/consignment-lots'),
+        _api.dio.get('/products'),
+      ]);
+
+      final List<dynamic> lotsData = responses[0].data['data'];
+      final List<dynamic> productsData = responses[1].data['data'];
+
       setState(() {
-        _lots = data.map((json) => ConsignmentLot.fromJson(json)).toList();
+        _lots = lotsData.map((json) => ConsignmentLot.fromJson(json)).toList();
+        _products = productsData.map((json) => Product.fromJson(json)).toList();
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Erro ao carregar lotes: $e');
+      debugPrint('Erro ao carregar dados: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -63,7 +71,7 @@ class _LotListScreenState extends State<LotListScreen> {
     if (confirmed == true) {
       try {
         await _api.dio.delete('/consignment-lots/${lot.id}');
-        _loadLots();
+        _loadData();
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -76,49 +84,145 @@ class _LotListScreenState extends State<LotListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          'Lotes e Estoque',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: Text(
+            'Gestão de Estoque',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
+          ),
+          actions: [
+            IconButton(
+              onPressed: _loadData,
+              icon: const Icon(Icons.refresh, color: Color(0xFF64748B)),
+            ),
+          ],
+          bottom: TabBar(
+            labelColor: const Color(0xFF6366F1),
+            unselectedLabelColor: const Color(0xFF94A3B8),
+            indicatorColor: const Color(0xFF6366F1),
+            indicatorWeight: 3,
+            labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13),
+            unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 13),
+            tabs: const [
+              Tab(text: 'Estoque Central'),
+              Tab(text: 'Estoque na Rede'),
+            ],
+          ),
         ),
-        actions: [
-          IconButton(
-            onPressed: _loadLots,
-            icon: const Icon(Icons.refresh, color: Color(0xFF64748B)),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  _buildCentralStockTab(),
+                  _buildNetworkStockTab(),
+                ],
+              ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LotFormScreen()),
+            );
+            if (result == true) _loadData();
+          },
+          backgroundColor: const Color(0xFF6366F1),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: Text('Novo Lote', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCentralStockTab() {
+    if (_products.isEmpty) {
+      return Center(child: Text('Nenhum produto em estoque', style: GoogleFonts.inter(color: Colors.grey)));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: _products.length,
+      itemBuilder: (context, index) {
+        final product = _products[index];
+        return FadeInUp(
+          duration: Duration(milliseconds: 300 + (index * 50)),
+          child: _buildProductStockCard(product),
+        );
+      },
+    );
+  }
+
+  Widget _buildProductStockCard(Product product) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.inventory_2_outlined, color: Color(0xFF6366F1)),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                ),
+                Text(
+                  'SKU: ${product.sku ?? "N/A"}',
+                  style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '${product.totalStock} un',
+              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF10B981)),
+            ),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _lots.isEmpty
-              ? Center(child: Text('Nenhum lote encontrado', style: GoogleFonts.inter(color: Colors.grey)))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: _lots.length,
-                  itemBuilder: (context, index) {
-                    final lot = _lots[index];
-                    return FadeInUp(
-                      duration: Duration(milliseconds: 300 + (index * 50)),
-                      child: _buildLotCard(lot),
-                    );
-                  },
-                ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const LotFormScreen()),
-          );
-          if (result == true) _loadLots();
-        },
-        backgroundColor: const Color(0xFF6366F1),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('Novo Lote', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white)),
-      ),
+    );
+  }
+
+  Widget _buildNetworkStockTab() {
+    if (_lots.isEmpty) {
+      return Center(child: Text('Nenhum lote na rede', style: GoogleFonts.inter(color: Colors.grey)));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: _lots.length,
+      itemBuilder: (context, index) {
+        final lot = _lots[index];
+        return FadeInUp(
+          duration: Duration(milliseconds: 300 + (index * 50)),
+          child: _buildLotCard(lot),
+        );
+      },
     );
   }
 
@@ -135,7 +239,7 @@ class _LotListScreenState extends State<LotListScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => LotDetailsScreen(lotId: lot.id)),
-          ).then((_) => _loadLots());
+          ).then((_) => _loadData());
         },
         borderRadius: BorderRadius.circular(24),
         child: Padding(
@@ -152,32 +256,24 @@ class _LotListScreenState extends State<LotListScreen> {
                       children: [
                         Text(
                           lot.product?.name ?? 'Produto Desconhecido',
-                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                         ),
                         Text(
-                          'PDV: ${lot.pos?.name ?? "Estoque Central"}',
-                          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B)),
+                          'PDV: ${lot.pos?.name ?? "N/A"}',
+                          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
                         ),
-                        if (lot.reference != null && lot.reference!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              'Ref: ${lot.reference}',
-                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6366F1)),
-                            ),
-                          ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFF6366F1).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '${lot.currentStock} un',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: const Color(0xFF6366F1)),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: const Color(0xFF6366F1), fontSize: 12),
                     ),
                   ),
                   PopupMenuButton<String>(
@@ -186,7 +282,7 @@ class _LotListScreenState extends State<LotListScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => LotFormScreen(lot: lot)),
-                        ).then((res) => {if (res == true) _loadLots()});
+                        ).then((res) => {if (res == true) _loadData()});
                       } else if (val == 'delete') {
                         _deleteLot(lot);
                       }
@@ -198,15 +294,15 @@ class _LotListScreenState extends State<LotListScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
               const Divider(color: Color(0xFFF1F5F9)),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildMetric('Custo/Venda', _currencyFormat.format(lot.unitPrice)),
+                  _buildMetric('Preço', _currencyFormat.format(lot.unitPrice)),
                   _buildMetric('Comissão', '${lot.commissionPercent}%'),
-                  _buildMetric('Entrada', DateFormat('dd/MM/yy').format(lot.createdAt)),
+                  _buildMetric('Data', DateFormat('dd/MM/yy').format(lot.createdAt)),
                 ],
               ),
             ],
@@ -220,8 +316,8 @@ class _LotListScreenState extends State<LotListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8))),
-        Text(value, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF475569))),
+        Text(label, style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF94A3B8))),
+        Text(value, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF475569))),
       ],
     );
   }
