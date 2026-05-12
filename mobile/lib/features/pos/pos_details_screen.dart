@@ -184,6 +184,7 @@ class _PosDetailsScreenState extends State<PosDetailsScreen> {
           ],
         ),
         const SizedBox(width: 5),
+      ],
     );
   }
 
