@@ -170,8 +170,8 @@ class _PosDetailsScreenState extends State<PosDetailsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
-                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF94A3B8), uppercase: true, letterSpacing: 0.5),
+                label.toUpperCase(),
+                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF94A3B8), letterSpacing: 0.5),
               ),
               const SizedBox(height: 2),
               Text(
