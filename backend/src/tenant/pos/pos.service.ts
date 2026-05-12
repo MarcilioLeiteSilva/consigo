@@ -44,6 +44,10 @@ export class PosService {
               include: { product: true }
             }
           }
+        },
+        consignmentSettlements: {
+          take: 10,
+          orderBy: { settledAt: 'desc' }
         }
       }
     });

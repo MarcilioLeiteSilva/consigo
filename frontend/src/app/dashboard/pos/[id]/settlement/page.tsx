@@ -15,7 +15,8 @@ import {
   History,
   TrendingUp,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate } from '@/utils/formatters';
@@ -213,6 +214,54 @@ export default function POSSettlementPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Histórico de Fechamentos Recentes */}
+      <div className="space-y-6">
+        <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 px-2 uppercase tracking-tighter">
+          <History className="text-indigo-600" /> Últimos Acertos Realizados
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {pos.consignmentSettlements?.map((s: any) => (
+            <div 
+              key={s.id} 
+              onClick={() => router.push(`/dashboard/settlements/${s.id}`)}
+              className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
+                  <FileText size={20} />
+                </div>
+                <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase rounded">Concluído</span>
+              </div>
+              
+              <div className="space-y-1 mb-4">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{formatDate(s.settledAt)}</p>
+                <p className="text-lg font-black text-slate-900 leading-tight">Fechamento #{s.id.slice(0, 8).toUpperCase()}</p>
+                {s.startDate && s.endDate && (
+                  <p className="text-[10px] font-bold text-slate-500 italic">
+                    Período: {new Date(s.startDate).toLocaleDateString()} - {new Date(s.endDate).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                <div className="text-indigo-600 font-black text-lg">
+                  {formatCurrency(s.totalAmount)}
+                </div>
+                <div className="text-indigo-500 font-bold text-xs flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Ver Relatório <ChevronRight size={14} />
+                </div>
+              </div>
+            </div>
+          ))}
+          {(!pos.consignmentSettlements || pos.consignmentSettlements.length === 0) && (
+            <div className="col-span-full py-10 bg-slate-50/50 rounded-[32px] border border-dashed border-slate-200 text-center">
+              <p className="text-slate-400 font-bold italic">Nenhum fechamento histórico encontrado.</p>
+            </div>
+          )}
         </div>
       </div>
 

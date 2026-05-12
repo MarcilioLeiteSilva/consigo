@@ -15,7 +15,8 @@ import {
   Loader2,
   ChevronRight,
   X,
-  History
+  History,
+  FileText
 } from 'lucide-react';
 import api from '@/lib/api';
 import { CurrencyText } from '@/components/CurrencyText';
@@ -244,14 +245,21 @@ export default function SettlementsPage() {
               Últimos Fechamentos
             </h3>
             <div className="space-y-4">
-              {settlementsHistory.slice(0, 5).map((s) => (
-                <div key={s.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              {settlementsHistory.slice(0, 10).map((s) => (
+                <div 
+                  key={s.id} 
+                  onClick={() => router.push(`/dashboard/settlements/${s.id}`)}
+                  className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-md transition-all cursor-pointer group"
+                >
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-[10px] font-black text-slate-400 uppercase">{new Date(s.settledAt).toLocaleDateString()}</span>
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase rounded">Pago</span>
+                    <FileText size={14} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
                   </div>
                   <p className="font-bold text-slate-900 text-sm mb-1">{s.pos?.name}</p>
-                  <p className="text-indigo-600 font-black text-sm"><CurrencyText value={s.totalAmount} /></p>
+                  <div className="flex justify-between items-end">
+                    <p className="text-indigo-600 font-black text-sm"><CurrencyText value={s.totalAmount} /></p>
+                    <span className="text-[8px] font-bold text-indigo-400 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">Ver <ChevronRight size={10} /></span>
+                  </div>
                 </div>
               ))}
               {settlementsHistory.length === 0 && (
