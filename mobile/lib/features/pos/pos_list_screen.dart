@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../../core/api_client.dart';
 import '../../core/models.dart';
 import 'pos_form_screen.dart';
+import 'pos_details_screen.dart';
 
 class PosListScreen extends StatefulWidget {
   const PosListScreen({super.key});
@@ -190,9 +191,16 @@ class _PosListScreenState extends State<PosListScreen> {
   }
 
   Widget _buildPosCard(POS pos) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(20),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => PosDetailsScreen(pos: pos)),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -304,9 +312,8 @@ class _PosListScreenState extends State<PosListScreen> {
                   ),
                 ),
               ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
