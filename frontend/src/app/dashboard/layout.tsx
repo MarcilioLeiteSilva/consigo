@@ -36,13 +36,13 @@ const menuItems = [
   { icon: Tags, label: 'Categorias', href: '/dashboard/categories' },
   { icon: Database, label: 'Estoque', href: '/dashboard/stock' },
   { icon: Store, label: 'PDVs', href: '/dashboard/pos' },
-  { icon: ClipboardList, label: 'Fechamento', href: '/dashboard/settlements' },
   { 
     icon: DollarSign, 
     label: 'Financeiro', 
     href: '/dashboard/financial',
     children: [
       { label: 'Extrato Geral', href: '/dashboard/financial' },
+      { icon: ClipboardList, label: 'Fechamento', href: '/dashboard/settlements' },
       { icon: ShoppingCart, label: 'Vendas', href: '/dashboard/sales' },
       { label: 'Calculadora 3D', href: '/dashboard/finance/calc-3d' },
       { label: 'Calculadora Revenda', href: '/dashboard/finance/calc-resale' },
