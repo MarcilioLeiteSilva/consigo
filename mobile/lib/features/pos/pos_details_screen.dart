@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/models.dart';
 import 'pos_form_screen.dart';
 import 'pos_map_screen.dart';
+import 'pos_settlement_screen.dart';
 
 class PosDetailsScreen extends StatefulWidget {
   final POS pos;
@@ -117,8 +118,72 @@ class _PosDetailsScreenState extends State<PosDetailsScreen> {
           },
           icon: const Icon(Icons.edit_outlined, color: Colors.white),
         ),
-        const SizedBox(width: 10),
-      ],
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.white),
+          onSelected: (value) {
+            switch (value) {
+              case 'abastecer':
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulo Abastecer em breve')));
+                break;
+              case 'devolver':
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulo Devolução em breve')));
+                break;
+              case 'perda':
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulo Registrar Perda em breve')));
+                break;
+              case 'fechamento':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PosSettlementScreen(pos: _currentPos)),
+                );
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'abastecer',
+              child: Row(
+                children: [
+                  Icon(Icons.add_shopping_cart, color: Color(0xFF6366F1), size: 20),
+                  SizedBox(width: 12),
+                  Text('Abastecer'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'devolver',
+              child: Row(
+                children: [
+                  Icon(Icons.assignment_return_outlined, color: Color(0xFF6366F1), size: 20),
+                  SizedBox(width: 12),
+                  Text('Devolver produtos'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'perda',
+              child: Row(
+                children: [
+                  Icon(Icons.report_problem_outlined, color: Colors.redAccent, size: 20),
+                  SizedBox(width: 12),
+                  Text('Registrar perda'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              value: 'fechamento',
+              child: Row(
+                children: [
+                  Icon(Icons.account_balance_wallet_outlined, color: Colors.purpleAccent, size: 20),
+                  SizedBox(width: 12),
+                  Text('Fazer fechamento'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 5),
     );
   }
 
