@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong2.dart' as latlong;
 import 'package:geocoding/geocoding.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:latlong2/latlong.dart';
 
 class PosMapScreen extends StatefulWidget {
   final String address;
@@ -19,7 +19,7 @@ class PosMapScreen extends StatefulWidget {
 }
 
 class _PosMapScreenState extends State<PosMapScreen> {
-  latlong.LatLng? _currentLatLng;
+  LatLng? _currentLatLng;
   bool _isLoading = true;
   String? _error;
 
@@ -34,7 +34,7 @@ class _PosMapScreenState extends State<PosMapScreen> {
       List<Location> locations = await locationFromAddress(widget.address);
       if (locations.isNotEmpty) {
         setState(() {
-          _currentLatLng = latlong.LatLng(locations.first.latitude, locations.first.longitude);
+          _currentLatLng = LatLng(locations.first.latitude, locations.first.longitude);
           _isLoading = false;
         });
       } else {
