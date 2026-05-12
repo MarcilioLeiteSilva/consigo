@@ -8,6 +8,7 @@ import '../auth/login_screen.dart';
 import '../pos/pos_list_screen.dart';
 import '../products/product_list_screen.dart';
 import 'stock_alerts_screen.dart';
+import '../pos/settlement_pos_list_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -115,10 +116,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildSectionHeader('Gestão Operacional', 'Ações de monitoramento'),
                     const SizedBox(height: 15),
                     _buildAdvancedActions(),
-                    const SizedBox(height: 35),
-                    _buildSectionHeader('Produtos Mais Vendidos', 'Ranking de saída'),
-                    const SizedBox(height: 15),
-                    _buildTopProducts(),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -489,7 +486,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icons.account_balance_wallet_rounded, 
           Colors.purpleAccent,
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulo de fechamento em desenvolvimento')));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const SettlementPosListScreen()));
           },
         ),
       ],
