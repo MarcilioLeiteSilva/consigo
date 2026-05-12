@@ -24,6 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> _chartData = [];
   List<dynamic> _topProducts = [];
   String _userName = 'Parceiro';
+  int _selectedPeriod = 7; // 0: Hoje, 7: 7 dias, 30: 30 dias
 
   final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
@@ -38,7 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final responses = await Future.wait([
         _api.dio.get('/dashboard/metrics'),
-        _api.dio.get('/dashboard/sales-chart'),
+        _api.dio.get('/dashboard/sales-chart', queryParameters: {'days': _selectedPeriod}),
         _api.dio.get('/dashboard/top-products'),
         _api.dio.get('/auth/me'),
       ]);
@@ -54,6 +55,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       debugPrint('Erro ao carregar dados do dashboard: $e');
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadSalesChart() async {
+    try {
+      final response = await _api.dio.get('/dashboard/sales-chart', queryParameters: {'days': _selectedPeriod});
+      setState(() {
+        _chartData = response.data['data'] ?? [];
+      });
+    } catch (e) {
+      debugPrint('Erro ao carregar gráfico: $e');
     }
   }
 
@@ -109,8 +121,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 15),
                     _buildQuickActions(),
                     const SizedBox(height: 35),
-                    _buildSectionHeader('Análise de Vendas', 'Últimos 7 dias'),
-                    const SizedBox(height: 15),
                     _buildSalesChart(),
                     const SizedBox(height: 35),
                     _buildSectionHeader('Gestão Operacional', 'Ações de monitoramento'),
@@ -419,18 +429,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Histórico de Vendas',
-                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
-                    ),
-                    Text(
-                      'Últimos 7 dias',
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
-                    ),
-                  ],
+                Text(
+                  'Análise de Vendas',
+                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildPeriodButton('Hoje', 0),
+                      _buildPeriodButton('7d', 7),
+                      _buildPeriodButton('30d', 30),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -461,6 +476,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeriodButton(String label, int days) {
+    final isSelected = _selectedPeriod == days;
+    return GestureDetector(
+      onTap: () {
+        if (!isSelected) {
+          setState(() {
+            _selectedPeriod = days;
+          });
+          _loadSalesChart();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: isSelected
+              ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF64748B),
+          ),
         ),
       ),
     );
