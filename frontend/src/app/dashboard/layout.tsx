@@ -31,7 +31,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+  { icon: LayoutDashboard, label: 'Painel', href: '/dashboard' },
   { icon: Package, label: 'Produtos', href: '/dashboard/products' },
   { icon: Tags, label: 'Categorias', href: '/dashboard/categories' },
   { icon: Database, label: 'Estoque', href: '/dashboard/stock' },
