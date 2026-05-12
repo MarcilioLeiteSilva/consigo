@@ -13,6 +13,14 @@ export class CreateSettlementDto {
   @IsString({ each: true })
   @IsOptional()
   saleItemIds?: string[]; // Opcional: se não enviado, fecha todas as vendas pendentes do PDV
+
+  @IsString()
+  @IsOptional()
+  startDate?: string;
+
+  @IsString()
+  @IsOptional()
+  endDate?: string;
 }
 
 export class InventorySettlementItemDto {
@@ -36,4 +44,12 @@ export class InventorySettlementDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsOptional()
+  startDate?: string;
+
+  @IsString()
+  @IsOptional()
+  endDate?: string;
 }

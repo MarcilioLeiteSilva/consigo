@@ -407,6 +407,8 @@ model ConsignmentSettlement {
   totalAmount     Decimal  @db.Decimal(12, 2) // Total das vendas líquidas neste fechamento
   status          String   @default("PENDING") // PENDING, COMPLETED
   notes           String?
+  startDate       DateTime?
+  endDate         DateTime?
   settledAt       DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

@@ -94,7 +94,7 @@ export class SettlementsService {
   }
 
   async create(tenantId: string, dto: CreateSettlementDto) {
-    const { posId, notes, saleItemIds } = dto;
+    const { posId, notes, saleItemIds, startDate, endDate } = dto;
 
     // 1. Validar PDV
     const pos = await this.prisma.pOS.findFirst({
@@ -130,6 +130,8 @@ export class SettlementsService {
           posId,
           totalAmount,
           notes,
+          startDate: startDate ? new Date(startDate) : null,
+          endDate: endDate ? new Date(endDate) : null,
           status: 'COMPLETED',
           settledAt: new Date(),
         },
@@ -207,7 +209,7 @@ export class SettlementsService {
   }
 
   async createFromInventory(tenantId: string, dto: InventorySettlementDto) {
-    const { posId, items, notes } = dto;
+    const { posId, items, notes, startDate, endDate } = dto;
 
     // 1. Validar PDV
     const pos = await this.prisma.pOS.findFirst({
@@ -271,7 +273,9 @@ export class SettlementsService {
       return this.create(tenantId, {
         posId,
         notes: notes || 'Fechamento baseado em inventário',
-        saleItemIds
+        saleItemIds,
+        startDate,
+        endDate
       });
     });
   }

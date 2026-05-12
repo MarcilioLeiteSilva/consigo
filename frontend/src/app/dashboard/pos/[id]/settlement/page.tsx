@@ -31,6 +31,8 @@ export default function POSSettlementPage() {
   const [inventoryItems, setInventoryItems] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [notes, setNotes] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [pendingTotal, setPendingTotal] = useState(0);
 
   const loadData = async () => {
@@ -71,17 +73,25 @@ export default function POSSettlementPage() {
   const handleConfirmInventorySettlement = async () => {
     setSaving(true);
     try {
-      await api.post('/settlements/inventory-based', {
+      const response = await api.post('/settlements/inventory-based', {
         posId: params.id,
         items: inventoryItems.map(item => ({
           lotId: item.id,
           remainingQuantity: Number(item.remainingQuantity)
         })),
-        notes
+        notes,
+        startDate,
+        endDate
       });
+      
+      const settlementId = response.data.data?.id || response.data.id;
       setInventoryModalOpen(false);
       setNotes('');
-      loadData();
+      setStartDate('');
+      setEndDate('');
+      
+      // Redirecionar para o relatório
+      router.push(`/dashboard/settlements/${settlementId}`);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Erro ao realizar fechamento por inventário');
     } finally {
@@ -222,9 +232,31 @@ export default function POSSettlementPage() {
               </button>
             </div>
 
-            <div className="p-8">
-              <div className="space-y-6">
-                <div className="bg-amber-50 border border-amber-100 p-6 rounded-3xl flex gap-4">
+              <div className="p-8">
+                <div className="space-y-6">
+                  {/* Novos campos de data */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 bg-slate-50 border border-slate-100 rounded-3xl">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Período: Início</label>
+                      <input 
+                        type="date" 
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full px-6 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-700"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Período: Fim</label>
+                      <input 
+                        type="date" 
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full px-6 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-100 p-6 rounded-3xl flex gap-4">
                   <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center shrink-0">
                     <TrendingUp size={24} />
                   </div>
