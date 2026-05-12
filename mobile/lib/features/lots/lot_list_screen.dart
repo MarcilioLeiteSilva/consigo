@@ -16,8 +16,8 @@ class LotListScreen extends StatefulWidget {
 
 class _LotListScreenState extends State<LotListScreen> {
   final ApiClient _api = ApiClient();
-  List<ConsignmentLot> _lots = [];
-  List<Product> _products = [];
+  List<ConsignmentLot> _networkLots = [];
+  List<Product> _centralProducts = [];
   bool _isLoading = true;
   final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
@@ -39,8 +39,15 @@ class _LotListScreenState extends State<LotListScreen> {
       final List<dynamic> productsData = responses[1].data['data'];
 
       setState(() {
-        _lots = lotsData.map((json) => ConsignmentLot.fromJson(json)).toList();
-        _products = productsData.map((json) => Product.fromJson(json)).toList();
+        // Filtra lotes que possuem PDV para a aba "Estoque na Rede"
+        _networkLots = lotsData
+            .map((json) => ConsignmentLot.fromJson(json))
+            .where((lot) => lot.posId != null)
+            .toList();
+        
+        // Usa a lista de produtos (estoque total/central) para a aba "Estoque Central"
+        _centralProducts = productsData.map((json) => Product.fromJson(json)).toList();
+        
         _isLoading = false;
       });
     } catch (e) {
@@ -54,7 +61,7 @@ class _LotListScreenState extends State<LotListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Excluir Lote', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
-        content: Text('Deseja realmente excluir o lote de "${lot.product?.name}"? Esta ação não pode ser desfeita.'),
+        content: Text('Deseja realmente excluir o lote de "${lot.product?.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -75,7 +82,7 @@ class _LotListScreenState extends State<LotListScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Erro ao excluir lote. Verifique se há vendas vinculadas.')),
+            const SnackBar(content: Text('Erro ao excluir lote.')),
           );
         }
       }
@@ -139,15 +146,15 @@ class _LotListScreenState extends State<LotListScreen> {
   }
 
   Widget _buildCentralStockTab() {
-    if (_products.isEmpty) {
-      return Center(child: Text('Nenhum produto em estoque', style: GoogleFonts.inter(color: Colors.grey)));
+    if (_centralProducts.isEmpty) {
+      return Center(child: Text('Nenhum produto em estoque central', style: GoogleFonts.inter(color: Colors.grey)));
     }
 
     return ListView.builder(
       padding: const EdgeInsets.all(20),
-      itemCount: _products.length,
+      itemCount: _centralProducts.length,
       itemBuilder: (context, index) {
-        final product = _products[index];
+        final product = _centralProducts[index];
         return FadeInUp(
           duration: Duration(milliseconds: 300 + (index * 50)),
           child: _buildProductStockCard(product),
@@ -209,15 +216,15 @@ class _LotListScreenState extends State<LotListScreen> {
   }
 
   Widget _buildNetworkStockTab() {
-    if (_lots.isEmpty) {
-      return Center(child: Text('Nenhum lote na rede', style: GoogleFonts.inter(color: Colors.grey)));
+    if (_networkLots.isEmpty) {
+      return Center(child: Text('Nenhum lote consignado na rede', style: GoogleFonts.inter(color: Colors.grey)));
     }
 
     return ListView.builder(
       padding: const EdgeInsets.all(20),
-      itemCount: _lots.length,
+      itemCount: _networkLots.length,
       itemBuilder: (context, index) {
-        final lot = _lots[index];
+        final lot = _networkLots[index];
         return FadeInUp(
           duration: Duration(milliseconds: 300 + (index * 50)),
           child: _buildLotCard(lot),
