@@ -221,7 +221,7 @@ class _PosSettlementScreenState extends State<PosSettlementScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _activeLots.isNotEmpty ? _openInventoryModal : null,
-                icon: const Icon(Icons.clipboard_outlined, color: Colors.white),
+                icon: const Icon(Icons.content_paste, color: Colors.white),
                 label: Text(
                   'Novo Fechamento (Inventário)',
                   style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white),
