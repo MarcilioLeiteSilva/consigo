@@ -19,7 +19,8 @@ import {
   MapPin,
   Phone,
   Mail,
-  X
+  X,
+  ClipboardList
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate, formatOnlyDate } from '@/utils/formatters';
@@ -160,6 +161,12 @@ export default function POSDetailsPage() {
               </div>
             )}
           </div>
+          <button 
+            onClick={() => router.push(`/dashboard/pos/${pos.id}/settlement`)}
+            className="flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100 text-sm"
+          >
+            <ClipboardList size={18} /> Fazer Fechamento
+          </button>
           <button 
             onClick={() => router.push(`/dashboard/lots?posId=${pos.id}&create=true`)}
             className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-100 text-sm"
