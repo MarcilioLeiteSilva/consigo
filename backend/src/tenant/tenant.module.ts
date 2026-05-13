@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { PosModule } from './pos/pos.module';
@@ -26,6 +27,7 @@ import { SettlementsModule } from './settlements/settlements.module';
     ConsignorAccountsModule,
     DashboardModule,
     SettlementsModule,
+    WhatsAppModule,
   ],
 })
 export class TenantModule {}

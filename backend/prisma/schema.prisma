@@ -117,6 +117,7 @@ model Tenant {
   operationLogs          OperationLog[]
   transactions           FinancialTransaction[]
   consignorAccount       ConsignorAccount?
+  whatsappConfig         WhatsAppConfig?
   stockSnapshots         StockSnapshot[]
 
   @@map("tenants")
@@ -455,4 +456,17 @@ model OperationLog {
 
   @@index([tenantId])
   @@map("operation_logs")
+}
+
+model WhatsAppConfig {
+  id           String   @id @default(uuid())
+  tenantId     String   @unique
+  instanceName String
+  status       String   @default("disconnected")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("whatsapp_config")
 }

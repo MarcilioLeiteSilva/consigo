@@ -16,7 +16,9 @@ import {
   ChevronDown,
   Calculator,
   Box,
-  Repeat
+  Repeat,
+  Bot,
+  MessageSquare
 } from 'lucide-react';
 
 const menuItems = [
@@ -35,6 +37,14 @@ const menuItems = [
     ]
   },
   { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
+  { 
+    icon: Sparkles, 
+    label: 'Automação', 
+    href: '/dashboard/automation',
+    children: [
+      { icon: Bot, label: 'Agente de Acertos', href: '/dashboard/automation/inventory-agent' },
+    ]
+  },
 ];
 
 export default function Sidebar() {
