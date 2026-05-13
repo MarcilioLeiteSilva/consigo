@@ -202,12 +202,12 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      role: json['role'] ?? '',
-      tenantId: json['tenantId'],
-      companyName: json['tenant']?['companyName'],
+      id: (json['id'] ?? json['sub'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      role: (json['role'] ?? '').toString(),
+      tenantId: json['tenantId']?.toString(),
+      companyName: json['tenant']?['companyName']?.toString(),
     );
   }
 }
