@@ -47,7 +47,7 @@ export class ConsignmentLotsService {
         });
 
         const totalGeneralStock = generalLots.reduce((acc, l) => {
-          return acc + (l.quantityReceived - l.quantitySold - l.quantityReturned);
+          return acc + (l.quantityReceived - l.quantitySold - l.quantityReturned - (l.quantityLost || 0));
         }, 0);
 
         if (totalGeneralStock < createConsignmentLotDto.quantityReceived) {
@@ -61,7 +61,7 @@ export class ConsignmentLotsService {
         for (const genLot of generalLots) {
           if (remainingToTransfer <= 0) break;
           
-          const availableInLot = genLot.quantityReceived - genLot.quantitySold - genLot.quantityReturned;
+          const availableInLot = genLot.quantityReceived - genLot.quantitySold - genLot.quantityReturned - (genLot.quantityLost || 0);
           if (availableInLot <= 0) continue;
 
           const amountFromThisLot = Math.min(remainingToTransfer, availableInLot);
@@ -182,6 +182,84 @@ export class ConsignmentLotsService {
 
     return this.prisma.consignmentLot.delete({
       where: { id },
+    });
+  }
+
+  async registerReturn(tenantId: string, id: string, quantity: number) {
+    const lot = await this.findOne(tenantId, id);
+
+    const available = lot.quantityReceived - lot.quantitySold - lot.quantityReturned - lot.quantityLost;
+    if (available < quantity) {
+      throw new BadRequestException(`Quantidade insuficiente no lote. Disponível: ${available}`);
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Atualizar o lote de origem (PDV)
+      await tx.consignmentLot.update({
+        where: { id },
+        data: { quantityReturned: { increment: quantity } },
+      });
+
+      // 2. Criar um novo lote no "Estoque Geral" (posId: null)
+      // Isso alimenta o estoque central automaticamente conforme a lógica do sistema
+      return await tx.consignmentLot.create({
+        data: {
+          tenantId,
+          productId: lot.productId,
+          quantityReceived: quantity,
+          unitPrice: lot.unitPrice,
+          commissionPercent: lot.commissionPercent,
+          reference: `RETORNO - ${lot.reference || 'S/Ref'}`,
+          notes: `Devolução originada do lote ${lot.id} (PDV: ${lot.pos?.name || 'N/A'})`,
+          posId: null, // Volta para o estoque central
+        },
+      });
+    });
+  }
+
+  async registerLoss(tenantId: string, id: string, quantity: number, reason: string) {
+    const lot = await this.findOne(tenantId, id);
+
+    const available = lot.quantityReceived - lot.quantitySold - lot.quantityReturned - lot.quantityLost;
+    if (available < quantity) {
+      throw new BadRequestException(`Quantidade insuficiente no lote. Disponível: ${available}`);
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Atualizar o lote de origem
+      const updatedLot = await tx.consignmentLot.update({
+        where: { id },
+        data: { quantityLost: { increment: quantity } },
+      });
+
+      // 2. Lógica Financeira: Registrar a perda como um débito ou ajuste negativo
+      const lossValue = Number(lot.unitPrice || 0) * quantity;
+      
+      if (lossValue > 0) {
+        await tx.financialTransaction.create({
+          data: {
+            tenantId,
+            type: 'ADJUSTMENT',
+            amount: lossValue,
+            referenceType: 'ADJUSTMENT',
+            referenceId: lot.id,
+            description: `PERDA: ${quantity} un de ${lot.product.name}. Motivo: ${reason}`,
+          },
+        });
+      }
+
+      // 3. Log de Operação
+      await tx.operationLog.create({
+        data: {
+          tenantId,
+          action: 'REGISTER_LOSS',
+          entity: 'CONSIGNMENT_LOT',
+          entityId: lot.id,
+          metadata: { quantity, reason, lossValue },
+        },
+      });
+
+      return updatedLot;
     });
   }
 }

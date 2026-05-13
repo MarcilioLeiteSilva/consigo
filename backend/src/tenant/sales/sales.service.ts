@@ -36,7 +36,7 @@ export class SalesService {
         });
 
         const totalAvailable = lots.reduce((acc, lot) => {
-          const lotQty = Number(lot.quantityReceived) - Number(lot.quantitySold) - Number(lot.quantityReturned);
+          const lotQty = Number(lot.quantityReceived) - Number(lot.quantitySold) - Number(lot.quantityReturned) - Number(lot.quantityLost || 0);
           return acc + lotQty;
         }, 0);
 
@@ -48,7 +48,7 @@ export class SalesService {
         for (const lot of lots) {
           if (remainingToSell <= 0) break;
 
-          const lotAvailable = Number(lot.quantityReceived) - Number(lot.quantitySold) - Number(lot.quantityReturned);
+          const lotAvailable = Number(lot.quantityReceived) - Number(lot.quantitySold) - Number(lot.quantityReturned) - Number(lot.quantityLost || 0);
           if (lotAvailable <= 0) continue;
 
           const quantityFromThisLot = Math.min(remainingToSell, lotAvailable);
@@ -162,11 +162,11 @@ export class SalesService {
     return products.map(p => {
       const generalStock = p.consignmentLots
         .filter(l => l.posId === null)
-        .reduce((acc, lot) => acc + (lot.quantityReceived - lot.quantitySold - lot.quantityReturned), 0);
+        .reduce((acc, lot) => acc + (lot.quantityReceived - lot.quantitySold - lot.quantityReturned - lot.quantityLost), 0);
         
       const networkStock = p.consignmentLots
         .filter(l => l.posId !== null)
-        .reduce((acc, lot) => acc + (lot.quantityReceived - lot.quantitySold - lot.quantityReturned), 0);
+        .reduce((acc, lot) => acc + (lot.quantityReceived - lot.quantitySold - lot.quantityReturned - lot.quantityLost), 0);
 
       return {
         id: p.id,
@@ -196,7 +196,7 @@ export class SalesService {
 
     lots.forEach(lot => {
       const key = `${lot.productId}_${lot.posId}`;
-      const available = lot.quantityReceived - (lot.quantitySold + lot.quantityReturned);
+      const available = lot.quantityReceived - (lot.quantitySold + lot.quantityReturned + lot.quantityLost);
       
       if (!stockMap[key]) {
         stockMap[key] = {

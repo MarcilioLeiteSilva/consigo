@@ -234,9 +234,10 @@ export class SettlementsService {
         const currentTotalSold = Number(lot.quantitySold);
         const totalReceived = Number(lot.quantityReceived);
         const totalReturned = Number(lot.quantityReturned);
+        const totalLost = Number(lot.quantityLost || 0);
         
-        // Vendidos = Recebidos - Devolvidos - Restantes
-        const theoreticalTotalSold = totalReceived - totalReturned - item.remainingQuantity;
+        // Vendidos = Recebidos - Devolvidos - Perdidos - Restantes
+        const theoreticalTotalSold = totalReceived - totalReturned - totalLost - item.remainingQuantity;
         const newlySold = theoreticalTotalSold - currentTotalSold;
 
         if (newlySold < 0) {

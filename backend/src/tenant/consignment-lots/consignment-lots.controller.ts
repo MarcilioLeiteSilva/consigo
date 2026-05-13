@@ -14,6 +14,8 @@ import { CreateConsignmentLotDto } from './dto/create-consignment-lot.dto';
 import { UpdateConsignmentLotDto } from './dto/update-consignment-lot.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RegisterReturnDto } from './dto/register-return.dto';
+import { RegisterLossDto } from './dto/register-loss.dto';
 
 @ApiTags('consignment-lots')
 @ApiBearerAuth()
@@ -61,5 +63,25 @@ export class ConsignmentLotsController {
   @ApiOperation({ summary: 'Remover lote' })
   remove(@CurrentUser() user: any, @Param('id') id: string) {
     return this.consignmentLotsService.remove(user.tenantId, id);
+  }
+
+  @Post(':id/return')
+  @ApiOperation({ summary: 'Registrar devolução de produtos para o estoque central' })
+  registerReturn(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: RegisterReturnDto,
+  ) {
+    return this.consignmentLotsService.registerReturn(user.tenantId, id, dto.quantity);
+  }
+
+  @Post(':id/loss')
+  @ApiOperation({ summary: 'Registrar perda de produtos' })
+  registerLoss(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: RegisterLossDto,
+  ) {
+    return this.consignmentLotsService.registerLoss(user.tenantId, id, dto.quantity, dto.reason);
   }
 }

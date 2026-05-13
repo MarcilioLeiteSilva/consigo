@@ -7,6 +7,8 @@ import '../../core/models.dart';
 import 'pos_form_screen.dart';
 import 'pos_map_screen.dart';
 import 'pos_settlement_screen.dart';
+import 'pos_return_screen.dart';
+import 'pos_loss_screen.dart';
 
 class PosDetailsScreen extends StatefulWidget {
   final POS pos;
@@ -126,10 +128,16 @@ class _PosDetailsScreenState extends State<PosDetailsScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulo Abastecer em breve')));
                 break;
               case 'devolver':
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulo Devolução em breve')));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PosReturnScreen(pos: _currentPos)),
+                ).then((_) => _loadData());
                 break;
               case 'perda':
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulo Registrar Perda em breve')));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PosLossScreen(pos: _currentPos)),
+                ).then((_) => _loadData());
                 break;
               case 'fechamento':
                 Navigator.push(

@@ -137,6 +137,7 @@ class ConsignmentLot {
   final int quantityReceived;
   final int quantitySold;
   final int quantityReturned;
+  final int quantityLost;
   final double commissionPercent;
   final double unitPrice;
   final String? reference;
@@ -152,6 +153,7 @@ class ConsignmentLot {
     required this.quantityReceived,
     required this.quantitySold,
     required this.quantityReturned,
+    required this.quantityLost,
     required this.commissionPercent,
     required this.unitPrice,
     this.reference,
@@ -159,7 +161,7 @@ class ConsignmentLot {
     required this.createdAt,
   });
 
-  int get currentStock => quantityReceived - quantitySold - quantityReturned;
+  int get currentStock => quantityReceived - quantitySold - quantityReturned - quantityLost;
 
   factory ConsignmentLot.fromJson(Map<String, dynamic> json) {
     return ConsignmentLot(
@@ -171,6 +173,7 @@ class ConsignmentLot {
       quantityReceived: json['quantityReceived'] ?? 0,
       quantitySold: json['quantitySold'] ?? 0,
       quantityReturned: json['quantityReturned'] ?? 0,
+      quantityLost: json['quantityLost'] ?? 0,
       commissionPercent: double.tryParse(json['commissionPercent']?.toString() ?? '0') ?? 0,
       unitPrice: double.tryParse(json['unitPrice']?.toString() ?? '0') ?? 0,
       reference: json['reference'],

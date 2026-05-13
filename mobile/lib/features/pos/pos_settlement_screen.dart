@@ -80,6 +80,7 @@ class _PosSettlementScreenState extends State<PosSettlementScreen> {
       final received = int.tryParse(l['quantityReceived']?.toString() ?? '0') ?? 0;
       final sold = int.tryParse(l['quantitySold']?.toString() ?? '0') ?? 0;
       final returned = int.tryParse(l['quantityReturned']?.toString() ?? '0') ?? 0;
+      final lost = int.tryParse(l['quantityLost']?.toString() ?? '0') ?? 0;
       return {
         'id': l['id'],
         'productName': l['product']?['name'] ?? 'Produto',
@@ -87,8 +88,9 @@ class _PosSettlementScreenState extends State<PosSettlementScreen> {
         'received': received,
         'sold': sold,
         'returned': returned,
-        'remainingQuantity': received - sold - returned,
-        'controller': TextEditingController(text: '${received - sold - returned}'),
+        'lost': lost,
+        'remainingQuantity': received - sold - returned - lost,
+        'controller': TextEditingController(text: '${received - sold - returned - lost}'),
       };
     }).toList();
 
@@ -404,7 +406,8 @@ class _PosSettlementScreenState extends State<PosSettlementScreen> {
     final received = lot['quantityReceived'] ?? 0;
     final sold = lot['quantitySold'] ?? 0;
     final returned = lot['quantityReturned'] ?? 0;
-    final stock = received - sold - returned;
+    final lost = lot['quantityLost'] ?? 0;
+    final stock = received - sold - returned - lost;
     final unitPrice = double.tryParse(lot['unitPrice']?.toString() ?? '0') ?? 0;
 
     return Container(
