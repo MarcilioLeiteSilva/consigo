@@ -16,7 +16,6 @@ import {
   Users, 
   Settings, 
   ClipboardList,
-  ClipboardList,
   LogOut,
   Menu,
   X,
