@@ -202,7 +202,7 @@ export class SettlementsService {
         closedAt: null,
       },
       include: {
-        product: { select: { name: true, sku: true } },
+        product: { select: { id: true, name: true, sku: true } },
       },
       orderBy: { receivedAt: 'asc' },
     });
