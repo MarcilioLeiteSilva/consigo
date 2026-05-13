@@ -16,12 +16,15 @@ import {
   Users, 
   Settings, 
   ClipboardList,
+  ClipboardList,
   LogOut,
   Menu,
   X,
   Bell,
   Search,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Bot
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -56,6 +59,14 @@ const menuItems = [
     children: [
       { label: 'Meu Perfil', href: '/dashboard/settings' },
       { icon: Users, label: 'Usuários', href: '/dashboard/users' },
+    ]
+  },
+  { 
+    icon: Sparkles, 
+    label: 'Automação', 
+    href: '/dashboard/automation',
+    children: [
+      { label: 'Agente de Acertos', href: '/dashboard/automation/inventory-agent' },
     ]
   },
 ];
