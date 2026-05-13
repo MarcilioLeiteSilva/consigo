@@ -124,6 +124,7 @@ class _PosDetailsScreenState extends State<PosDetailsScreen> {
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.white),
           onSelected: (value) {
+            debugPrint('Menu selecionado: $value');
             switch (value) {
               case 'abastecer':
                 Navigator.push(

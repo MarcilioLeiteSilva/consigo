@@ -45,6 +45,11 @@ class _PosReturnScreenState extends State<PosReturnScreen> {
       }
     } catch (e) {
       debugPrint('Erro ao carregar lotes: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar lotes: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
       setState(() => _isLoading = false);
     }
   }
