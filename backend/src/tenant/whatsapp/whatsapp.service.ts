@@ -12,8 +12,8 @@ export class WhatsAppService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    this.agentUrl = this.configService.get<string>('WHATSAPP_AGENT_URL');
-    this.agentKey = this.configService.get<string>('WHATSAPP_AGENT_KEY');
+    this.agentUrl = this.configService.get<string>('WHATSAPP_AGENT_URL') || '';
+    this.agentKey = this.configService.get<string>('WHATSAPP_AGENT_KEY') || '';
   }
 
   private async callAgent(path: string, method: string = 'GET', body?: any) {
