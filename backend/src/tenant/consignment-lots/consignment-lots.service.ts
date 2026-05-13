@@ -226,13 +226,31 @@ export class ConsignmentLotsService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      // 1. Atualizar o lote de origem
+      // 1. Atualizar o lote de origem (PDV)
       const updatedLot = await tx.consignmentLot.update({
         where: { id },
         data: { quantityLost: { increment: quantity } },
       });
 
-      // 2. Lógica Financeira: Registrar a perda como um débito ou ajuste negativo
+      // 2. Refletir no Estoque Central para MENOS (Alimentação Negativa)
+      // Criamos um lote com quantityReceived 0 e quantityLost positivo
+      await tx.consignmentLot.create({
+        data: {
+          tenantId,
+          productId: lot.productId,
+          quantityReceived: 0,
+          quantitySold: 0,
+          quantityReturned: 0,
+          quantityLost: quantity, // Isso gera saldo negativo no cálculo de estoque central
+          unitPrice: lot.unitPrice,
+          commissionPercent: lot.commissionPercent,
+          reference: `PERDA NO PDV - ${lot.pos?.name || 'N/A'}`,
+          notes: `Perda registrada no PDV. Motivo: ${reason}. ID Lote Origem: ${lot.id}`,
+          posId: null, // Impacta o estoque central
+        },
+      });
+
+      // 3. Lógica Financeira...
       const lossValue = Number(lot.unitPrice || 0) * quantity;
       
       if (lossValue > 0) {
