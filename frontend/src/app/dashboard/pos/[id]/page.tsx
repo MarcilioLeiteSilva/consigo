@@ -32,6 +32,12 @@ export default function POSDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [isMovimentarOpen, setIsMovimentarOpen] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [isLossModalOpen, setIsLossModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [returnForm, setReturnForm] = useState({ lotId: '', quantity: '' });
+  const [lossForm, setLossForm] = useState({ lotId: '', quantity: '', reason: '' });
 
   const loadDetails = async () => {
     setLoading(true);
@@ -42,6 +48,43 @@ export default function POSDetailsPage() {
       console.error('Erro ao carregar detalhes do PDV:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReturn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.post(`/consignment-lots/${returnForm.lotId}/return`, {
+        quantity: parseInt(returnForm.quantity)
+      });
+      setIsReturnModalOpen(false);
+      setReturnForm({ lotId: '', quantity: '' });
+      loadDetails();
+    } catch (err) {
+      console.error('Erro ao devolver produtos:', err);
+      alert('Falha ao processar devolução.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleLoss = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.post(`/consignment-lots/${lossForm.lotId}/loss`, {
+        quantity: parseInt(lossForm.quantity),
+        reason: lossForm.reason
+      });
+      setIsLossModalOpen(false);
+      setLossForm({ lotId: '', quantity: '', reason: '' });
+      loadDetails();
+    } catch (err) {
+      console.error('Erro ao registrar perda:', err);
+      alert('Falha ao registrar perda.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -146,7 +189,10 @@ export default function POSDetailsPage() {
             
             {isMovimentarOpen && (
               <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <button className="w-full text-left px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50">
+                <button 
+                  onClick={() => { setIsReturnModalOpen(true); setIsMovimentarOpen(false); }}
+                  className="w-full text-left px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                >
                   <ArrowLeft size={16} className="text-amber-500" /> Devolver Produtos
                 </button>
                 <button 
@@ -155,7 +201,10 @@ export default function POSDetailsPage() {
                 >
                   <PlusCircle size={16} className="text-blue-500" /> Abastecer (Novo Lote)
                 </button>
-                <button className="w-full text-left px-6 py-4 text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
+                <button 
+                  onClick={() => { setIsLossModalOpen(true); setIsMovimentarOpen(false); }}
+                  className="w-full text-left px-6 py-4 text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors"
+                >
                   <AlertCircle size={16} /> Registrar Perda
                 </button>
               </div>
@@ -240,7 +289,7 @@ export default function POSDetailsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {pos.consignmentLots?.map((lot: any) => {
-                    const currentStock = lot.quantityReceived - lot.quantitySold - lot.quantityReturned;
+                    const currentStock = lot.quantityReceived - lot.quantitySold - lot.quantityReturned - (lot.quantityLost || 0);
                     return (
                       <tr key={lot.id} className="hover:bg-slate-50/30 transition-all group">
                         <td className="px-8 py-6">
@@ -348,6 +397,133 @@ export default function POSDetailsPage() {
           </div>
         </div>
       </div>
+      {/* Return Modal */}
+      {isReturnModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Devolver Produtos</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Para o Estoque Central</p>
+              </div>
+              <button onClick={() => setIsReturnModalOpen(false)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all">✕</button>
+            </div>
+
+            <form onSubmit={handleReturn} className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lote / Produto</label>
+                <select 
+                  required
+                  value={returnForm.lotId}
+                  onChange={(e) => setReturnForm({...returnForm, lotId: e.target.value})}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium appearance-none"
+                >
+                  <option value="">Selecione um lote...</option>
+                  {pos.consignmentLots?.map((lot: any) => (
+                    <option key={lot.id} value={lot.id}>
+                      {lot.product?.name} (Saldo: {lot.quantityReceived - lot.quantitySold - lot.quantityReturned - (lot.quantityLost || 0)} un)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantidade a Devolver</label>
+                <input 
+                  required
+                  type="number"
+                  min="1"
+                  placeholder="0"
+                  value={returnForm.quantity}
+                  onChange={(e) => setReturnForm({...returnForm, quantity: e.target.value})}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-black"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setIsReturnModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-200 transition-all">Cancelar</button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="flex-[2] py-4 bg-amber-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-amber-600 transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : 'Confirmar Devolução'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Loss Modal */}
+      {isLossModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter text-rose-600">Registrar Perda</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ajuste de Estoque</p>
+              </div>
+              <button onClick={() => setIsLossModalOpen(false)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all">✕</button>
+            </div>
+
+            <form onSubmit={handleLoss} className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lote / Produto</label>
+                <select 
+                  required
+                  value={lossForm.lotId}
+                  onChange={(e) => setLossForm({...lossForm, lotId: e.target.value})}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm font-medium appearance-none"
+                >
+                  <option value="">Selecione um lote...</option>
+                  {pos.consignmentLots?.map((lot: any) => (
+                    <option key={lot.id} value={lot.id}>
+                      {lot.product?.name} (Saldo: {lot.quantityReceived - lot.quantitySold - lot.quantityReturned - (lot.quantityLost || 0)} un)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantidade Perdida</label>
+                <input 
+                  required
+                  type="number"
+                  min="1"
+                  placeholder="0"
+                  value={lossForm.quantity}
+                  onChange={(e) => setLossForm({...lossForm, quantity: e.target.value})}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm font-black text-rose-600"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Motivo / Descrição</label>
+                <textarea 
+                  required
+                  placeholder="Ex: Produto danificado..."
+                  value={lossForm.reason}
+                  onChange={(e) => setLossForm({...lossForm, reason: e.target.value})}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm font-medium h-24"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setIsLossModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-200 transition-all">Cancelar</button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="flex-[2] py-4 bg-rose-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-rose-700 transition-all shadow-lg shadow-rose-100 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : 'Registrar Perda'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Map Modal */}
       {isMapModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
