@@ -9,6 +9,7 @@ import 'pos_map_screen.dart';
 import 'pos_settlement_screen.dart';
 import 'pos_return_screen.dart';
 import 'pos_loss_screen.dart';
+import '../lots/lot_form_screen.dart';
 
 class PosDetailsScreen extends StatefulWidget {
   final POS pos;
@@ -125,7 +126,12 @@ class _PosDetailsScreenState extends State<PosDetailsScreen> {
           onSelected: (value) {
             switch (value) {
               case 'abastecer':
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Módulo Abastecer em breve')));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LotFormScreen(initialPosId: _currentPos.id),
+                  ),
+                ).then((_) => _loadData());
                 break;
               case 'devolver':
                 Navigator.push(
