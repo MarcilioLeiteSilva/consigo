@@ -90,10 +90,12 @@ export class WhatsAppService {
                'apikey': evolutionKey
              },
              body: JSON.stringify({
-               enabled: true,
-               url: `${agentBaseUrl}/v1/integration/hooks/evolution`,
-               webhook_by_events: false,
-               events: ["MESSAGES_UPSERT"]
+               webhook: {
+                 enabled: true,
+                 url: `${agentBaseUrl}/v1/integration/hooks/evolution`,
+                 webhook_by_events: false,
+                 events: ["MESSAGES_UPSERT"]
+               }
              }),
              signal: controller.signal
            });
