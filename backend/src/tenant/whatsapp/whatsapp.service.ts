@@ -158,7 +158,7 @@ export class WhatsAppService {
     return this.callAgent('/v1/integration/agents/inventory/start', 'POST', {
       instance_name: config.instanceName,
       pdv_phone: phone,
-      closing_id: data.closingId,
+      closing_id: data.closingId || 0,
       message: data.message,
     });
   }
