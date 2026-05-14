@@ -45,8 +45,8 @@ export default function InventoryAgentPage() {
       const res = await api.get('/tenant/whatsapp/qr');
       console.log('✅ Resposta do QR:', res.data);
       
-      // Detecção agressiva de qualquer string base64 que pareça um QR
-      const data = res.data;
+      // Detecção agressiva (agora incluindo o campo 'data' extra do NestJS)
+      const data = res.data.data || res.data;
       const qrData = data.base64 || data.qrcode?.base64 || data.qrcode || (typeof data === 'string' && data.includes('base64') ? data : null);
       
       if (qrData) {
@@ -54,7 +54,6 @@ export default function InventoryAgentPage() {
         setQrCode(qrData);
       } else {
         console.warn('⚠️ QR Data não encontrado no JSON:', data);
-        // Tenta pegar a primeira string que comece com data:image
         const fallback = Object.values(data).find(v => typeof v === 'string' && v.startsWith('data:image'));
         if (fallback) setQrCode(fallback as string);
       }
@@ -71,9 +70,9 @@ export default function InventoryAgentPage() {
     try {
       console.log('🚀 Iniciando conexão...');
       const res = await api.post('/tenant/whatsapp/connect');
-      setStatus(res.data);
+      setStatus(res.data.data || res.data);
       
-      const data = res.data;
+      const data = res.data.data || res.data;
       const qrData = data.base64 || data.qrcode?.base64 || data.qrcode;
       
       if (qrData) {
