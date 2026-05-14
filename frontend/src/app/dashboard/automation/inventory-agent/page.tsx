@@ -23,6 +23,7 @@ export default function InventoryAgentPage() {
   const [loading, setLoading] = useState(true);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
   const fetchStatus = async () => {
@@ -154,19 +155,28 @@ export default function InventoryAgentPage() {
                 <h3 className="text-lg font-bold text-slate-900 mb-1">Status da Conexão</h3>
                 <p className="text-sm text-slate-500">Vincule seu WhatsApp para iniciar as automações</p>
               </div>
-              <div className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 ${
-                status?.status === 'connected' 
-                  ? 'bg-green-100 text-green-700' 
-                  : status?.status === 'connecting'
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-slate-100 text-slate-600'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  status?.status === 'connected' ? 'bg-green-500 animate-pulse' : 
-                  status?.status === 'connecting' ? 'bg-amber-500 animate-bounce' : 'bg-slate-400'
-                }`} />
-                {status?.status === 'connected' ? 'CONECTADO' : 
-                 status?.status === 'connecting' ? 'CONECTANDO...' : 'DESCONECTADO'}
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all border border-slate-200"
+                  title="Configurações do Agente"
+                >
+                  <Settings size={20} />
+                </button>
+                <div className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 ${
+                  status?.status === 'connected' 
+                    ? 'bg-green-100 text-green-700' 
+                    : status?.status === 'connecting'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-slate-100 text-slate-600'
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${
+                    status?.status === 'connected' ? 'bg-green-500 animate-pulse' : 
+                    status?.status === 'connecting' ? 'bg-amber-500 animate-bounce' : 'bg-slate-400'
+                  }`} />
+                  {status?.status === 'connected' ? 'CONECTADO' : 
+                   status?.status === 'connecting' ? 'CONECTANDO...' : 'DESCONECTADO'}
+                </div>
               </div>
             </div>
 
@@ -244,7 +254,7 @@ export default function InventoryAgentPage() {
               Próximos Passos
             </h4>
             <p className="text-sm text-blue-100 mb-6 leading-relaxed">
-              Após conectar, o agente ficará disponível no menu de <strong>Fechamentos</strong> para automatizar seus acertos.
+              Após conectar, o agente ficará disponível no menu de <strong>Prestação de Contas</strong> para automatizar seus acertos.
             </p>
             <div className="p-4 bg-white/10 rounded-xl border border-white/20">
               <p className="text-xs font-bold mb-2 uppercase tracking-wider text-blue-200">Status da IA</p>
@@ -254,47 +264,68 @@ export default function InventoryAgentPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-            <h4 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <Settings size={20} className="text-blue-600" />
-              Configurações do Agente
-            </h4>
-            
-            <div className="space-y-6">
+      {/* Settings Modal */}
+      {isSettingsModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+                  <Settings size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Configurações</h2>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Personalize seu Agente</p>
+                </div>
+              </div>
+              <button onClick={() => setIsSettingsModalOpen(false)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all">✕</button>
+            </div>
+
+            <div className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
                   <MessageSquarePlus size={14} /> Mensagem de Saudação
                 </label>
                 <textarea 
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  rows={3}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all h-24"
                   defaultValue="Olá! Sou o assistente virtual da Consigo. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?"
                   placeholder="Mensagem inicial do robô..."
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
                   <BrainCircuit size={14} /> Instruções da IA
                 </label>
                 <textarea 
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  rows={4}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all h-32"
                   defaultValue="Seja educado e direto. Peça as quantidades restantes de cada produto individualmente. Se o lojista informar avarias, registre separadamente."
                   placeholder="Como o robô deve se comportar..."
                 />
               </div>
 
-              <button className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all text-sm opacity-50 cursor-not-allowed" title="Persistência em breve">
-                <Save size={18} />
-                Salvar Configurações
-              </button>
-              <p className="text-[9px] text-center text-slate-400 italic">O salvamento de configurações personalizadas será habilitado em breve.</p>
+              <div className="pt-4 flex gap-3">
+                <button 
+                  onClick={() => setIsSettingsModalOpen(false)} 
+                  className="flex-1 py-4 bg-slate-100 text-slate-600 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-200 transition-all"
+                >
+                  Fechar
+                </button>
+                <button 
+                  disabled
+                  className="flex-[2] py-4 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-2xl opacity-50 cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Save size={18} /> Salvar Configurações
+                </button>
+              </div>
+              <p className="text-[10px] text-center text-slate-400 italic">O salvamento será habilitado em breve.</p>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Connection Modal */}
       {isModalOpen && (
