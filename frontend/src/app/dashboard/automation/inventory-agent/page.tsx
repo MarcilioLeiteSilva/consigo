@@ -24,10 +24,11 @@ export default function InventoryAgentPage() {
   const fetchStatus = async () => {
     try {
       const res = await api.get('/tenant/whatsapp/status');
-      setStatus(res.data);
+      const data = res.data.data || res.data;
+      setStatus(data);
       
       // Se estiver na modal e o status mudar para conectado, fecha a modal
-      if (res.data.status === 'connected' && isModalOpen) {
+      if (data.status === 'connected' && isModalOpen) {
         setIsModalOpen(false);
         setQrCode(null);
       }
