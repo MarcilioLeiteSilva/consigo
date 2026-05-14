@@ -19,7 +19,8 @@ import {
   History,
   FileText,
   MessageCircle,
-  Zap
+  Zap,
+  Bot
 } from 'lucide-react';
 import api from '@/lib/api';
 import { CurrencyText } from '@/components/CurrencyText';
@@ -164,16 +165,24 @@ export default function SettlementsPage() {
           <h1 className="text-2xl font-bold text-slate-900">Prestação de Contas (Fechamento)</h1>
           <p className="text-slate-500 text-sm">Consolidação de vendas e acerto de contas com PDVs.</p>
         </div>
-        <button 
-          onClick={() => {
-            setSelectedPOS(null);
-            setInventoryModalOpen(true);
-            setInventoryItems([]);
-          }}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-indigo-100"
-        >
-          <ClipboardList size={20} /> Novo Fechamento (Inventário)
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button 
+            onClick={() => router.push('/dashboard/automation/inventory-agent')}
+            className="flex items-center justify-center gap-2 bg-white text-slate-600 border border-slate-200 font-bold py-3.5 px-6 rounded-2xl hover:bg-slate-50 transition-all shadow-sm"
+          >
+            <Bot size={20} className="text-blue-600" /> Configurar Agente
+          </button>
+          <button 
+            onClick={() => {
+              setSelectedPOS(null);
+              setInventoryModalOpen(true);
+              setInventoryItems([]);
+            }}
+            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-indigo-100"
+          >
+            <ClipboardList size={20} /> Novo Fechamento (Inventário)
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
