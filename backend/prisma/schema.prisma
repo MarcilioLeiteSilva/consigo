@@ -460,11 +460,11 @@ model OperationLog {
 
 model WhatsAppConfig {
   id           String   @id @default(uuid())
-  tenantId     String   @unique
-  instanceName String
+  tenantId     String   @unique @map("tenant_id")
+  instanceName String   @map("instance_name")
   status       String   @default("disconnected")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
