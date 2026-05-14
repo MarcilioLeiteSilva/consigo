@@ -1,14 +1,14 @@
 # Relatório de Desenvolvimento - Consigo
 **Data:** 13 de Maio de 2026
 **Status:** Funcionalidades de Devolução e Perda Operacionais (Web & Mobile)
+---------------------------------------
+---------------------------------------
 
----
-
-## 1. Implementações de Back-end (NestJS)
+## 1. Implementações de Back-end --- (NestJS)
 
 ### 🔄 Módulo de Devolução (Return)
 - **Lógica de Negócio**: Criado o endpoint `POST /consignment-lots/:id/return`.
-- **Fluxo de Estoque**: A devolução retira o produto do PDV (incrementa `quantityReturned`) e cria automaticamente um novo lote no **Estoque Central** para revenda.
+- **Fluxo de Estoque**: A devolução retira o produto do PDV (incrementa `quantityReturned`) e cria automaticamente um novo lote para o **Estoque Central** para revenda.
 - **Integridade**: Garantia de que a quantidade devolvida não excede o saldo atual do lote.
 
 ### 📉 Módulo de Registro de Perdas (Loss)
