@@ -41,15 +41,25 @@ export default function InventoryAgentPage() {
   const getQr = async () => {
     setLoading(true);
     try {
+      console.log('🔄 Buscando QR Code...');
       const res = await api.get('/tenant/whatsapp/qr');
-      const qrData = res.data.base64 || res.data.qrcode?.base64 || res.data.qrcode;
+      console.log('✅ Resposta do QR:', res.data);
+      
+      // Detecção agressiva de qualquer string base64 que pareça um QR
+      const data = res.data;
+      const qrData = data.base64 || data.qrcode?.base64 || data.qrcode || (typeof data === 'string' && data.includes('base64') ? data : null);
+      
       if (qrData) {
+        console.log('📱 QR Code detectado com sucesso');
         setQrCode(qrData);
       } else {
-        console.warn('QR Data not found in response', res.data);
+        console.warn('⚠️ QR Data não encontrado no JSON:', data);
+        // Tenta pegar a primeira string que comece com data:image
+        const fallback = Object.values(data).find(v => typeof v === 'string' && v.startsWith('data:image'));
+        if (fallback) setQrCode(fallback as string);
       }
     } catch (e) {
-      console.error('Error fetching QR', e);
+      console.error('❌ Erro ao buscar QR:', e);
     } finally {
       setLoading(false);
     }
@@ -59,18 +69,22 @@ export default function InventoryAgentPage() {
     setIsModalOpen(true);
     setLoading(true);
     try {
+      console.log('🚀 Iniciando conexão...');
       const res = await api.post('/tenant/whatsapp/connect');
       setStatus(res.data);
-      const qrData = res.data.base64 || res.data.qrcode?.base64 || res.data.qrcode;
+      
+      const data = res.data;
+      const qrData = data.base64 || data.qrcode?.base64 || data.qrcode;
+      
       if (qrData) {
+        console.log('📱 QR recebido no connect');
         setQrCode(qrData);
       } else {
-        // Se não veio no connect, tenta buscar no endpoint de QR
+        console.log('⌛ QR não veio no connect, buscando no endpoint dedicado...');
         await getQr();
       }
     } catch (e: any) {
-      console.error('Connect error', e);
-      // Mesmo com erro (ex: já existe), tenta buscar o QR
+      console.error('⚠️ Erro no connect, tentando buscar QR existente:', e);
       await getQr();
     } finally {
       setLoading(false);
