@@ -152,10 +152,16 @@ export default function InventoryAgentPage() {
               <div className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 ${
                 status?.status === 'connected' 
                   ? 'bg-green-100 text-green-700' 
-                  : 'bg-slate-100 text-slate-600'
+                  : status?.status === 'connecting'
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-slate-100 text-slate-600'
               }`}>
-                <div className={`w-2 h-2 rounded-full ${status?.status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`} />
-                {status?.status === 'connected' ? 'CONECTADO' : 'DESCONECTADO'}
+                <div className={`w-2 h-2 rounded-full ${
+                  status?.status === 'connected' ? 'bg-green-500 animate-pulse' : 
+                  status?.status === 'connecting' ? 'bg-amber-500 animate-bounce' : 'bg-slate-400'
+                }`} />
+                {status?.status === 'connected' ? 'CONECTADO' : 
+                 status?.status === 'connecting' ? 'CONECTANDO...' : 'DESCONECTADO'}
               </div>
             </div>
 
@@ -170,6 +176,21 @@ export default function InventoryAgentPage() {
                     <p className="text-sm opacity-90">Sua conta está conectada e pronta para o trabalho.</p>
                   </div>
                 </div>
+
+                {status?.instanceName && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase mb-1">ID da Instância</p>
+                      <p className="text-sm font-bold text-slate-700">{status.instanceName}</p>
+                    </div>
+                    {status.instance?.owner && (
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Número Conectado</p>
+                        <p className="text-sm font-bold text-slate-700">+{status.instance.owner.split('@')[0]}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <div className="flex flex-wrap gap-4 pt-4">
                   <button 
@@ -186,16 +207,25 @@ export default function InventoryAgentPage() {
                 <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MessageSquare size={32} />
                 </div>
-                <h4 className="text-lg font-bold text-slate-900 mb-2">Conectar Novo Aparelho</h4>
+                <h4 className="text-lg font-bold text-slate-900 mb-2">
+                  {status?.status === 'connecting' ? 'Conexão em Andamento' : 'Conectar Novo Aparelho'}
+                </h4>
                 <p className="text-sm text-slate-500 max-w-xs mx-auto mb-8">
-                  Clique no botão abaixo para gerar um código de conexão.
+                  {status?.status === 'connecting' 
+                    ? `O agente "${status.instanceName}" está aguardando a leitura do QR Code.`
+                    : 'Clique no botão abaixo para gerar um código de conexão.'}
                 </p>
                 <button 
                   onClick={handleOpenConnect}
-                  className="inline-flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all"
+                  disabled={status?.status === 'connecting'}
+                  className={`inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all ${
+                    status?.status === 'connecting'
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                      : 'bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700'
+                  }`}
                 >
                   <Sparkles size={20} />
-                  Conectar WhatsApp
+                  {status?.status === 'connecting' ? 'Agente já Iniciado' : 'Conectar WhatsApp'}
                 </button>
               </div>
             )}

@@ -98,12 +98,12 @@ export class WhatsAppService {
       const result = await this.callAgent(`/v1/integration/instances/${config.instanceName}/status`);
       
       // Mapeamento robusto de status da Evolution para o Consigo
-      const state = result.instance?.state || result.status;
+      const rawState = (result.instance?.state || result.status || '').toLowerCase();
       let status = 'disconnected';
       
-      if (state === 'open') {
+      if (['open', 'connected', 'active_connected'].includes(rawState)) {
         status = 'connected';
-      } else if (state === 'connecting' || state === 'close' || state === 'active') {
+      } else if (['connecting', 'close', 'active', 'init', 'qrcode'].includes(rawState)) {
         status = 'connecting';
       }
 
