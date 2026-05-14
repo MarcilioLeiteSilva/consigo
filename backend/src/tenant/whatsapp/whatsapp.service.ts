@@ -77,7 +77,7 @@ export class WhatsAppService {
 
        if (evolutionBaseUrl && evolutionKey) {
          try {
-           const webhookPath = this.configService.get<string>('WHATSAPP_AGENT_WEBHOOK_PATH') || '/v1/integration/agents/webhook';
+           const webhookPath = this.configService.get<string>('WHATSAPP_AGENT_WEBHOOK_PATH') || '/webhook';
            this.logger.log(`Attempting to set webhook for ${instanceName} at ${evolutionBaseUrl} pointing to ${webhookPath}`);
            
            const controller = new AbortController();
@@ -93,8 +93,12 @@ export class WhatsAppService {
                webhook: {
                  enabled: true,
                  url: `${agentBaseUrl}${webhookPath}`,
-                 webhook_by_events: false,
-                 events: ["MESSAGES_UPSERT"]
+                 webhookByEvents: true,
+                 events: [
+                   "MESSAGES_UPSERT",
+                   "MESSAGES_UPDATE",
+                   "MESSAGES_SET"
+                 ]
                }
              }),
              signal: controller.signal
