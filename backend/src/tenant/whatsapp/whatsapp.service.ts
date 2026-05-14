@@ -57,6 +57,7 @@ export class WhatsAppService {
   }
 
   async connect(tenantId: string, companyName: string) {
+    console.log(`[DEBUG] WhatsAppService.connect started for tenant: ${tenantId}`);
     try {
       this.logger.log(`Starting connection for tenant ${tenantId} (${companyName})`);
       let config = await this.getConfig(tenantId);

@@ -14,6 +14,7 @@ export class WhatsAppController {
 
   @Post('connect')
   async connect(@Request() req) {
+    console.log(`[DEBUG] Received connect request for tenant: ${req.user.tenantId}`);
     // Busca o nome da empresa para enviar ao Agent
     const tenant = await this.whatsappService.getConfig(req.user.tenantId);
     return this.whatsappService.connect(req.user.tenantId, req.user.tenantName || 'Consigo Tenant');
