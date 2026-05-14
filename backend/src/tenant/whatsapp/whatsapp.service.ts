@@ -91,7 +91,7 @@ export class WhatsAppService {
              body: JSON.stringify({
                webhook: {
                  enabled: true,
-                 url: `${agentBaseUrl}/v1/whatsapp/webhook`,
+                 url: `${agentBaseUrl}/v1/integration/evolution/webhook`,
                  webhook_by_events: false,
                  events: ["MESSAGES_UPSERT"]
                }
