@@ -10,7 +10,11 @@ import {
   AlertCircle,
   X,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Settings,
+  Save,
+  MessageSquarePlus,
+  BrainCircuit
 } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -248,6 +252,45 @@ export default function InventoryAgentPage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                 <span className="text-xs font-medium">Pronta para conferência</span>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+            <h4 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <Settings size={20} className="text-blue-600" />
+              Configurações do Agente
+            </h4>
+            
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <MessageSquarePlus size={14} /> Mensagem de Saudação
+                </label>
+                <textarea 
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  rows={3}
+                  defaultValue="Olá! Sou o assistente virtual da Consigo. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?"
+                  placeholder="Mensagem inicial do robô..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <BrainCircuit size={14} /> Instruções da IA
+                </label>
+                <textarea 
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  rows={4}
+                  defaultValue="Seja educado e direto. Peça as quantidades restantes de cada produto individualmente. Se o lojista informar avarias, registre separadamente."
+                  placeholder="Como o robô deve se comportar..."
+                />
+              </div>
+
+              <button className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all text-sm opacity-50 cursor-not-allowed" title="Persistência em breve">
+                <Save size={18} />
+                Salvar Configurações
+              </button>
+              <p className="text-[9px] text-center text-slate-400 italic">O salvamento de configurações personalizadas será habilitado em breve.</p>
             </div>
           </div>
         </div>

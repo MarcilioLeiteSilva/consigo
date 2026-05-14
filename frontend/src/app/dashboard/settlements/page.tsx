@@ -46,7 +46,7 @@ export default function SettlementsPage() {
     try {
       await api.post('/tenant/whatsapp/inventory/start', {
         posId,
-        message: 'Olá! Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto.'
+        message: 'Olá! Sou o assistente virtual da Consigo. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?'
       });
       alert('Automação iniciada com sucesso! O Agente entrará em contato com o PDV.');
     } catch (err: any) {
