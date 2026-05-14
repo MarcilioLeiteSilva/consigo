@@ -35,8 +35,10 @@ export default function InventoryAgentPage() {
   const getQr = async () => {
     try {
       const res = await api.get('/tenant/whatsapp/qr');
-      if (res.data.qrcode?.base64) {
-        setQrCode(res.data.qrcode.base64);
+      // Tenta encontrar o base64 em diferentes formatos possíveis
+      const qrData = res.data.base64 || res.data.qrcode?.base64 || res.data.qrcode;
+      if (qrData) {
+        setQrCode(qrData);
       }
     } catch (e) {
       console.error('Error fetching QR', e);
@@ -48,8 +50,9 @@ export default function InventoryAgentPage() {
     try {
       const res = await api.post('/tenant/whatsapp/connect');
       setStatus(res.data);
-      if (res.data.qrcode) {
-        setQrCode(res.data.qrcode);
+      const qrData = res.data.base64 || res.data.qrcode?.base64 || res.data.qrcode;
+      if (qrData) {
+        setQrCode(qrData);
       }
     } catch (e: any) {
       const msg = e.response?.data?.detail || e.response?.data?.message || 'Erro ao conectar';
