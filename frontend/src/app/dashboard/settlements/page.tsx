@@ -17,7 +17,9 @@ import {
   ChevronRight,
   X,
   History,
-  FileText
+  FileText,
+  MessageCircle,
+  Zap
 } from 'lucide-react';
 import api from '@/lib/api';
 import { CurrencyText } from '@/components/CurrencyText';
@@ -37,6 +39,22 @@ export default function SettlementsPage() {
   const [allPOS, setAllPOS] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [notes, setNotes] = useState('');
+  const [startingAutomation, setStartingAutomation] = useState<string | null>(null);
+
+  const handleStartAutomation = async (posId: string) => {
+    setStartingAutomation(posId);
+    try {
+      await api.post('/tenant/whatsapp/inventory/start', {
+        posId,
+        message: 'Olá! Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto.'
+      });
+      alert('Automação iniciada com sucesso! O Agente entrará em contato com o PDV.');
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erro ao iniciar automação. Verifique se o WhatsApp está conectado.');
+    } finally {
+      setStartingAutomation(null);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -215,12 +233,26 @@ export default function SettlementsPage() {
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor do Acerto</p>
                         <div className="text-xl font-black text-indigo-600"><CurrencyText value={pos.totalPending} /></div>
                       </div>
-                      <button 
-                        onClick={() => handleSelectPOS(pos)}
-                        className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100"
-                      >
-                        <ChevronRight size={20} />
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => handleStartAutomation(pos.id)}
+                          disabled={startingAutomation === pos.id}
+                          className={`p-4 rounded-2xl transition-all shadow-lg flex items-center justify-center ${
+                            startingAutomation === pos.id 
+                            ? 'bg-slate-100 text-slate-400' 
+                            : 'bg-green-50 text-green-600 hover:bg-green-100 shadow-green-50'
+                          }`}
+                          title="Iniciar Agente de Acertos"
+                        >
+                          {startingAutomation === pos.id ? <Loader2 size={20} className="animate-spin" /> : <Zap size={20} />}
+                        </button>
+                        <button 
+                          onClick={() => handleSelectPOS(pos)}
+                          className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100"
+                        >
+                          <ChevronRight size={20} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
