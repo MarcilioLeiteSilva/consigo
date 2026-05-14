@@ -96,8 +96,17 @@ export class WhatsAppService {
 
     try {
       const result = await this.callAgent(`/v1/integration/instances/${config.instanceName}/status`);
-      const status = result.instance?.state === 'open' ? 'connected' : 'disconnected';
       
+      // Mapeamento robusto de status da Evolution para o Consigo
+      const state = result.instance?.state || result.status;
+      let status = 'disconnected';
+      
+      if (state === 'open') {
+        status = 'connected';
+      } else if (state === 'connecting' || state === 'close' || state === 'active') {
+        status = 'connecting';
+      }
+
       if (status !== config.status) {
         await this.prisma.whatsAppConfig.update({
           where: { tenantId },

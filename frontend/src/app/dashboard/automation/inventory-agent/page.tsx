@@ -22,6 +22,7 @@ export default function InventoryAgentPage() {
     try {
       const res = await api.get('/tenant/whatsapp/status');
       setStatus(res.data);
+      // Se não estiver conectado e não tivermos QR ainda, tenta buscar
       if (res.data.status === 'connecting' && !qrCode) {
         getQr();
       }
