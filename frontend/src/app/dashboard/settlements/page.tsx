@@ -15,6 +15,7 @@ import {
   Clock,
   Loader2,
   ChevronRight,
+  ChevronDown,
   X,
   History,
   FileText,
@@ -41,6 +42,7 @@ export default function SettlementsPage() {
   const [saving, setSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [startingAutomation, setStartingAutomation] = useState<string | null>(null);
+  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
 
   const handleStartAutomation = async (posId: string) => {
     setStartingAutomation(posId);
@@ -172,6 +174,37 @@ export default function SettlementsPage() {
           >
             <Bot size={20} className="text-blue-600" /> Configurar Agente
           </button>
+          <div className="relative">
+            <button 
+              onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
+              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-emerald-100"
+            >
+              <Zap size={20} /> Acerto com Agente <ChevronDown size={16} />
+            </button>
+
+            {isAgentDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <button 
+                  onClick={() => {
+                    setIsAgentDropdownOpen(false);
+                    setInventoryModalOpen(true);
+                    // Aqui a lógica de "Acerto Manual" usará a modal de inventário já existente
+                    // mas podemos adicionar uma flag para disparar o agente ao selecionar o PDV
+                  }}
+                  className="w-full text-left px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                >
+                  <Zap size={16} className="text-emerald-500" /> Acerto Manual
+                </button>
+                <div 
+                  className="w-full text-left px-6 py-4 text-sm font-bold text-slate-300 flex items-center gap-3 cursor-not-allowed bg-slate-50/50"
+                >
+                  <Calendar size={16} /> Acerto Agendado
+                  <span className="ml-auto text-[8px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full font-black uppercase">Breve</span>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button 
             onClick={() => {
               setSelectedPOS(null);

@@ -16,7 +16,10 @@ import {
   TrendingUp,
   CheckCircle2,
   AlertCircle,
-  FileText
+  FileText,
+  Zap,
+  ChevronDown,
+  Calendar
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate } from '@/utils/formatters';
@@ -35,6 +38,8 @@ export default function POSSettlementPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [pendingTotal, setPendingTotal] = useState(0);
+  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
+  const [startingAutomation, setStartingAutomation] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -100,6 +105,22 @@ export default function POSSettlementPage() {
     }
   };
 
+  const handleStartAutomation = async () => {
+    setStartingAutomation(true);
+    setIsAgentDropdownOpen(false);
+    try {
+      await api.post('/tenant/whatsapp/inventory/start', {
+        posId: params.id,
+        message: 'Olá! Sou o assistente virtual da Consigo. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?'
+      });
+      alert('Automação iniciada com sucesso! O Agente entrará em contato com o PDV.');
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erro ao iniciar automação. Verifique se o WhatsApp está conectado.');
+    } finally {
+      setStartingAutomation(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -129,12 +150,49 @@ export default function POSSettlementPage() {
           </div>
         </div>
         
-        <button 
-          onClick={handleStartInventory}
-          className="flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-3.5 px-8 rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100"
-        >
-          <ClipboardList size={20} /> Novo Fechamento (Inventário)
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <div className="relative">
+            <button 
+              onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
+              disabled={startingAutomation}
+              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+            >
+              {startingAutomation ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} /> Iniciando...
+                </>
+              ) : (
+                <>
+                  <Zap size={20} /> Acerto com Agente <ChevronDown size={16} />
+                </>
+              )}
+            </button>
+
+            {isAgentDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <button 
+                  onClick={handleStartAutomation}
+                  className="w-full text-left px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                >
+                  <Zap size={16} className="text-emerald-500" /> Acerto Manual
+                </button>
+                <div 
+                  className="w-full text-left px-6 py-4 text-sm font-bold text-slate-300 flex items-center gap-3 cursor-not-allowed bg-slate-50/50"
+                >
+                  <Calendar size={16} /> Acerto Agendado
+                  <span className="ml-auto text-[8px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full font-black uppercase">Breve</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button 
+            onClick={handleStartInventory}
+            className="flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-3.5 px-8 rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100"
+          >
+            <ClipboardList size={20} /> Novo Fechamento (Inventário)
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
