@@ -55,7 +55,7 @@ export class WhatsAppService {
       this.logger.log(`Starting connection for tenant ${tenantId} (${companyName})`);
       let config = await this.getConfig(tenantId);
       
-      const instanceName = config?.instanceName || `consigo_${tenantId.split('-')[0]}_${Date.now()}`;
+    const instanceName = config?.instanceName || `c_${tenantId.substring(0, 8)}`;
 
       // Criar/Garantir instância no Agent
       const result = await this.callAgent('/v1/integration/instances', 'POST', {
