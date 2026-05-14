@@ -77,10 +77,11 @@ export class WhatsAppService {
 
        if (evolutionBaseUrl && evolutionKey) {
          try {
-           this.logger.log(`Attempting to set webhook for ${instanceName} at ${evolutionBaseUrl}`);
+           const webhookPath = this.configService.get<string>('WHATSAPP_AGENT_WEBHOOK_PATH') || '/v1/integration/agents/webhook';
+           this.logger.log(`Attempting to set webhook for ${instanceName} at ${evolutionBaseUrl} pointing to ${webhookPath}`);
            
            const controller = new AbortController();
-           const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos de timeout
+           const timeoutId = setTimeout(() => controller.abort(), 8000);
 
            const webhookRes = await fetch(`${evolutionBaseUrl}/webhook/set/${instanceName}`, {
              method: 'POST',
@@ -91,7 +92,7 @@ export class WhatsAppService {
              body: JSON.stringify({
                webhook: {
                  enabled: true,
-                 url: `${agentBaseUrl}/v1/integration/agents/webhook`,
+                 url: `${agentBaseUrl}${webhookPath}`,
                  webhook_by_events: false,
                  events: ["MESSAGES_UPSERT"]
                }
@@ -105,7 +106,6 @@ export class WhatsAppService {
          } catch (whErr) {
            const isTimeout = whErr.name === 'AbortError';
            this.logger.error(`FAILED to configure webhook: ${isTimeout ? 'Network Timeout' : whErr.message}`);
-           this.logger.warn(`Tip: Check if the Evolution API URL is reachable from this container.`);
          }
        } else {
          this.logger.warn('Skipping webhook config: Evolution URL or Key missing in env vars');
