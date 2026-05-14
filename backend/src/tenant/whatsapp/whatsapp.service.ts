@@ -77,6 +77,11 @@ export class WhatsAppService {
 
        if (evolutionBaseUrl && evolutionKey) {
          try {
+           this.logger.log(`Attempting to set webhook for ${instanceName} at ${evolutionBaseUrl}`);
+           
+           const controller = new AbortController();
+           const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos de timeout
+
            const webhookRes = await fetch(`${evolutionBaseUrl}/webhook/set/${instanceName}`, {
              method: 'POST',
              headers: {
@@ -88,14 +93,20 @@ export class WhatsAppService {
                url: `${agentBaseUrl}/v1/integration/hooks/evolution`,
                webhook_by_events: false,
                events: ["MESSAGES_UPSERT"]
-             })
+             }),
+             signal: controller.signal
            });
            
+           clearTimeout(timeoutId);
            const webhookData = await webhookRes.json();
-           this.logger.log(`Webhook auto-config result for ${instanceName}: ${webhookRes.status} - ${JSON.stringify(webhookData)}`);
+           this.logger.log(`Webhook auto-config response: ${webhookRes.status} - ${JSON.stringify(webhookData)}`);
          } catch (whErr) {
-           this.logger.error(`CRITICAL: Failed to auto-configure webhook: ${whErr.message}`);
+           const isTimeout = whErr.name === 'AbortError';
+           this.logger.error(`FAILED to configure webhook: ${isTimeout ? 'Network Timeout' : whErr.message}`);
+           this.logger.warn(`Tip: Check if the Evolution API URL is reachable from this container.`);
          }
+       } else {
+         this.logger.warn('Skipping webhook config: Evolution URL or Key missing in env vars');
        }
        // -------------------------------------------------------------
 
