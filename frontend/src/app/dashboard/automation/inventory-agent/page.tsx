@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Sparkles
 } from 'lucide-react';
+import api from '@/lib/api';
 
 export default function InventoryAgentPage() {
   const [status, setStatus] = useState<any>(null);
@@ -19,10 +20,9 @@ export default function InventoryAgentPage() {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch('/api/tenant/whatsapp/status');
-      const data = await res.json();
-      setStatus(data);
-      if (data.status === 'connecting' && !qrCode) {
+      const res = await api.get('/tenant/whatsapp/status');
+      setStatus(res.data);
+      if (res.data.status === 'connecting' && !qrCode) {
         getQr();
       }
     } catch (e) {
@@ -34,10 +34,9 @@ export default function InventoryAgentPage() {
 
   const getQr = async () => {
     try {
-      const res = await fetch('/api/tenant/whatsapp/qr');
-      const data = await res.json();
-      if (data.qrcode?.base64) {
-        setQrCode(data.qrcode.base64);
+      const res = await api.get('/tenant/whatsapp/qr');
+      if (res.data.qrcode?.base64) {
+        setQrCode(res.data.qrcode.base64);
       }
     } catch (e) {
       console.error('Error fetching QR', e);
@@ -47,14 +46,14 @@ export default function InventoryAgentPage() {
   const handleConnect = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/tenant/whatsapp/connect', { method: 'POST' });
-      const data = await res.json();
-      setStatus(data);
-      if (data.qrcode) {
-        setQrCode(data.qrcode);
+      const res = await api.post('/tenant/whatsapp/connect');
+      setStatus(res.data);
+      if (res.data.qrcode) {
+        setQrCode(res.data.qrcode);
       }
-    } catch (e) {
-      alert('Erro ao conectar');
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || e.response?.data?.message || 'Erro ao conectar';
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -64,7 +63,7 @@ export default function InventoryAgentPage() {
     if (!confirm('Tem certeza que deseja desconectar o WhatsApp?')) return;
     setLoading(true);
     try {
-      await fetch('/api/tenant/whatsapp/disconnect', { method: 'DELETE' });
+      await api.delete('/tenant/whatsapp/disconnect');
       setStatus(null);
       setQrCode(null);
       fetchStatus();

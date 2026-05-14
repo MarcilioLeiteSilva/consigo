@@ -51,37 +51,43 @@ export class WhatsAppService {
   }
 
   async connect(tenantId: string, companyName: string) {
-    let config = await this.getConfig(tenantId);
-    
-    const instanceName = config?.instanceName || `consigo_${tenantId.split('-')[0]}_${Date.now()}`;
+    try {
+      this.logger.log(`Starting connection for tenant ${tenantId} (${companyName})`);
+      let config = await this.getConfig(tenantId);
+      
+      const instanceName = config?.instanceName || `consigo_${tenantId.split('-')[0]}_${Date.now()}`;
 
-    // Criar/Garantir instância no Agent
-    const result = await this.callAgent('/v1/integration/instances', 'POST', {
-      client_id: tenantId,
-      client_name: companyName,
-      instance_name: instanceName,
-    });
+      // Criar/Garantir instância no Agent
+      const result = await this.callAgent('/v1/integration/instances', 'POST', {
+        client_id: tenantId,
+        client_name: companyName,
+        instance_name: instanceName,
+      });
 
-    // Salvar no DB local
-    if (!config) {
-      config = await this.prisma.whatsAppConfig.create({
-        data: {
-          tenantId,
-          instanceName,
-          status: 'connecting',
-        },
-      });
-    } else {
-      config = await this.prisma.whatsAppConfig.update({
-        where: { tenantId },
-        data: { status: 'connecting' },
-      });
+      // Salvar no DB local
+      if (!config) {
+        config = await this.prisma.whatsAppConfig.create({
+          data: {
+            tenantId,
+            instanceName,
+            status: 'connecting',
+          },
+        });
+      } else {
+        config = await this.prisma.whatsAppConfig.update({
+          where: { tenantId },
+          data: { status: 'connecting' },
+        });
+      }
+
+      return {
+        ...config,
+        qrcode: result.qrcode,
+      };
+    } catch (e) {
+      this.logger.error(`Failed to connect WhatsApp: ${e.message}`);
+      throw e;
     }
-
-    return {
-      ...config,
-      qrcode: result.qrcode,
-    };
   }
 
   async getStatus(tenantId: string) {
