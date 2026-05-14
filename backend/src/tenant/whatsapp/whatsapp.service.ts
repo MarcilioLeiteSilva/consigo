@@ -77,7 +77,7 @@ export class WhatsAppService {
 
        if (evolutionBaseUrl && evolutionKey) {
          try {
-           await fetch(`${evolutionBaseUrl}/webhook/set/${instanceName}`, {
+           const webhookRes = await fetch(`${evolutionBaseUrl}/webhook/set/${instanceName}`, {
              method: 'POST',
              headers: {
                'Content-Type': 'application/json',
@@ -90,9 +90,11 @@ export class WhatsAppService {
                events: ["MESSAGES_UPSERT"]
              })
            });
-           this.logger.log(`Webhook automatically configured for instance ${instanceName}`);
+           
+           const webhookData = await webhookRes.json();
+           this.logger.log(`Webhook auto-config result for ${instanceName}: ${webhookRes.status} - ${JSON.stringify(webhookData)}`);
          } catch (whErr) {
-           this.logger.warn(`Failed to auto-configure webhook: ${whErr.message}`);
+           this.logger.error(`CRITICAL: Failed to auto-configure webhook: ${whErr.message}`);
          }
        }
        // -------------------------------------------------------------
