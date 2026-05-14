@@ -69,22 +69,49 @@ export class WhatsAppService {
         client_name: companyName,
         instance_name: instanceName,
       });
+ 
+       // --- NOVO: Configurar Webhook na Evolution automaticamente ---
+       const agentBaseUrl = this.configService.get<string>('WHATSAPP_AGENT_URL') || 'https://agentes-whatsapp-agent.xc4mw1.easypanel.host';
+       const evolutionBaseUrl = this.configService.get<string>('WHATSAPP_EVOLUTION_URL');
+       const evolutionKey = this.configService.get<string>('WHATSAPP_EVOLUTION_KEY');
 
-      // Salvar no DB local
-      if (!config) {
-        config = await this.prisma.whatsAppConfig.create({
-          data: {
-            tenantId,
-            instanceName,
-            status: 'connecting',
-          },
-        });
-      } else {
-        config = await this.prisma.whatsAppConfig.update({
-          where: { tenantId },
-          data: { status: 'connecting' },
-        });
-      }
+       if (evolutionBaseUrl && evolutionKey) {
+         try {
+           await fetch(`${evolutionBaseUrl}/webhook/set/${instanceName}`, {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'apikey': evolutionKey
+             },
+             body: JSON.stringify({
+               enabled: true,
+               url: `${agentBaseUrl}/v1/integration/hooks/evolution`,
+               webhook_by_events: false,
+               events: ["MESSAGES_UPSERT"]
+             })
+           });
+           this.logger.log(`Webhook automatically configured for instance ${instanceName}`);
+         } catch (whErr) {
+           this.logger.warn(`Failed to auto-configure webhook: ${whErr.message}`);
+         }
+       }
+       // -------------------------------------------------------------
+
+       // Salvar no DB local
+       if (!config) {
+         config = await this.prisma.whatsAppConfig.create({
+           data: {
+             tenantId,
+             instanceName,
+             status: 'connecting',
+           },
+         });
+       } else {
+         config = await this.prisma.whatsAppConfig.update({
+           where: { tenantId },
+           data: { status: 'connecting' },
+         });
+       }
 
       return {
         ...config,
