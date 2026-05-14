@@ -50,6 +50,12 @@ export class WhatsAppService {
     });
   }
 
+  async getConfigByInstance(instanceName: string) {
+    return this.prisma.whatsAppConfig.findFirst({
+      where: { instanceName },
+    });
+  }
+
   async connect(tenantId: string, companyName: string) {
     try {
       this.logger.log(`Starting connection for tenant ${tenantId} (${companyName})`);
