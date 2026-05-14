@@ -8,8 +8,9 @@ import {
   MessageSquare, 
   CheckCircle2, 
   AlertCircle,
-  ArrowRight,
-  Sparkles
+  X,
+  Sparkles,
+  ExternalLink
 } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -17,14 +18,18 @@ export default function InventoryAgentPage() {
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   const fetchStatus = async () => {
     try {
       const res = await api.get('/tenant/whatsapp/status');
       setStatus(res.data);
-      // Se não estiver conectado e não tivermos QR ainda, tenta buscar
-      if (res.data.status === 'connecting' && !qrCode) {
-        getQr();
+      
+      // Se estiver na modal e o status mudar para conectado, fecha a modal
+      if (res.data.status === 'connected' && isModalOpen) {
+        setIsModalOpen(false);
+        setQrCode(null);
       }
     } catch (e) {
       console.error('Error fetching status', e);
@@ -34,19 +39,24 @@ export default function InventoryAgentPage() {
   };
 
   const getQr = async () => {
+    setLoading(true);
     try {
       const res = await api.get('/tenant/whatsapp/qr');
-      // Tenta encontrar o base64 em diferentes formatos possíveis
       const qrData = res.data.base64 || res.data.qrcode?.base64 || res.data.qrcode;
       if (qrData) {
         setQrCode(qrData);
+      } else {
+        console.warn('QR Data not found in response', res.data);
       }
     } catch (e) {
       console.error('Error fetching QR', e);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleConnect = async () => {
+  const handleOpenConnect = async () => {
+    setIsModalOpen(true);
     setLoading(true);
     try {
       const res = await api.post('/tenant/whatsapp/connect');
@@ -54,10 +64,14 @@ export default function InventoryAgentPage() {
       const qrData = res.data.base64 || res.data.qrcode?.base64 || res.data.qrcode;
       if (qrData) {
         setQrCode(qrData);
+      } else {
+        // Se não veio no connect, tenta buscar no endpoint de QR
+        await getQr();
       }
     } catch (e: any) {
-      const msg = e.response?.data?.detail || e.response?.data?.message || 'Erro ao conectar';
-      alert(msg);
+      console.error('Connect error', e);
+      // Mesmo com erro (ex: já existe), tenta buscar o QR
+      await getQr();
     } finally {
       setLoading(false);
     }
@@ -80,53 +94,67 @@ export default function InventoryAgentPage() {
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 10000);
+    const interval = setInterval(fetchStatus, 5000); // Mais frequente para detectar conexão
     return () => clearInterval(interval);
-  }, []);
+  }, [isModalOpen]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-blue-600 rounded-lg text-white">
-            <Bot size={24} />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-blue-600 rounded-lg text-white">
+              <Bot size={24} />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Agente de Acertos</h1>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Agente de Acertos</h1>
+          <p className="text-slate-500 max-w-2xl">
+            Automação de conferência de inventário via WhatsApp.
+          </p>
         </div>
-        <p className="text-slate-500 max-w-2xl">
-          Automação de conferência de inventário via WhatsApp. Configure o agente para entrar em contato com os lojistas e interpretar as respostas automaticamente.
-        </p>
+        <button 
+          onClick={() => setShowDebug(!showDebug)}
+          className="text-xs text-slate-400 hover:text-slate-600 underline"
+        >
+          {showDebug ? 'Esconder Debug' : 'Mostrar Debug'}
+        </button>
       </div>
 
+      {showDebug && (
+        <div className="p-4 bg-slate-900 text-green-400 font-mono text-xs rounded-xl overflow-auto max-h-40">
+          <pre>{JSON.stringify(status, null, 2)}</pre>
+          <div className="mt-2 text-white">QR Code Status: {qrCode ? 'Presente' : 'Ausente'}</div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Control Card */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 mb-1">Status da Conexão</h3>
-                <p className="text-sm text-slate-500">Gerencie a instância do WhatsApp vinculada à sua conta</p>
+                <p className="text-sm text-slate-500">Vincule seu WhatsApp para iniciar as automações</p>
               </div>
               <div className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 ${
                 status?.status === 'connected' 
                   ? 'bg-green-100 text-green-700' 
-                  : 'bg-red-100 text-red-700'
+                  : 'bg-slate-100 text-slate-600'
               }`}>
-                <div className={`w-2 h-2 rounded-full ${status?.status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                <div className={`w-2 h-2 rounded-full ${status?.status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`} />
                 {status?.status === 'connected' ? 'CONECTADO' : 'DESCONECTADO'}
               </div>
             </div>
 
             {status?.status === 'connected' ? (
               <div className="space-y-6">
-                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-4">
+                <div className="p-6 bg-green-50 rounded-xl border border-green-100 flex items-center gap-4 text-green-700">
                   <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white">
                     <CheckCircle2 size={24} />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900">WhatsApp Ativo</h4>
-                    <p className="text-sm text-slate-500">Sua conta está conectada e pronta para automação.</p>
+                    <h4 className="font-bold">WhatsApp Ativo</h4>
+                    <p className="text-sm opacity-90">Sua conta está conectada e pronta para o trabalho.</p>
                   </div>
                 </div>
                 
@@ -136,115 +164,112 @@ export default function InventoryAgentPage() {
                     className="flex items-center gap-2 px-6 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
                   >
                     <Power size={18} />
-                    Desconectar Aparelho
-                  </button>
-                  <button 
-                    onClick={fetchStatus}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"
-                  >
-                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                    Atualizar Status
+                    Desconectar WhatsApp
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
-                {!qrCode ? (
-                  <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                    <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageSquare size={32} />
-                    </div>
-                    <h4 className="text-lg font-bold text-slate-900 mb-2">Conectar WhatsApp</h4>
-                    <p className="text-sm text-slate-500 max-w-xs mx-auto mb-8">
-                      Para começar a usar a automação, você precisa conectar seu número de WhatsApp corporativo.
-                    </p>
-                    <button 
-                      onClick={handleConnect}
-                      disabled={loading}
-                      className="inline-flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50"
-                    >
-                      {loading ? <RefreshCw size={20} className="animate-spin" /> : <MessageSquare size={20} />}
-                      {loading ? 'Preparando...' : 'Gerar QR Code de Conexão'}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center animate-in zoom-in-95 duration-300">
-                    <div className="p-4 bg-white border-4 border-slate-100 rounded-3xl shadow-xl mb-6">
-                      <img src={qrCode} alt="WhatsApp QR Code" className="w-64 h-64" />
-                    </div>
-                    <div className="text-center space-y-3">
-                      <h4 className="font-bold text-slate-900">Escaneie o código</h4>
-                      <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
-                        Abra o WhatsApp no seu celular {'>'} Configurações {'>'} Aparelhos Conectados {'>'} Conectar um Aparelho.
-                      </p>
-                      <button 
-                        onClick={() => setQrCode(null)}
-                        className="text-sm text-blue-600 font-bold hover:underline pt-2"
-                      >
-                        Cancelar e tentar novamente
-                      </button>
-                    </div>
-                  </div>
-                )}
+              <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare size={32} />
+                </div>
+                <h4 className="text-lg font-bold text-slate-900 mb-2">Conectar Novo Aparelho</h4>
+                <p className="text-sm text-slate-500 max-w-xs mx-auto mb-8">
+                  Clique no botão abaixo para gerar um código de conexão.
+                </p>
+                <button 
+                  onClick={handleOpenConnect}
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all"
+                >
+                  <Sparkles size={20} />
+                  Conectar WhatsApp
+                </button>
               </div>
             )}
           </div>
+        </div>
 
-          {/* Activity Feed */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <RefreshCw size={20} className="text-blue-600" />
-              Atividade Recente
-            </h3>
-            <div className="space-y-4">
-              <div className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900">Sistema Pronto</p>
-                  <p className="text-xs text-slate-500 mt-1">O módulo de automação foi inicializado. Conecte seu WhatsApp para começar.</p>
-                </div>
+        <div className="space-y-6">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-lg shadow-blue-200">
+            <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <Bot size={20} />
+              Próximos Passos
+            </h4>
+            <p className="text-sm text-blue-100 mb-6 leading-relaxed">
+              Após conectar, o agente ficará disponível no menu de <strong>Fechamentos</strong> para automatizar seus acertos.
+            </p>
+            <div className="p-4 bg-white/10 rounded-xl border border-white/20">
+              <p className="text-xs font-bold mb-2 uppercase tracking-wider text-blue-200">Status da IA</p>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-xs font-medium">Pronta para conferência</span>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Sidebar Info */}
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-lg shadow-blue-200">
-            <h4 className="font-bold text-lg mb-6">Como funciona?</h4>
-            <div className="space-y-6">
-              {[
-                { title: 'Inicie o Acerto', desc: 'No menu de Fechamentos, clique no ícone do WhatsApp para iniciar.' },
-                { title: 'IA entra em contato', desc: 'O robô envia uma mensagem personalizada solicitando o inventário.' },
-                { title: 'Coleta de Dados', desc: 'O lojista responde e nossa IA interpreta as quantidades vendidas.' },
-                { title: 'Pronto!', desc: 'Você recebe o fechamento mastigado para apenas conferir e aprovar.' }
-              ].map((step, idx) => (
-                <div key={idx} className="flex gap-4">
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold shrink-0">
-                    {idx + 1}
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-bold leading-none">{step.title}</p>
-                    <p className="text-xs text-blue-100 leading-relaxed">{step.desc}</p>
-                  </div>
+      {/* Connection Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-slate-900">Escaneie o QR Code</h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-8 flex flex-col items-center">
+              {loading ? (
+                <div className="py-20 flex flex-col items-center gap-4">
+                  <RefreshCw size={48} className="text-blue-600 animate-spin" />
+                  <p className="text-sm text-slate-500 font-medium">Gerando código seguro...</p>
                 </div>
-              ))}
+              ) : qrCode ? (
+                <>
+                  <div className="p-4 bg-white border-4 border-slate-50 rounded-3xl shadow-lg mb-8">
+                    <img src={qrCode} alt="WhatsApp QR Code" className="w-64 h-64" />
+                  </div>
+                  <div className="space-y-4 text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
+                      <ExternalLink size={12} />
+                      Passo a Passo
+                    </div>
+                    <ol className="text-sm text-slate-500 text-left space-y-2 list-decimal pl-4">
+                      <li>Abra o WhatsApp no seu celular</li>
+                      <li>Toque em <strong>Aparelhos Conectados</strong></li>
+                      <li>Toque em <strong>Conectar um Aparelho</strong></li>
+                      <li>Aponte a câmera para este código</li>
+                    </ol>
+                  </div>
+                </>
+              ) : (
+                <div className="py-12 text-center">
+                  <AlertCircle size={48} className="text-amber-500 mx-auto mb-4" />
+                  <h4 className="font-bold text-slate-900 mb-2">Ops! Falha ao carregar</h4>
+                  <p className="text-sm text-slate-500 mb-6">Não conseguimos obter o código da Evolution API.</p>
+                  <button 
+                    onClick={getQr}
+                    className="px-6 py-2 bg-slate-100 text-slate-900 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"
+                  >
+                    Tentar Novamente
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
-
-          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6">
-            <div className="flex items-center gap-2 text-amber-700 font-bold text-sm mb-2">
-              <AlertCircle size={18} />
-              Dica de Uso
+            
+            <div className="p-6 bg-slate-50 border-t border-slate-100 text-center">
+              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+                Segurança ponta-a-ponta via Evolution API
+              </p>
             </div>
-            <p className="text-xs text-amber-600 leading-relaxed">
-              Mantenha seu celular conectado à internet para garantir que o agente consiga enviar mensagens instantaneamente.
-            </p>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
