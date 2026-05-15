@@ -226,6 +226,15 @@ export class WhatsAppService {
       message = config.greetingMessage;
     }
 
+    // Se ainda não houver mensagem, usa uma padrão
+    if (!message) {
+      message = 'Olá {{pdv_name}}! Gostaria de realizar o acerto do estoque.';
+    }
+
+    // Substitui variáveis
+    const pdvName = pos.name || 'Parceiro';
+    message = message.replace(/{{pdv_name}}|{{nome_pdv}}/g, pdvName);
+
     // Formata o número (garantir DDI e remover caracteres)
     let phone = pos.whatsapp.replace(/\D/g, '');
     if (!phone.startsWith('55')) phone = '55' + phone;
@@ -234,7 +243,7 @@ export class WhatsAppService {
       instance_name: config.instanceName,
       pdv_phone: phone,
       closing_id: data.closingId || 0,
-      message: message || 'Olá! Gostaria de realizar o acerto do estoque.',
+      message: message,
     });
   }
 }

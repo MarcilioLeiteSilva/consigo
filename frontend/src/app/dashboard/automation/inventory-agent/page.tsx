@@ -63,7 +63,7 @@ export default function InventoryAgentPage() {
       // Se não houver saudação salva, define a padrão com o nome da empresa
       if (!greeting && !status?.greetingMessage) {
         const companyName = data?.companyName || 'nossa empresa';
-        setGreeting(`Olá! Sou o assistente virtual da ${companyName}. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?`);
+        setGreeting(`Olá {{pdv_name}}! Sou o assistente virtual da ${companyName}. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?`);
       }
     } catch (e) {
       console.error('Error fetching tenant', e);
@@ -339,6 +339,9 @@ export default function InventoryAgentPage() {
                   onChange={(e) => setGreeting(e.target.value)}
                   placeholder="Mensagem inicial do robô..."
                 />
+                <p className="text-[10px] text-slate-400 font-bold ml-1">
+                  Dica: Use <span className="text-blue-600">{"{{pdv_name}}"}</span> para inserir o nome do PDV automaticamente.
+                </p>
               </div>
 
               <div className="space-y-2">
