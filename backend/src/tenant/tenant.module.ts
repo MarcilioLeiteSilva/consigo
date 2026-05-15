@@ -12,6 +12,7 @@ import { FinancialTransactionsModule } from './financial-transactions/financial-
 import { ConsignorAccountsModule } from './consignor-accounts/consignor-accounts.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SettlementsModule } from './settlements/settlements.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SettlementsModule } from './settlements/settlements.module';
     DashboardModule,
     SettlementsModule,
     WhatsAppModule,
+    ProfileModule,
   ],
 })
 export class TenantModule {}

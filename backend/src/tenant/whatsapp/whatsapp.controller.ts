@@ -29,6 +29,11 @@ export class WhatsAppController {
     return this.whatsappService.disconnect(req.user.tenantId);
   }
 
+  @Post('settings')
+  async updateSettings(@Request() req, @Body() data: { greetingMessage?: string, aiInstructions?: string }) {
+    return this.whatsappService.updateSettings(req.user.tenantId, data);
+  }
+
   @Post('inventory/start')
   async startInventory(@Request() req, @Body() data: { posId: string, closingId: number, message: string }) {
     return this.whatsappService.startInventoryFlow(req.user.tenantId, data);

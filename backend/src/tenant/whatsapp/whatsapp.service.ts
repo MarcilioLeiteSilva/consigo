@@ -192,6 +192,23 @@ export class WhatsAppService {
     return { ok: true };
   }
 
+  async updateSettings(tenantId: string, data: { greetingMessage?: string, aiInstructions?: string }) {
+    return this.prisma.whatsAppConfig.upsert({
+      where: { tenantId },
+      update: {
+        greetingMessage: data.greetingMessage,
+        aiInstructions: data.aiInstructions,
+      },
+      create: {
+        tenantId,
+        instanceName: `c_${tenantId.substring(0, 8)}`,
+        status: 'disconnected',
+        greetingMessage: data.greetingMessage,
+        aiInstructions: data.aiInstructions,
+      },
+    });
+  }
+
   async startInventoryFlow(tenantId: string, data: { posId: string, closingId: number, message: string }) {
     const config = await this.getConfig(tenantId);
     if (!config || config.status !== 'connected') {
@@ -203,15 +220,17 @@ export class WhatsAppService {
       throw new BadRequestException('PDV does not have a WhatsApp number');
     }
 
-    // Formata o número (garantir DDI e remover caracteres)
-    let phone = pos.whatsapp.replace(/\D/g, '');
-    if (!phone.startsWith('55')) phone = '55' + phone;
+    // Busca mensagem personalizada se não enviada
+    let message = data.message;
+    if (!message && config.greetingMessage) {
+      message = config.greetingMessage;
+    }
 
     return this.callAgent('/v1/integration/agents/inventory/start', 'POST', {
       instance_name: config.instanceName,
       pdv_phone: phone,
       closing_id: data.closingId || 0,
-      message: data.message,
+      message: message || 'Olá! Gostaria de realizar o acerto do estoque.',
     });
   }
 }

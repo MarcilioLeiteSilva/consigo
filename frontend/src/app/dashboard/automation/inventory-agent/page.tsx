@@ -20,11 +20,17 @@ import api from '@/lib/api';
 
 export default function InventoryAgentPage() {
   const [status, setStatus] = useState<any>(null);
+  const [tenant, setTenant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  // Form states for settings
+  const [greeting, setGreeting] = useState('');
+  const [instructions, setInstructions] = useState('');
 
   const fetchStatus = async () => {
     try {
@@ -32,6 +38,10 @@ export default function InventoryAgentPage() {
       const data = res.data.data || res.data;
       setStatus(data);
       
+      // Carregar configurações salvas se existirem e o formulário estiver vazio
+      if (data.greetingMessage && !greeting) setGreeting(data.greetingMessage);
+      if (data.aiInstructions && !instructions) setInstructions(data.aiInstructions);
+
       // Se estiver na modal e o status mudar para conectado, fecha a modal
       if (data.status === 'connected' && isModalOpen) {
         setIsModalOpen(false);
@@ -41,6 +51,39 @@ export default function InventoryAgentPage() {
       console.error('Error fetching status', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTenant = async () => {
+    try {
+      const res = await api.get('/tenant/profile');
+      const data = res.data.data || res.data;
+      setTenant(data);
+      
+      // Se não houver saudação salva, define a padrão com o nome da empresa
+      if (!greeting && !status?.greetingMessage) {
+        const companyName = data?.companyName || 'nossa empresa';
+        setGreeting(`Olá! Sou o assistente virtual da ${companyName}. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?`);
+      }
+    } catch (e) {
+      console.error('Error fetching tenant', e);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      await api.post('/tenant/whatsapp/settings', {
+        greetingMessage: greeting,
+        aiInstructions: instructions
+      });
+      alert('Configurações salvas com sucesso!');
+      setIsSettingsModalOpen(false);
+      fetchStatus();
+    } catch (e) {
+      alert('Erro ao salvar configurações');
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -113,6 +156,7 @@ export default function InventoryAgentPage() {
 
   useEffect(() => {
     fetchStatus();
+    fetchTenant();
     const interval = setInterval(fetchStatus, 5000); // Mais frequente para detectar conexão
     return () => clearInterval(interval);
   }, [isModalOpen]);
@@ -291,7 +335,8 @@ export default function InventoryAgentPage() {
                 </label>
                 <textarea 
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all h-24"
-                  defaultValue="Olá! Sou o assistente virtual da Consigo. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?"
+                  value={greeting}
+                  onChange={(e) => setGreeting(e.target.value)}
                   placeholder="Mensagem inicial do robô..."
                 />
               </div>
@@ -302,7 +347,8 @@ export default function InventoryAgentPage() {
                 </label>
                 <textarea 
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all h-32"
-                  defaultValue="Seja educado e direto. Peça as quantidades restantes de cada produto individualmente. Se o lojista informar avarias, registre separadamente."
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
                   placeholder="Como o robô deve se comportar..."
                 />
               </div>
@@ -315,13 +361,14 @@ export default function InventoryAgentPage() {
                   Fechar
                 </button>
                 <button 
-                  disabled
-                  className="flex-[2] py-4 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-2xl opacity-50 cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+                  onClick={handleSaveSettings}
+                  disabled={savingSettings}
+                  className="flex-[2] py-4 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:bg-slate-800 transition-all disabled:opacity-50"
                 >
-                  <Save size={18} /> Salvar Configurações
+                  {savingSettings ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
+                  {savingSettings ? 'Salvando...' : 'Salvar Configurações'}
                 </button>
               </div>
-              <p className="text-[10px] text-center text-slate-400 italic">O salvamento será habilitado em breve.</p>
             </div>
           </div>
         </div>

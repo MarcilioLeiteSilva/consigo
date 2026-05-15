@@ -19,12 +19,41 @@ import { useRouter } from 'next/navigation';
 export default function SettingsPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [tenant, setTenant] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('perfil');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) setUser(JSON.parse(userData));
+    fetchTenant();
   }, []);
+
+  const fetchTenant = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/tenant/profile');
+      setTenant(res.data.data || res.data);
+    } catch (e) {
+      console.error('Error fetching tenant', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.patch('/tenant/profile', tenant);
+      alert('Dados da empresa atualizados com sucesso!');
+    } catch (e) {
+      alert('Erro ao salvar dados da empresa');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
@@ -125,7 +154,81 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {activeTab !== 'perfil' && (
+          {activeTab === 'tenant' && (
+            <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8 animate-in fade-in duration-500">
+              <div className="pb-8 border-b border-slate-50">
+                <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                  <Building2 size={24} className="text-blue-600" /> Dados da Empresa
+                </h3>
+                <p className="text-slate-400 font-medium text-sm mt-1">Essas informações serão usadas pelo Agente de WhatsApp e nos relatórios.</p>
+              </div>
+
+              {loading ? (
+                <div className="py-20 flex justify-center">
+                  <RefreshCw className="animate-spin text-blue-600" size={40} />
+                </div>
+              ) : (
+                <form onSubmit={handleSaveTenant} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Fantasia / Empresa</label>
+                      <input 
+                        type="text" 
+                        value={tenant?.companyName || ''}
+                        onChange={(e) => setTenant({...tenant, companyName: e.target.value})}
+                        placeholder="Ex: Consignados Brasil"
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-900"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CNPJ / CPF</label>
+                      <input 
+                        type="text"
+                        value={tenant?.document || ''}
+                        onChange={(e) => setTenant({...tenant, document: e.target.value})}
+                        placeholder="00.000.000/0000-00"
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-900"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail Corporativo</label>
+                      <input 
+                        type="email"
+                        value={tenant?.email || ''}
+                        onChange={(e) => setTenant({...tenant, email: e.target.value})}
+                        placeholder="empresa@email.com"
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-900"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Telefone / WhatsApp</label>
+                      <input 
+                        type="text"
+                        value={tenant?.phone || ''}
+                        onChange={(e) => setTenant({...tenant, phone: e.target.value})}
+                        placeholder="(00) 00000-0000"
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-8 border-t border-slate-50 flex justify-end">
+                    <button 
+                      type="submit"
+                      disabled={saving}
+                      className="flex items-center gap-2 px-8 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-100 uppercase tracking-widest text-xs disabled:opacity-50"
+                    >
+                      {saving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
+                      {saving ? 'Salvando...' : 'Atualizar Empresa'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
+          {activeTab !== 'perfil' && activeTab !== 'tenant' && (
             <div className="bg-white p-20 rounded-[40px] border border-slate-100 shadow-sm text-center space-y-6">
               <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-200">
                 <Settings size={40} />
