@@ -226,6 +226,10 @@ export class WhatsAppService {
       message = config.greetingMessage;
     }
 
+    // Formata o número (garantir DDI e remover caracteres)
+    let phone = pos.whatsapp.replace(/\D/g, '');
+    if (!phone.startsWith('55')) phone = '55' + phone;
+
     return this.callAgent('/v1/integration/agents/inventory/start', 'POST', {
       instance_name: config.instanceName,
       pdv_phone: phone,
