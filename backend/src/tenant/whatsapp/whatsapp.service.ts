@@ -241,11 +241,35 @@ export class WhatsAppService {
     let phone = pos.whatsapp.replace(/\D/g, '');
     if (!phone.startsWith('55')) phone = '55' + phone;
 
+    // Busca lotes ativos no PDV para enviar ao Agente
+    const activeLots = await this.prisma.consignmentLot.findMany({
+      where: {
+        posId: data.posId,
+        closedAt: null,
+      },
+      include: {
+        product: true,
+      },
+    });
+
+    const items = activeLots
+      .map(lot => {
+        const remaining = lot.quantityReceived - lot.quantitySold - lot.quantityReturned - lot.quantityLost;
+        if (remaining <= 0) return null;
+        return {
+          lot_id: lot.id,
+          product_name: lot.product.name,
+          expected_quantity: remaining,
+        };
+      })
+      .filter(Boolean);
+
     return this.callAgent('/v1/integration/agents/inventory/start', 'POST', {
       instance_name: config.instanceName,
       pdv_phone: phone,
       closing_id: data.closingId || 0,
       message: message,
+      items: items,
     });
   }
 }
