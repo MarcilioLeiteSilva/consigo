@@ -56,7 +56,7 @@ export class WhatsAppWebhookController {
       try {
         const settlement = await this.settlementsService.createFromInventory(config.tenantId, {
           posId: pos.id,
-          notes: notes || 'Acerto automático via Agente WhatsApp',
+          notes: notes || `Acerto automático processado via Agente de Acerto WhatsApp (Ref: ${new Date().toLocaleDateString('pt-BR')})`,
           items: items.map(item => ({
             lotId: item.lot_id,
             remainingQuantity: Number(item.remaining)
