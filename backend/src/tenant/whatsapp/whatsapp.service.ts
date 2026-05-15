@@ -228,7 +228,9 @@ export class WhatsAppService {
 
     // Se ainda não houver mensagem, usa uma padrão
     if (!message) {
-      message = 'Olá {{pdv_name}}! Gostaria de realizar o acerto do estoque.';
+      const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+      const company = tenant?.companyName || 'Consigo';
+      message = `Olá {{pdv_name}}! Sou o assistente virtual da ${company}. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?`;
     }
 
     // Substitui variáveis

@@ -111,7 +111,7 @@ export default function POSSettlementPage() {
     try {
       await api.post('/tenant/whatsapp/inventory/start', {
         posId: params.id,
-        message: 'Olá! Sou o assistente virtual da Consigo. Gostaria de confirmar o que você ainda tem em estoque para realizarmos o acerto do período. Podemos começar?'
+        message: '' // Deixa vazio para usar a configuração do banco de dados
       });
       alert('Automação iniciada com sucesso! O Agente entrará em contato com o PDV.');
     } catch (err: any) {
