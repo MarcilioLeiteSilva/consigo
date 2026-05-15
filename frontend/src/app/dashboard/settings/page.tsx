@@ -12,9 +12,11 @@ import {
   Phone,
   Save,
   CheckCircle2,
-  Users
+  Users,
+  RefreshCw
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 export default function SettingsPage() {
   const router = useRouter();
