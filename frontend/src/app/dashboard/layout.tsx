@@ -46,11 +46,12 @@ const menuItems = [
       { label: 'Extrato Geral', href: '/dashboard/financial' },
       { icon: ClipboardList, label: 'Prestação de Contas', href: '/dashboard/settlements' },
       { icon: ShoppingCart, label: 'Vendas', href: '/dashboard/sales' },
+      { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
       { label: 'Calculadora 3D', href: '/dashboard/finance/calc-3d' },
       { label: 'Calculadora Revenda', href: '/dashboard/finance/calc-resale' },
     ]
   },
-  { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
+
   { 
     icon: Settings, 
     label: 'Configurações', 
