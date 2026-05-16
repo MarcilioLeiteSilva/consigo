@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { SettlementsService } from '../settlements/settlements.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
-@Controller('webhooks/whatsapp')
+@Controller('webhook/whatsapp')
 export class WhatsAppWebhookController {
   private readonly logger = new Logger(WhatsAppWebhookController.name);
 
