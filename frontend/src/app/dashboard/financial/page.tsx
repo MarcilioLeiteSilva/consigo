@@ -21,6 +21,8 @@ export default function FinancialPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState<string | number>(0);
+  const [monthlyCredits, setMonthlyCredits] = useState<number>(0);
+  const [monthlyDebits, setMonthlyDebits] = useState<number>(0);
 
   useEffect(() => {
     async function loadFinancialData() {
@@ -29,8 +31,25 @@ export default function FinancialPage() {
           api.get('/financial-transactions'),
           api.get('/dashboard/metrics')
         ]);
-        setTransactions(tRes.data.data || []);
+        const txData: any[] = tRes.data.data || [];
+        setTransactions(txData);
         setBalance(mRes.data.data?.balance || 0);
+
+        const now = new Date();
+        const credits = txData
+          .filter((tx) => {
+            const d = new Date(tx.createdAt);
+            return tx.type === 'CREDIT' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          })
+          .reduce((acc, tx) => acc + Number(tx.amount), 0);
+        const debits = txData
+          .filter((tx) => {
+            const d = new Date(tx.createdAt);
+            return tx.type === 'DEBIT' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          })
+          .reduce((acc, tx) => acc + Number(tx.amount), 0);
+        setMonthlyCredits(credits);
+        setMonthlyDebits(debits);
       } catch (err) {
         console.error('Erro ao carregar dados financeiros', err);
       } finally {
@@ -84,19 +103,19 @@ export default function FinancialPage() {
 
         <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
           <p className="text-slate-500 text-sm font-medium mb-1">Total em Vendas (Mês)</p>
-          <h2 className="text-3xl font-bold text-slate-900">R$ 12.450,00</h2>
+          <h2 className="text-3xl font-bold text-slate-900"><CurrencyText value={monthlyCredits} /></h2>
           <div className="mt-6 flex items-center gap-2 text-emerald-600 text-sm font-bold">
             <ArrowUpCircle size={16} />
-            <span>+15% em relação ao mês anterior</span>
+            <span>Acumulado no mês corrente</span>
           </div>
         </div>
 
         <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-          <p className="text-slate-500 text-sm font-medium mb-1">Comissões Pagas</p>
-          <h2 className="text-3xl font-bold text-slate-900">R$ 1.867,50</h2>
+          <p className="text-slate-500 text-sm font-medium mb-1">Débitos do Período</p>
+          <h2 className="text-3xl font-bold text-slate-900"><CurrencyText value={monthlyDebits} /></h2>
           <div className="mt-6 flex items-center gap-2 text-slate-500 text-sm font-medium">
             <Clock size={16} />
-            <span>Média de 15% por venda</span>
+            <span>Saídas registradas no mês</span>
           </div>
         </div>
       </div>
