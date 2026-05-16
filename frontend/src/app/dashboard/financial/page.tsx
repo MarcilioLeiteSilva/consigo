@@ -12,7 +12,10 @@ import {
   MoreVertical,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  TrendingUp,
+  Package,
+  Store
 } from 'lucide-react';
 import api from '@/lib/api';
 import { CurrencyText } from '@/components/CurrencyText';
@@ -23,18 +26,30 @@ export default function FinancialPage() {
   const [balance, setBalance] = useState<string | number>(0);
   const [monthlyCredits, setMonthlyCredits] = useState<number>(0);
   const [monthlyDebits, setMonthlyDebits] = useState<number>(0);
+  const [topPos, setTopPos] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [totalPending, setTotalPending] = useState<number>(0);
+  const [pendingCount, setPendingCount] = useState<number>(0);
 
   const loadFinancialData = async () => {
     setLoading(true);
     try {
-      const [tRes, mRes] = await Promise.all([
+      const [tRes, mRes, posRes, prodRes, pendRes] = await Promise.all([
         api.get('/financial-transactions'),
-        api.get('/dashboard/metrics')
+        api.get('/dashboard/metrics'),
+        api.get('/dashboard/top-pos'),
+        api.get('/dashboard/top-products'),
+        api.get('/settlements/pending-pos'),
       ]);
       
       const txData: any[] = tRes.data.data || tRes.data || [];
       setTransactions(txData);
       setBalance(mRes.data.data?.balance || mRes.data?.balance || 0);
+      setTopPos(posRes.data.data || posRes.data || []);
+      setTopProducts(prodRes.data.data || prodRes.data || []);
+      const pending = pendRes.data.data || pendRes.data || [];
+      setTotalPending(pending.reduce((acc: number, p: any) => acc + Number(p.totalPending || 0), 0));
+      setPendingCount(pending.length);
 
       const now = new Date();
       const credits = txData
@@ -147,6 +162,64 @@ export default function FinancialPage() {
           <div className="mt-6 flex items-center gap-2 text-slate-500 text-sm font-medium">
             <Clock size={16} />
             <span>Saídas registradas no mês</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Painel Consolidado */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Pendências */}
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">A Receber</p>
+            <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">
+              {pendingCount} PDVs
+            </span>
+          </div>
+          <h2 className="text-3xl font-bold text-amber-600"><CurrencyText value={totalPending} /></h2>
+          <div className="flex items-center gap-2 text-slate-400 text-sm">
+            <Clock size={14} />
+            <span>Pendente de repasse</span>
+          </div>
+        </div>
+
+        {/* Top PDVs */}
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={16} className="text-blue-600" />
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Top PDVs</p>
+          </div>
+          <div className="space-y-3">
+            {topPos.slice(0, 3).map((pos, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 bg-slate-100 rounded-md text-slate-500 text-[10px] font-black flex items-center justify-center">{i + 1}</span>
+                  <span className="text-sm font-bold text-slate-700 truncate max-w-[120px]">{pos.name}</span>
+                </div>
+                <span className="text-sm font-black text-slate-900"><CurrencyText value={pos.sales} /></span>
+              </div>
+            ))}
+            {topPos.length === 0 && <p className="text-slate-400 text-xs italic">Sem dados de vendas</p>}
+          </div>
+        </div>
+
+        {/* Top Produtos */}
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Package size={16} className="text-emerald-600" />
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Top Produtos</p>
+          </div>
+          <div className="space-y-3">
+            {topProducts.slice(0, 3).map((prod, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 bg-slate-100 rounded-md text-slate-500 text-[10px] font-black flex items-center justify-center">{i + 1}</span>
+                  <span className="text-sm font-bold text-slate-700 truncate max-w-[120px]">{prod.name}</span>
+                </div>
+                <span className="text-sm font-black text-slate-900">{prod.quantity} un.</span>
+              </div>
+            ))}
+            {topProducts.length === 0 && <p className="text-slate-400 text-xs italic">Sem dados de produtos</p>}
           </div>
         </div>
       </div>
