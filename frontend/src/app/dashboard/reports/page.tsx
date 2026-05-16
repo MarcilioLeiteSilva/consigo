@@ -54,8 +54,9 @@ export default function ReportsPage() {
   }
 
   const faturamento = metrics?.salesMonth || 0;
+  const vendasCount = metrics?.salesCountMonth || 0;
+  const activePos = metrics?.activePosCount || 0;
   const totalStock = metrics?.totalStock || 0;
-  const activePosCount = metrics?.activePosCount || 0;
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -84,12 +85,12 @@ export default function ReportsPage() {
             <DollarSign size={24} />
           </div>
           <div>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Faturamento Total (Mês)</p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Faturamento Total</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">
-              {Number(faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {Number(faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
             </h3>
-            <p className="text-slate-400 text-[10px] font-bold flex items-center gap-1 mt-1">
-              Baseado nas vendas registradas
+            <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 mt-1">
+              <ArrowUpRight size={14} /> Mês corrente
             </p>
           </div>
         </div>
@@ -99,12 +100,10 @@ export default function ReportsPage() {
             <ShoppingCart size={24} />
           </div>
           <div>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Saldo Disponível</p>
-            <h3 className="text-2xl font-black text-slate-900 mt-1">
-              {Number(metrics?.balance || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            </h3>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Vendas Realizadas</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">{vendasCount}</h3>
             <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 mt-1">
-              Sincronizado
+              <ArrowUpRight size={14} /> Este mês
             </p>
           </div>
         </div>
@@ -117,7 +116,7 @@ export default function ReportsPage() {
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Itens em Estoque</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{totalStock}</h3>
             <p className="text-slate-400 text-[10px] font-bold flex items-center gap-1 mt-1">
-              Total entre todos PDVs
+              Total nos PDVs
             </p>
           </div>
         </div>
@@ -128,9 +127,9 @@ export default function ReportsPage() {
           </div>
           <div>
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">PDVs Ativos</p>
-            <h3 className="text-2xl font-black text-slate-900 mt-1">{activePosCount}</h3>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">{activePos}</h3>
             <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 mt-1">
-              Operacionais
+              <ArrowUpRight size={14} /> Operacionais
             </p>
           </div>
         </div>
@@ -141,8 +140,9 @@ export default function ReportsPage() {
         <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 uppercase tracking-tighter">
-              <TrendingUp className="text-blue-600" /> Top 5 PDVs (Volume)
+              <TrendingUp className="text-blue-600" /> Top 5 PDVs (Vendas)
             </h3>
+            <button className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">Ver Todos</button>
           </div>
           
           <div className="space-y-6">
@@ -156,12 +156,15 @@ export default function ReportsPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-black text-slate-900">{Number(pdv.sales).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                  <p className="text-[10px] font-bold text-emerald-500">
+                    Volume Real
+                  </p>
                 </div>
               </div>
             )) : (
-              <div className="text-center py-10 text-slate-400">
-                <AlertCircle className="mx-auto mb-2 opacity-20" size={32} />
-                <p className="text-xs font-bold uppercase tracking-widest">Sem dados de vendas</p>
+              <div className="text-center py-20">
+                <AlertCircle className="mx-auto w-12 h-12 text-slate-200 mb-4" />
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Sem dados de vendas</p>
               </div>
             )}
           </div>
@@ -194,9 +197,9 @@ export default function ReportsPage() {
                 </div>
               </>
             ) : (
-              <div className="text-center py-10 text-slate-400">
-                <AlertCircle className="mx-auto mb-2 opacity-20" size={32} />
-                <p className="text-xs font-bold uppercase tracking-widest">Sem dados de categorias</p>
+              <div className="text-center py-20">
+                <AlertCircle className="mx-auto w-12 h-12 text-slate-200 mb-4" />
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Sem dados de categorias</p>
               </div>
             )}
           </div>

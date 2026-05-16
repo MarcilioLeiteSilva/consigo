@@ -112,6 +112,7 @@ export class DashboardService {
     return {
       salesToday: salesToday._sum.totalAmount || 0,
       salesMonth: totalSalesMonth,
+      salesCountMonth: salesMetrics._count.id || 0,
       avgTicket: avgTicket,
       totalStock,
       activePosCount,
