@@ -15,6 +15,19 @@ import {
   DollarSign,
   ShoppingCart
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
 import api from '@/lib/api';
 
 const MOCK_POS = [
@@ -29,17 +42,23 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<any>(null);
   const [topPos, setTopPos] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [productsByPos, setProductsByPos] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadReportData() {
       try {
-        const [mRes, pRes] = await Promise.all([
+        const [mRes, pRes, tpRes, ppRes] = await Promise.all([
           api.get('/dashboard/metrics'),
           api.get('/dashboard/top-pos'),
+          api.get('/dashboard/top-products'),
+          api.get('/dashboard/top-products-by-pos'),
         ]);
         setMetrics(mRes.data.data || mRes.data);
         const posData = pRes.data.data || pRes.data || [];
         setTopPos(posData.length > 0 ? posData : MOCK_POS);
+        setTopProducts(tpRes.data.data || tpRes.data || []);
+        setProductsByPos(ppRes.data.data || ppRes.data || []);
       } catch (err) {
         console.error('Erro ao carregar dados de relatórios', err);
         setTopPos(MOCK_POS);
@@ -205,6 +224,124 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Produtos Mais Vendidos ── */}
+      {topProducts.length > 0 && (() => {
+        const total = topProducts.reduce((a, p) => a + (p.quantity || 0), 0);
+        const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        const pieData = topProducts.slice(0, 5).map((p) => ({
+          name: p.name,
+          value: p.quantity || 0,
+        }));
+
+        return (
+          <>
+            {/* Título da seção */}
+            <div className="flex items-center gap-3 pt-4">
+              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                <Package size={20} />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Produtos Mais Vendidos</h2>
+                <p className="text-slate-400 text-xs font-bold">Ranking geral e por PDV</p>
+              </div>
+            </div>
+
+            {/* Lista + Pizza */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Lista */}
+              <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
+                <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 uppercase tracking-tighter">
+                  <TrendingUp className="text-blue-600" /> Ranking de Produtos
+                </h3>
+                <div className="space-y-5">
+                  {topProducts.slice(0, 5).map((p, i) => {
+                    const pct = total > 0 ? Math.round((p.quantity / total) * 100) : 0;
+                    return (
+                      <div key={i} className="flex items-center justify-between group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white" style={{ background: COLORS[i % 5] }}>
+                            {i + 1}
+                          </div>
+                          <span className="font-bold text-slate-700 group-hover:text-slate-900 transition-colors text-sm">{p.name}</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-black text-slate-900">{p.quantity} un.</p>
+                          <p className="text-[10px] font-bold text-emerald-500">{pct}% do total</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Gráfico Pizza */}
+              <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
+                <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 uppercase tracking-tighter">
+                  <PieChart className="text-emerald-600" /> % por Produto
+                </h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {pieData.map((_, idx) => (
+                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v: any) => [`${v} un.`, 'Vendidos']} />
+                    <Legend formatter={(value) => <span className="text-xs font-bold text-slate-600">{value}</span>} />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Gráfico Barras Geral */}
+            <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
+              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 uppercase tracking-tighter">
+                <BarChart3 className="text-blue-600" /> Mais Vendidos — Geral
+              </h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={topProducts.slice(0, 8)} layout="vertical" margin={{ left: 20, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                  <XAxis type="number" tick={{ fontSize: 11, fontWeight: 700, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fontWeight: 700, fill: '#475569' }} axisLine={false} tickLine={false} width={140} />
+                  <Tooltip formatter={(v: any) => [`${v} un.`, 'Vendidos']} />
+                  <Bar dataKey="quantity" radius={[0, 8, 8, 0]} fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Gráfico Barras por PDV */}
+            {productsByPos.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {productsByPos.slice(0, 4).map((posData: any, pi: number) => (
+                  <div key={pi} className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-6">
+                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
+                      <Store size={18} className="text-rose-500" /> {posData.pos}
+                    </h3>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={posData.products} layout="vertical" margin={{ left: 10, right: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                        <XAxis type="number" tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fontWeight: 700, fill: '#475569' }} axisLine={false} tickLine={false} width={100} />
+                        <Tooltip formatter={(v: any) => [`${v} un.`, 'Vendidos']} />
+                        <Bar dataKey="quantity" radius={[0, 6, 6, 0]} fill={COLORS[pi % COLORS.length]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }

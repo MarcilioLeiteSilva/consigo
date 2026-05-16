@@ -233,4 +233,31 @@ export class DashboardService {
       percentage: total > 0 ? Math.round((value / total) * 100) : 0,
     }));
   }
+
+  async getTopProductsByPos(tenantId: string) {
+    const saleItems = await this.prisma.saleItem.findMany({
+      where: { tenantId },
+      include: {
+        product: { select: { name: true } },
+        sale: { include: { pos: { select: { name: true } } } },
+      },
+    });
+
+    const posMap: Record<string, Record<string, number>> = {};
+
+    saleItems.forEach((item) => {
+      const posName = item.sale?.pos?.name || 'Sem PDV';
+      const productName = item.product?.name || 'Desconhecido';
+      if (!posMap[posName]) posMap[posName] = {};
+      posMap[posName][productName] = (posMap[posName][productName] || 0) + item.quantity;
+    });
+
+    return Object.entries(posMap).map(([pos, products]) => ({
+      pos,
+      products: Object.entries(products)
+        .map(([name, quantity]) => ({ name, quantity }))
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 5),
+    }));
+  }
 }

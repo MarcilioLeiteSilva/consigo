@@ -48,4 +48,11 @@ export class DashboardController {
   getSalesByCategory(@CurrentUser() user: any) {
     return this.dashboardService.getSalesByCategory(user.tenantId);
   }
+
+  @Get('top-products-by-pos')
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
+  @ApiOperation({ summary: 'Produtos mais vendidos por PDV' })
+  getTopProductsByPos(@CurrentUser() user: any) {
+    return this.dashboardService.getTopProductsByPos(user.tenantId);
+  }
 }
