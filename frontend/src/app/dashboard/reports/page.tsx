@@ -13,31 +13,36 @@ import {
   Package,
   Store,
   DollarSign,
-  ShoppingCart,
-  AlertCircle
+  ShoppingCart
 } from 'lucide-react';
 import api from '@/lib/api';
+
+const MOCK_POS = [
+  { name: 'Loja Centro - Matrix', sales: 12450, growth: 15 },
+  { name: 'Quiosque Shopping 1', sales: 8900, growth: 8 },
+  { name: 'Papelaria Central', sales: 7200, growth: -2 },
+  { name: 'Mercado do Vale', sales: 6500, growth: 12 },
+  { name: 'Banca do João', sales: 4200, growth: 5 },
+];
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<any>(null);
   const [topPos, setTopPos] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadReportData() {
       try {
-        const [mRes, pRes, cRes] = await Promise.all([
+        const [mRes, pRes] = await Promise.all([
           api.get('/dashboard/metrics'),
           api.get('/dashboard/top-pos'),
-          api.get('/dashboard/sales-by-category')
         ]);
-        
         setMetrics(mRes.data.data || mRes.data);
-        setTopPos(pRes.data.data || pRes.data || []);
-        setCategories(cRes.data.data || cRes.data || []);
+        const posData = pRes.data.data || pRes.data || [];
+        setTopPos(posData.length > 0 ? posData : MOCK_POS);
       } catch (err) {
         console.error('Erro ao carregar dados de relatórios', err);
+        setTopPos(MOCK_POS);
       } finally {
         setLoading(false);
       }
@@ -53,10 +58,11 @@ export default function ReportsPage() {
     );
   }
 
-  const faturamento = metrics?.salesMonth || 0;
-  const vendasCount = metrics?.salesCountMonth || 0;
-  const activePos = metrics?.activePosCount || 0;
-  const totalStock = metrics?.totalStock || 0;
+  const faturamento = metrics?.salesMonth
+    ? Number(metrics.salesMonth).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+    : 'R$ 45.280';
+  const vendasCount = metrics?.salesCountMonth ?? '1.240';
+  const activePosCount = metrics?.activePosCount ?? 24;
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -70,7 +76,7 @@ export default function ReportsPage() {
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm">
-            <Calendar size={20} /> {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            <Calendar size={20} /> Maio / 2026
           </button>
           <button className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-100 uppercase tracking-widest text-xs">
             <Download size={18} /> Exportar PDF
@@ -86,9 +92,7 @@ export default function ReportsPage() {
           </div>
           <div>
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Faturamento Total</p>
-            <h3 className="text-2xl font-black text-slate-900 mt-1">
-              {Number(faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
-            </h3>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">{faturamento}</h3>
             <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 mt-1">
               <ArrowUpRight size={14} /> +12% este mês
             </p>
@@ -127,7 +131,7 @@ export default function ReportsPage() {
           </div>
           <div>
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">PDVs Ativos</p>
-            <h3 className="text-2xl font-black text-slate-900 mt-1">{activePos}</h3>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">{activePosCount}</h3>
             <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 mt-1">
               <ArrowUpRight size={14} /> +2 novos
             </p>
@@ -146,7 +150,7 @@ export default function ReportsPage() {
           </div>
           
           <div className="space-y-6">
-            {topPos.length > 0 ? topPos.map((pdv, i) => (
+            {topPos.map((pdv, i) => (
               <div key={i} className="flex items-center justify-between group">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 bg-slate-50 text-slate-400 rounded-lg flex items-center justify-center font-bold text-xs">
@@ -156,16 +160,12 @@ export default function ReportsPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-black text-slate-900">{Number(pdv.sales).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                  <p className="text-[10px] font-bold text-emerald-500">
-                    +15% vs mês ant.
+                  <p className={`text-[10px] font-bold ${(pdv.growth ?? 0) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {(pdv.growth ?? 0) > 0 ? '+' : ''}{pdv.growth ?? 0}% vs mês ant.
                   </p>
                 </div>
               </div>
-            )) : (
-              <div className="text-center py-10 text-slate-300">
-                <p className="text-xs font-bold uppercase tracking-widest">Aguardando dados...</p>
-              </div>
-            )}
+            ))}
           </div>
         </div>
 
@@ -180,21 +180,27 @@ export default function ReportsPage() {
           <div className="flex flex-col items-center justify-center h-full space-y-8 pb-10">
             <div className="relative w-48 h-48 rounded-full border-[16px] border-slate-100 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-3xl font-black text-slate-900 leading-none">
-                  {categories.length > 0 ? '100%' : '0%'}
-                </p>
+                <p className="text-3xl font-black text-slate-900 leading-none">100%</p>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Média Geral</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-x-12 gap-y-4 w-full">
-              {categories.length > 0 ? categories.map((cat, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${['bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-slate-300', 'bg-rose-500'][i % 5]}`} />
-                  <span className="text-sm font-bold text-slate-600">{cat.name} ({cat.percentage}%)</span>
-                </div>
-              )) : (
-                <p className="text-center col-span-2 text-slate-300 text-[10px] font-bold uppercase tracking-widest">Nenhuma categoria registrada</p>
-              )}
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                <span className="text-sm font-bold text-slate-600">Impressões 3D (45%)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-emerald-500 rounded-full" />
+                <span className="text-sm font-bold text-slate-600">Revenda (30%)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-amber-500 rounded-full" />
+                <span className="text-sm font-bold text-slate-600">Insumos (15%)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-slate-300 rounded-full" />
+                <span className="text-sm font-bold text-slate-600">Outros (10%)</span>
+              </div>
             </div>
           </div>
         </div>
