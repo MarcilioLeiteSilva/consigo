@@ -18,6 +18,8 @@ export class WhatsAppWebhookController {
   @Post('inventory')
   async handleInventoryResult(
     @Headers('x-integration-key') key: string,
+    @Body() payload: any
+  ) {
     // Validação da chave dedicada de Webhook (Agente -> ERP)
     const secret = this.configService.get<string>('CONSIGO_WEBHOOK_KEY');
     
