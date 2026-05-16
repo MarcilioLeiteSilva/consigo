@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { SettlementsService } from '../settlements/settlements.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
+import { Public } from '../../common/decorators/public.decorator';
+
 @Controller('webhook/whatsapp')
 export class WhatsAppWebhookController {
   private readonly logger = new Logger(WhatsAppWebhookController.name);
@@ -15,6 +17,7 @@ export class WhatsAppWebhookController {
     private readonly configService: ConfigService,
   ) {}
 
+  @Public()
   @Post('inventory')
   async handleInventoryResult(
     @Headers('x-api-key') apiKey: string,
