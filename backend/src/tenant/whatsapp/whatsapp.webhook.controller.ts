@@ -21,10 +21,10 @@ export class WhatsAppWebhookController {
     @Body() payload: any
   ) {
     // Validação da chave dedicada de Webhook (Agente -> ERP)
-    const secret = this.configService.get<string>('WEBHOOK_API_KEY');
+    const secret = this.configService.get<string>('CONSIGO_WEBHOOK_KEY') || 'consigo_inventory_secret';
     
     if (!secret) {
-      this.logger.error('Security Alert: No WEBHOOK_API_KEY configured in environment!');
+      this.logger.error('Security Alert: No CONSIGO_WEBHOOK_KEY configured in environment!');
     }
 
     if (!apiKey || apiKey !== secret) {
