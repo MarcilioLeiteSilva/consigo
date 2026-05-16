@@ -24,40 +24,72 @@ export default function FinancialPage() {
   const [monthlyCredits, setMonthlyCredits] = useState<number>(0);
   const [monthlyDebits, setMonthlyDebits] = useState<number>(0);
 
-  useEffect(() => {
-    async function loadFinancialData() {
-      try {
-        const [tRes, mRes] = await Promise.all([
-          api.get('/financial-transactions'),
-          api.get('/dashboard/metrics')
-        ]);
-        const txData: any[] = tRes.data.data || [];
-        setTransactions(txData);
-        setBalance(mRes.data.data?.balance || 0);
+  const loadFinancialData = async () => {
+    setLoading(true);
+    try {
+      const [tRes, mRes] = await Promise.all([
+        api.get('/financial-transactions'),
+        api.get('/dashboard/metrics')
+      ]);
+      
+      const txData: any[] = tRes.data.data || tRes.data || [];
+      setTransactions(txData);
+      setBalance(mRes.data.data?.balance || mRes.data?.balance || 0);
 
-        const now = new Date();
-        const credits = txData
-          .filter((tx) => {
-            const d = new Date(tx.createdAt);
-            return tx.type === 'CREDIT' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-          })
-          .reduce((acc, tx) => acc + Number(tx.amount), 0);
-        const debits = txData
-          .filter((tx) => {
-            const d = new Date(tx.createdAt);
-            return tx.type === 'DEBIT' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-          })
-          .reduce((acc, tx) => acc + Number(tx.amount), 0);
-        setMonthlyCredits(credits);
-        setMonthlyDebits(debits);
-      } catch (err) {
-        console.error('Erro ao carregar dados financeiros', err);
-      } finally {
-        setLoading(false);
-      }
+      const now = new Date();
+      const credits = txData
+        .filter((tx) => {
+          const d = new Date(tx.createdAt);
+          return tx.type === 'CREDIT' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        })
+        .reduce((acc, tx) => acc + Number(tx.amount), 0);
+      const debits = txData
+        .filter((tx) => {
+          const d = new Date(tx.createdAt);
+          return tx.type === 'DEBIT' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        })
+        .reduce((acc, tx) => acc + Number(tx.amount), 0);
+      setMonthlyCredits(credits);
+      setMonthlyDebits(debits);
+    } catch (err) {
+      console.error('Erro ao carregar dados financeiros', err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadFinancialData();
   }, []);
+
+  const handleExport = () => {
+    if (transactions.length === 0) {
+      alert('Não há transações para exportar.');
+      return;
+    }
+
+    const headers = ['Data', 'Descricao', 'Tipo', 'Status', 'Valor'];
+    const csvContent = [
+      headers.join(','),
+      ...transactions.map(tx => [
+        new Date(tx.createdAt).toLocaleDateString('pt-BR'),
+        `"${tx.description || 'Transação operacional'}"`,
+        tx.type === 'CREDIT' ? 'Credito' : 'Debito',
+        'Concluido',
+        tx.amount
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `extrato_financeiro_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (loading) {
     return (
@@ -76,13 +108,12 @@ export default function FinancialPage() {
           <p className="text-slate-500">Acompanhe seu saldo, vendas e repasses.</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl hover:bg-slate-50 transition-all shadow-sm">
+          <button 
+            onClick={handleExport}
+            className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl hover:bg-slate-50 transition-all shadow-sm"
+          >
             <Download size={20} />
-            Exportar
-          </button>
-          <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-200">
-            <DollarSign size={20} />
-            Solicitar Saque
+            Exportar CSV
           </button>
         </div>
       </div>
