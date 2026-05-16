@@ -48,6 +48,7 @@ const menuItems = [
       { icon: ShoppingCart, label: 'Vendas', href: '/dashboard/sales' },
       { icon: BarChart3, label: 'Relatórios', href: '/dashboard/reports' },
       { label: 'Contas a Receber', href: '/dashboard/financial/receivables' },
+      { label: 'DRE', href: '/dashboard/financial/dre' },
       { label: 'Calculadora 3D', href: '/dashboard/finance/calc-3d' },
       { label: 'Calculadora Revenda', href: '/dashboard/finance/calc-resale' },
     ]

@@ -260,4 +260,45 @@ export class DashboardService {
         .slice(0, 5),
     }));
   }
+
+  async getDRE(tenantId: string, month: number, year: number) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 1);
+
+    const transactions = await this.prisma.financialTransaction.findMany({
+      where: {
+        tenantId,
+        createdAt: { gte: startDate, lt: endDate },
+      },
+    });
+
+    const receita = transactions
+      .filter((t) => t.type === 'CREDIT')
+      .reduce((acc, t) => acc + Number(t.amount), 0);
+
+    const saidas = transactions
+      .filter((t) => t.type === 'DEBIT')
+      .reduce((acc, t) => acc + Number(t.amount), 0);
+
+    const resultado = receita - saidas;
+
+    const settlements = await this.prisma.consignmentSettlement.count({
+      where: {
+        tenantId,
+        settledAt: { gte: startDate, lt: endDate },
+      },
+    });
+
+    const ticketMedio = settlements > 0 ? receita / settlements : 0;
+
+    return {
+      month,
+      year,
+      receita,
+      saidas,
+      resultado,
+      settlements,
+      ticketMedio,
+    };
+  }
 }

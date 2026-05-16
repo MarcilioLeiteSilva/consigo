@@ -55,4 +55,18 @@ export class DashboardController {
   getTopProductsByPos(@CurrentUser() user: any) {
     return this.dashboardService.getTopProductsByPos(user.tenantId);
   }
+
+  @Get('dre')
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
+  @ApiOperation({ summary: 'DRE Simplificada por mês/ano' })
+  getDRE(
+    @CurrentUser() user: any,
+    @Query('month') month?: string,
+    @Query('year') year?: string,
+  ) {
+    const now = new Date();
+    const m = month ? parseInt(month) : now.getMonth() + 1;
+    const y = year ? parseInt(year) : now.getFullYear();
+    return this.dashboardService.getDRE(user.tenantId, m, y);
+  }
 }
