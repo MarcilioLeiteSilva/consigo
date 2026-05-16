@@ -21,9 +21,17 @@ export class WhatsAppWebhookController {
     @Body() payload: any
   ) {
     // Validação do segredo
-    const secret = this.configService.get<string>('WHATSAPP_AGENT_KEY');
-    if (key !== secret) {
-      throw new UnauthorizedException('Invalid webhook key');
+    // Validação da chave de integração
+    const secret = this.configService.get<string>('CONSIGO_WEBHOOK_KEY') || 
+                   this.configService.get<string>('WHATSAPP_AGENT_KEY');
+    
+    if (!secret) {
+      this.logger.error('Security Alert: No CONSIGO_WEBHOOK_KEY or WHATSAPP_AGENT_KEY configured in environment!');
+    }
+
+    if (!key || key !== secret) {
+      this.logger.warn(`Unauthorized webhook attempt. Key provided: ${key ? 'YES' : 'NO'}`);
+      throw new UnauthorizedException('Invalid or missing integration key');
     }
 
     this.logger.log(`Received inventory result from WhatsApp: ${JSON.stringify(payload)}`);
