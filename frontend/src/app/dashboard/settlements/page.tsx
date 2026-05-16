@@ -167,55 +167,6 @@ export default function SettlementsPage() {
           <h1 className="text-2xl font-bold text-slate-900">Prestação de Contas (Fechamento)</h1>
           <p className="text-slate-500 text-sm">Consolidação de vendas e acerto de contas com PDVs.</p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <button 
-            onClick={() => router.push('/dashboard/automation/inventory-agent')}
-            className="flex items-center justify-center gap-2 bg-white text-slate-600 border border-slate-200 font-bold py-3.5 px-6 rounded-2xl hover:bg-slate-50 transition-all shadow-sm"
-          >
-            <Bot size={20} className="text-blue-600" /> Configurar Agente
-          </button>
-          <div className="relative">
-            <button 
-              onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
-              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-emerald-100"
-            >
-              <Zap size={20} /> Acerto com Agente <ChevronDown size={16} />
-            </button>
-
-            {isAgentDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <button 
-                  onClick={() => {
-                    setIsAgentDropdownOpen(false);
-                    setInventoryModalOpen(true);
-                    // Aqui a lógica de "Acerto Manual" usará a modal de inventário já existente
-                    // mas podemos adicionar uma flag para disparar o agente ao selecionar o PDV
-                  }}
-                  className="w-full text-left px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50"
-                >
-                  <Zap size={16} className="text-emerald-500" /> Acerto Manual
-                </button>
-                <div 
-                  className="w-full text-left px-6 py-4 text-sm font-bold text-slate-300 flex items-center gap-3 cursor-not-allowed bg-slate-50/50"
-                >
-                  <Calendar size={16} /> Acerto Agendado
-                  <span className="ml-auto text-[8px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full font-black uppercase">Breve</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button 
-            onClick={() => {
-              setSelectedPOS(null);
-              setInventoryModalOpen(true);
-              setInventoryItems([]);
-            }}
-            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-indigo-100"
-          >
-            <ClipboardList size={20} /> Novo Fechamento (Inventário)
-          </button>
-        </div>
       </div>
 
       {/* Stats */}
@@ -276,18 +227,6 @@ export default function SettlementsPage() {
                         <div className="text-xl font-black text-indigo-600"><CurrencyText value={pos.totalPending} /></div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => handleStartAutomation(pos.id)}
-                          disabled={startingAutomation === pos.id}
-                          className={`p-4 rounded-2xl transition-all shadow-lg flex items-center justify-center ${
-                            startingAutomation === pos.id 
-                            ? 'bg-slate-100 text-slate-400' 
-                            : 'bg-green-50 text-green-600 hover:bg-green-100 shadow-green-50'
-                          }`}
-                          title="Iniciar Agente de Acertos"
-                        >
-                          {startingAutomation === pos.id ? <Loader2 size={20} className="animate-spin" /> : <Zap size={20} />}
-                        </button>
                         <button 
                           onClick={() => handleSelectPOS(pos)}
                           className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-100"
