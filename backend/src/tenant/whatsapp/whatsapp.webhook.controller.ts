@@ -23,12 +23,13 @@ export class WhatsAppWebhookController {
     // Validação da chave dedicada de Webhook (Agente -> ERP)
     const secret = this.configService.get<string>('CONSIGO_WEBHOOK_KEY') || 'consigo_inventory_secret';
     
-    if (!secret) {
-      this.logger.error('Security Alert: No CONSIGO_WEBHOOK_KEY configured in environment!');
-    }
+    // LOG TEMPORÁRIO PARA DEBUG
+    const receivedPrefix = apiKey ? apiKey.substring(0, 4) : 'NONE';
+    const expectedPrefix = secret ? secret.substring(0, 4) : 'NONE';
+    this.logger.debug(`Auth Check - Received: ${receivedPrefix}..., Expected: ${expectedPrefix}...`);
 
     if (!apiKey || apiKey !== secret) {
-      this.logger.warn(`Unauthorized webhook attempt. Provided key: ${apiKey ? 'HIDDEN' : 'NONE'}`);
+      this.logger.warn(`Unauthorized webhook attempt. Provided key: ${receivedPrefix}...`);
       throw new UnauthorizedException('Invalid or missing x-api-key');
     }
 
