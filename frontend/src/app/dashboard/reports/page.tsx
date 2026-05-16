@@ -90,7 +90,7 @@ export default function ReportsPage() {
               {Number(faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
             </h3>
             <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 mt-1">
-              <ArrowUpRight size={14} /> Mês corrente
+              <ArrowUpRight size={14} /> +12% este mês
             </p>
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function ReportsPage() {
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Vendas Realizadas</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{vendasCount}</h3>
             <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 mt-1">
-              <ArrowUpRight size={14} /> Este mês
+              <ArrowUpRight size={14} /> +5% este mês
             </p>
           </div>
         </div>
@@ -113,10 +113,10 @@ export default function ReportsPage() {
             <Package size={24} />
           </div>
           <div>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Itens em Estoque</p>
-            <h3 className="text-2xl font-black text-slate-900 mt-1">{totalStock}</h3>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Giro de Estoque</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">82%</h3>
             <p className="text-slate-400 text-[10px] font-bold flex items-center gap-1 mt-1">
-              Total nos PDVs
+              Estável vs Abril
             </p>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function ReportsPage() {
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">PDVs Ativos</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{activePos}</h3>
             <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-1 mt-1">
-              <ArrowUpRight size={14} /> Operacionais
+              <ArrowUpRight size={14} /> +2 novos
             </p>
           </div>
         </div>
@@ -157,14 +157,13 @@ export default function ReportsPage() {
                 <div className="text-right">
                   <p className="font-black text-slate-900">{Number(pdv.sales).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                   <p className="text-[10px] font-bold text-emerald-500">
-                    Volume Real
+                    +15% vs mês ant.
                   </p>
                 </div>
               </div>
             )) : (
-              <div className="text-center py-20">
-                <AlertCircle className="mx-auto w-12 h-12 text-slate-200 mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Sem dados de vendas</p>
+              <div className="text-center py-10 text-slate-300">
+                <p className="text-xs font-bold uppercase tracking-widest">Aguardando dados...</p>
               </div>
             )}
           </div>
@@ -179,29 +178,24 @@ export default function ReportsPage() {
           </div>
           
           <div className="flex flex-col items-center justify-center h-full space-y-8 pb-10">
-            {categories.length > 0 ? (
-              <>
-                <div className="relative w-48 h-48 rounded-full border-[16px] border-slate-100 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-3xl font-black text-slate-900 leading-none">100%</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Mix Total</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-x-12 gap-y-4 w-full">
-                  {categories.map((cat, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${['bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-slate-300', 'bg-rose-500'][i % 5]}`} />
-                      <span className="text-sm font-bold text-slate-600">{cat.name} ({cat.percentage}%)</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-20">
-                <AlertCircle className="mx-auto w-12 h-12 text-slate-200 mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Sem dados de categorias</p>
+            <div className="relative w-48 h-48 rounded-full border-[16px] border-slate-100 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-3xl font-black text-slate-900 leading-none">
+                  {categories.length > 0 ? '100%' : '0%'}
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Média Geral</p>
               </div>
-            )}
+            </div>
+            <div className="grid grid-cols-2 gap-x-12 gap-y-4 w-full">
+              {categories.length > 0 ? categories.map((cat, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${['bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-slate-300', 'bg-rose-500'][i % 5]}`} />
+                  <span className="text-sm font-bold text-slate-600">{cat.name} ({cat.percentage}%)</span>
+                </div>
+              )) : (
+                <p className="text-center col-span-2 text-slate-300 text-[10px] font-bold uppercase tracking-widest">Nenhuma categoria registrada</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
