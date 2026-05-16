@@ -34,4 +34,18 @@ export class DashboardController {
   getTopProducts(@CurrentUser() user: any) {
     return this.dashboardService.getTopProducts(user.tenantId);
   }
+
+  @Get('top-pos')
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
+  @ApiOperation({ summary: 'Ranking dos PDVs que mais vendem' })
+  getTopPos(@CurrentUser() user: any) {
+    return this.dashboardService.getTopPos(user.tenantId);
+  }
+
+  @Get('sales-by-category')
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
+  @ApiOperation({ summary: 'Vendas agrupadas por categoria' })
+  getSalesByCategory(@CurrentUser() user: any) {
+    return this.dashboardService.getSalesByCategory(user.tenantId);
+  }
 }

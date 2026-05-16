@@ -178,4 +178,58 @@ export class DashboardService {
 
     return products;
   }
+
+  async getTopPos(tenantId: string) {
+    const topPos = await this.prisma.sale.groupBy({
+      by: ['posId'],
+      where: { tenantId },
+      _sum: { totalAmount: true },
+      orderBy: {
+        _sum: { totalAmount: 'desc' },
+      },
+      take: 5,
+    });
+
+    const results = await Promise.all(
+      topPos.map(async (item) => {
+        const pos = await this.prisma.pOS.findUnique({
+          where: { id: item.posId },
+          select: { name: true },
+        });
+        return {
+          name: pos?.name || 'Desconhecido',
+          sales: Number(item._sum.totalAmount || 0),
+        };
+      }),
+    );
+
+    return results;
+  }
+
+  async getSalesByCategory(tenantId: string) {
+    const saleItems = await this.prisma.saleItem.findMany({
+      where: { tenantId },
+      include: {
+        product: {
+          include: { category: true },
+        },
+      },
+    });
+
+    const categoryMap: Record<string, number> = {};
+    let total = 0;
+
+    saleItems.forEach((item) => {
+      const categoryName = item.product?.category?.name || 'Sem Categoria';
+      const amount = Number(item.consignorAmount || 0);
+      categoryMap[categoryName] = (categoryMap[categoryName] || 0) + amount;
+      total += amount;
+    });
+
+    return Object.entries(categoryMap).map(([name, value]) => ({
+      name,
+      value,
+      percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+    }));
+  }
 }
