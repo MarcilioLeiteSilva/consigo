@@ -271,13 +271,9 @@ export class SettlementsService {
       }
 
       // Agora criamos o fechamento real usando os itens que acabamos de "vender" por inventário
-      const finalNotes = notes 
-        ? `${notes} | Processado via Agente de Acerto WhatsApp`
-        : 'Acerto automático processado via Agente de Acerto WhatsApp';
-
       return this.create(tenantId, {
         posId,
-        notes: finalNotes,
+        notes: notes || 'Fechamento baseado em inventário',
         saleItemIds,
         startDate,
         endDate
