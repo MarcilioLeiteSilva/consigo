@@ -21,7 +21,8 @@ export class WhatsAppWebhookController {
     @Body() payload: any
   ) {
     // Validação da chave dedicada de Webhook (Agente -> ERP)
-    const secret = this.configService.get<string>('CONSIGO_WEBHOOK_KEY') || 'consigo_inventory_secret';
+    const rawSecret = this.configService.get<string>('CONSIGO_WEBHOOK_KEY') || 'consigo_inventory_secret';
+    const secret = rawSecret.trim();
     
     // LOG TEMPORÁRIO PARA DEBUG
     const receivedPrefix = apiKey ? apiKey.substring(0, 4) : 'NONE';
