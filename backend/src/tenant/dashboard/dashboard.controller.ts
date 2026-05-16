@@ -69,4 +69,11 @@ export class DashboardController {
     const y = year ? parseInt(year) : now.getFullYear();
     return this.dashboardService.getDRE(user.tenantId, m, y);
   }
+
+  @Get('alerts')
+  @Roles(TenantUserRole.TENANT_ADMIN, TenantUserRole.GERENTE)
+  @ApiOperation({ summary: 'Alertas inteligentes do tenant' })
+  getAlerts(@CurrentUser() user: any) {
+    return this.dashboardService.getAlerts(user.tenantId);
+  }
 }

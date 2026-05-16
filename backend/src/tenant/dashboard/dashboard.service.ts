@@ -261,6 +261,107 @@ export class DashboardService {
     }));
   }
 
+  async getAlerts(tenantId: string) {
+    const alerts: Array<{
+      type: string;
+      severity: 'critical' | 'warning';
+      title: string;
+      description: string;
+      link: string;
+    }> = [];
+
+    const now = new Date();
+    const today = now.getDate();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // 1. Estoque Crítico (≤ 3 unidades)
+    const lots = await this.prisma.consignmentLot.findMany({
+      where: { tenantId, closedAt: null },
+      select: {
+        productId: true, posId: true,
+        quantityReceived: true, quantitySold: true, quantityReturned: true,
+        pos: { select: { name: true } },
+        product: { select: { name: true } },
+      },
+    });
+    const stockMap: Record<string, { available: number; posName: string; productName: string }> = {};
+    lots.forEach((lot) => {
+      const key = `${lot.productId}_${lot.posId}`;
+      const available = lot.quantityReceived - (lot.quantitySold + lot.quantityReturned);
+      if (!stockMap[key]) stockMap[key] = { available: 0, posName: lot.pos?.name || 'PDV', productName: lot.product?.name || 'Produto' };
+      stockMap[key].available += available;
+    });
+    Object.values(stockMap).forEach(({ available, posName, productName }) => {
+      if (available > 0 && available <= 3) {
+        alerts.push({ type: 'ESTOQUE_CRITICO', severity: 'critical', title: 'Estoque Crítico',
+          description: `"${productName}" com apenas ${available} un. em ${posName}.`, link: '/dashboard/inventory' });
+      }
+    });
+
+    // 2. PDV Inadimplente (billingDay vencido 5+ dias + itens pendentes)
+    const posWithBilling = await this.prisma.pOS.findMany({
+      where: { tenantId, isActive: true, billingDay: { not: null } },
+      select: { id: true, name: true, billingDay: true },
+    });
+    for (const pos of posWithBilling) {
+      if (pos.billingDay && today > pos.billingDay + 5) {
+        const pendingCount = await this.prisma.saleItem.count({
+          where: { tenantId, settlementId: null, sale: { posId: pos.id } },
+        });
+        if (pendingCount > 0) {
+          alerts.push({ type: 'PDV_INADIMPLENTE', severity: 'critical', title: 'PDV Inadimplente',
+            description: `${pos.name}: ${pendingCount} itens pendentes, vencimento dia ${pos.billingDay}.`,
+            link: '/dashboard/financial/receivables' });
+        }
+      }
+    }
+
+    // 3. PDV Inativo e PDV sem acerto há 30+ dias
+    const allPos = await this.prisma.pOS.findMany({
+      where: { tenantId, isActive: true },
+      select: { id: true, name: true },
+    });
+    for (const pos of allPos) {
+      const hasLots = await this.prisma.consignmentLot.count({ where: { tenantId, posId: pos.id } });
+      if (hasLots === 0) continue;
+
+      const recentSales = await this.prisma.sale.count({
+        where: { tenantId, posId: pos.id, createdAt: { gte: thirtyDaysAgo } },
+      });
+      if (recentSales === 0) {
+        alerts.push({ type: 'PDV_INATIVO', severity: 'warning', title: 'PDV Inativo',
+          description: `${pos.name} não registrou vendas nos últimos 30 dias.`, link: '/dashboard/sales' });
+      }
+
+      const lastSettlement = await this.prisma.consignmentSettlement.findFirst({
+        where: { tenantId, posId: pos.id }, orderBy: { settledAt: 'desc' },
+      });
+      if (!lastSettlement || new Date(lastSettlement.settledAt) < thirtyDaysAgo) {
+        alerts.push({ type: 'SEM_ACERTO', severity: 'warning', title: 'Sem Acerto há 30+ dias',
+          description: `${pos.name} não realizou fechamento nos últimos 30 dias.`, link: '/dashboard/settlements' });
+      }
+    }
+
+    // 4. DRE Negativa
+    const monthTx = await this.prisma.financialTransaction.findMany({ where: { tenantId, createdAt: { gte: monthStart } } });
+    const rec = monthTx.filter((t) => t.type === 'CREDIT').reduce((acc, t) => acc + Number(t.amount), 0);
+    const sai = monthTx.filter((t) => t.type === 'DEBIT').reduce((acc, t) => acc + Number(t.amount), 0);
+    if (sai > 0 && rec - sai < 0) {
+      alerts.push({ type: 'DRE_NEGATIVA', severity: 'warning', title: 'DRE Negativa',
+        description: `Resultado do mês negativo: Receita R$ ${rec.toFixed(2)} vs Saídas R$ ${sai.toFixed(2)}.`,
+        link: '/dashboard/financial/dre' });
+    }
+
+    return {
+      total: alerts.length,
+      critical: alerts.filter((a) => a.severity === 'critical').length,
+      warning: alerts.filter((a) => a.severity === 'warning').length,
+      alerts,
+    };
+  }
+
   async getDRE(tenantId: string, month: number, year: number) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 1);
