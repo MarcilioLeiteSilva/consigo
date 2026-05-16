@@ -430,8 +430,9 @@ model FinancialTransaction {
   type          TransactionType
   amount        Decimal                @db.Decimal(15, 2)
   referenceType FinancialReferenceType
-  referenceId   String? // e.g. saleId
+  referenceId   String?
   description   String?
+  category      String?
   createdAt     DateTime               @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
